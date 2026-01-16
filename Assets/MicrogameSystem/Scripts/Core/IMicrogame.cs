@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace CautionPotion.Microgames
+namespace Pansori.Microgames
 {
     /// <summary>
     /// 미니게임 인터페이스

@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
-using CautionPotion.Microgames;
+using Pansori.Microgames;
 using TMPro;
 
-namespace CautionPotion.Microgames.Games
+namespace Pansori.Microgames.Games
 {
     /// <summary>
     /// 미니게임 예시1
@@ -18,6 +18,11 @@ namespace CautionPotion.Microgames.Games
         [SerializeField] private int targetClicks = 10; // 목표 클릭 횟수
         [SerializeField] private TMP_Text clickCountText; // 클릭 횟수 표시 UI
         [SerializeField] private TMP_Text timerText; // 남은 시간 표시 UI
+        
+        /// <summary>
+        /// 현재 게임 이름
+        /// </summary>
+        public override string currentGameName => "톱질";
         
         /// <summary>
         /// 현재 클릭 횟수

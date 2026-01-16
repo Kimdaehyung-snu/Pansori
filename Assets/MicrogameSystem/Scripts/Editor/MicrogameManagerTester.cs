@@ -2,9 +2,9 @@
 using UnityEditor;
 using System.Collections.Generic;
 using System;
-using CautionPotion.Microgames;
+using Pansori.Microgames;
 
-namespace CautionPotion.Microgames.Editor
+namespace Pansori.Microgames.Editor
 {
     /// <summary>
     /// MicrogameManager 테스트 에디터

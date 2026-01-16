@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using CautionPotion.Microgames;
+using Pansori.Microgames;
 
-namespace CautionPotion.Microgames.Editor
+namespace Pansori.Microgames.Editor
 {
     /// <summary>
     /// 미니게임 프리팹 검증 도구

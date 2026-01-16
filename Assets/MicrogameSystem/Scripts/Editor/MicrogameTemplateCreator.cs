@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.IO;
-using CautionPotion.Microgames;
+using Pansori.Microgames;
 
-namespace CautionPotion.Microgames.Editor
+namespace Pansori.Microgames.Editor
 {
     /// <summary>
     /// 미니게임 템플릿 생성 마법사
@@ -160,9 +160,9 @@ namespace CautionPotion.Microgames.Editor
         private string GenerateManagerScript(string name, string description)
         {
             return $@"using UnityEngine;
-using CautionPotion.Microgames;
+using Pansori.Microgames;
 
-namespace CautionPotion.Microgames.Games
+namespace Pansori.Microgames.Games
 {{
     /// <summary>
     /// {description}
@@ -264,7 +264,7 @@ namespace CautionPotion.Microgames.Games
             
             // 매니저 스크립트 추가
             string managerScriptName = $"{name}_Manager";
-            System.Type managerType = System.Type.GetType($"CautionPotion.Microgames.Games.{managerScriptName}, Assembly-CSharp");
+            System.Type managerType = System.Type.GetType($"Pansori.Microgames.Games.{managerScriptName}, Assembly-CSharp");
             if (managerType != null)
             {
                 prefabObject.AddComponent(managerType);

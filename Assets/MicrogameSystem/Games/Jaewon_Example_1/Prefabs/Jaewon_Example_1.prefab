@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ed89136d6d262bd42b159545c3590d31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.Games.Jaewon_Example_1_Manager
+  m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.Games.Jaewon_Example_1_Manager
   timer: {fileID: 0}
   inputHandler: {fileID: 0}
   uiLayer: {fileID: 0}
@@ -93,7 +93,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b0ded04db28d0234b960aaf66eea064e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameTimer
+  m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.MicrogameTimer
   baseDuration: 5
 --- !u!1 &5357473333413988480
 GameObject:
@@ -138,7 +138,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 98132d48c11386f45b53af5c64315fa0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameUILayer
+  m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.MicrogameUILayer
   sortOrder: 100
   worldSpace: 0
 --- !u!1 &7174898861250320921
@@ -184,6 +184,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6857de9c52fb7ee4093e8da578d606be, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameInputHandler
+  m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.MicrogameInputHandler
   enableKeyboardInput: 1
   enableMouseInput: 1

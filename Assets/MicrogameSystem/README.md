@@ -6,11 +6,12 @@
 
 1. [시스템 개요](#시스템-개요)
 2. [아키텍처](#아키텍처)
-3. [인터페이스 및 베이스 클래스](#인터페이스-및-베이스-클래스)
-4. [헬퍼 컴포넌트](#헬퍼-컴포넌트)
-5. [에디터 도구](#에디터-도구)
-6. [제약사항 및 규칙](#제약사항-및-규칙)
-7. [체크리스트](#체크리스트)
+3. [게임 플로우 시스템](#게임-플로우-시스템)
+4. [인터페이스 및 베이스 클래스](#인터페이스-및-베이스-클래스)
+5. [헬퍼 컴포넌트](#헬퍼-컴포넌트)
+6. [에디터 도구](#에디터-도구)
+7. [제약사항 및 규칙](#제약사항-및-규칙)
+8. [체크리스트](#체크리스트)
 
 ## 시스템 개요
 
@@ -22,7 +23,17 @@
 Assets/MicrogameSystem/
   Scripts/
     Core/              # 핵심 인터페이스 및 매니저
+      - IMicrogame.cs
+      - MicrogameBase.cs
+      - MicrogameManager.cs
+      - GameFlowManager.cs
     Helpers/           # 헬퍼 컴포넌트
+      - MicrogameTimer.cs
+      - MicrogameInputHandler.cs
+      - MicrogameUILayer.cs
+      - MicrogameInfoUI.cs
+      - PansoriSceneUI.cs
+      - GameScreens.cs
     Templates/         # 템플릿 스크립트
     Editor/            # 에디터 도구
   Examples/            # 예제 미니게임
@@ -39,8 +50,10 @@ Assets/MicrogameSystem/
 ### 계층 구조
 
 ```
-MicrogameManager (최상단 매니저)
-  ↓ 프리팹 인스턴스화 및 OnGameStart 호출
+GameFlowManager (게임 전체 흐름 관리)
+  ↓ 상태에 따라 화면 전환 및 게임 시작
+MicrogameManager (미니게임 생명주기 관리)
+  ↓ 프리팹 풀링 및 OnGameStart 호출
 MicrogameBase (각 미니게임의 베이스 클래스)
   ↓ 게임 로직 관리
 하위 컴포넌트들 (게임별 로직, UI, 오브젝트 등)
@@ -48,11 +61,98 @@ MicrogameBase (각 미니게임의 베이스 클래스)
 
 ### 생명주기
 
-1. **준비**: 프리팹 인스턴스화, Awake/Start 호출
-2. **개시**: `OnGameStart(difficulty, speed)` 호출
-3. **진행**: 3~5초간 플레이
-4. **판정**: `ReportResult()` 호출
-5. **종료**: `OnDisable()` → `ResetGameState()` 호출
+1. **준비**: 프리팹 풀에서 인스턴스 활성화, Awake/Start 호출
+2. **정보 표시**: 게임 이름, 목숨, 스테이지 정보 표시
+3. **개시**: `OnGameStart(difficulty, speed)` 호출
+4. **진행**: 3~5초간 플레이
+5. **판정**: `ReportResult()` 호출
+6. **종료**: `OnDisable()` → `ResetGameState()` 호출, 인스턴스 비활성화 (풀로 반환)
+
+## 게임 플로우 시스템
+
+"울려라! 판소리" 게임의 전체 흐름을 관리하는 시스템입니다.
+
+### 게임 상태 (GameState)
+
+| 상태 | 설명 |
+|------|------|
+| `MainMenu` | 메인 화면 (Start 버튼) |
+| `Ready` | 준비 화면 ("준비!" → "시작!" 연출) |
+| `PansoriScene` | 판소리 씬 (마이크로게임 사이 화면) |
+| `Microgame` | 마이크로게임 진행 중 |
+| `Victory` | 승리 화면 (20회 승리 시) |
+| `GameOver` | 패배 화면 (4회 패배 시) |
+
+### 게임 흐름
+
+```
+메인 화면 → [Start] → 준비 화면 → 판소리 씬 → ["XX해라!"] → 마이크로게임
+    ↑                                    ↓
+    └──────────────────────────────── [결과에 따른 환호/야유]
+                                         ↓
+                              ┌──────────┴──────────┐
+                              ↓                     ↓
+                    20회 승리: 승리 화면     4회 패배: 패배 화면
+```
+
+### 핵심 컴포넌트
+
+#### GameFlowManager
+
+게임 전체 흐름을 상태 머신으로 관리합니다.
+
+```csharp
+[Header("게임 설정")]
+[SerializeField] private int winCountForVictory = 20;    // 승리 조건
+[SerializeField] private int loseCountForGameOver = 4;   // 패배 조건
+[SerializeField] private int winsPerSpeedIncrease = 4;   // 속도 증가 주기
+
+[Header("속도 설정")]
+[SerializeField] private float baseSpeed = 1.0f;         // 기본 속도
+[SerializeField] private float speedIncrement = 0.2f;    // 속도 증가량
+[SerializeField] private float maxSpeed = 2.5f;          // 최대 속도
+```
+
+**주요 메서드:**
+- `StartGame()`: 메인 메뉴에서 게임 시작
+- `RestartGame()`: 승리/패배 화면에서 재시작
+- `ChangeState(GameState)`: 상태 변경
+
+**주요 프로퍼티:**
+- `CurrentState`: 현재 게임 상태
+- `WinCount`: 승리 횟수
+- `LoseCount`: 패배 횟수
+- `CurrentSpeed`: 현재 속도
+
+#### PansoriSceneUI
+
+판소리 씬의 UI 및 연출을 관리합니다.
+
+**기능:**
+- "XX해라!" 명령 텍스트 표시
+- 환호/야유 반응 표시 (배경색 변경, 텍스트 애니메이션)
+
+```csharp
+// 명령 표시
+pansoriSceneUI.ShowCommand("점프", 1f, () => {
+    // 1초 후 콜백
+});
+
+// 반응 표시
+pansoriSceneUI.ShowReaction(success, 1.5f, () => {
+    // 반응 표시 후 콜백
+});
+```
+
+#### GameScreens
+
+메인 메뉴, 준비 화면, 승리/패배 화면을 관리합니다.
+
+**관리 화면:**
+- `MainMenuPanel`: 시작 버튼
+- `ReadyPanel`: "준비!" → "시작!" 텍스트 연출
+- `VictoryPanel`: 승리 메시지 + 재시작 버튼
+- `GameOverPanel`: 패배 메시지 + 재시작 버튼
 
 ## 인터페이스 및 베이스 클래스
 
@@ -143,6 +243,23 @@ void Start()
 }
 ```
 
+### MicrogameInfoUI
+
+게임 시작 전 정보(게임 이름, 목숨, 스테이지)를 표시하는 컴포넌트입니다.
+
+```csharp
+[SerializeField] private MicrogameInfoUI infoUI;
+
+// 기본 정보 표시
+infoUI.ShowInfo("게임 이름", 3, 1);
+
+// 스프라이트 기반 목숨 표시 + 자동 숨김
+infoUI.ShowInfoWithLives("게임 이름", totalLives: 4, consumedLives: 1, stage: 1, autoHideDuration: 2f);
+
+// 게임오버 표시
+infoUI.ShowGameOver();
+```
+
 ## 에디터 도구
 
 미니게임 개발을 돕기 위한 Unity 에디터 확장 도구들이 제공됩니다.
@@ -189,60 +306,38 @@ MicrogameManager를 쉽게 테스트할 수 있는 독립적인 에디터 윈도
 5. "인덱스로 시작" 또는 "랜덤 시작" 버튼으로 게임 시작
 
 **주요 기능:**
-
 - **Manager 선택**: 씬에서 자동 검색 또는 수동 할당
-- **프리팹 목록 관리**: 
-  - SerializedObject를 사용하여 프리팹 배열 표시 및 편집
-  - 드래그 앤 드롭으로 프리팹 할당
-  - 각 프리팹 옆 "시작" 버튼으로 바로 테스트
-- **게임 설정**:
-  - 난이도 슬라이더 (1-3)
-  - 배속 슬라이더 (1.0-5.0)
-- **제어 버튼**:
-  - 인덱스로 시작: 선택한 프리팹으로 시작
-  - 랜덤 시작: 랜덤 프리팹으로 시작
-  - 강제 종료: 실행 중인 게임 강제 종료
-- **상태 표시**: 
-  - 실시간 실행 상태 (실행 중/대기 중)
-  - 현재 실행 중인 미니게임 이름 표시
-- **결과 로그**:
-  - 최근 20개 결과 저장
-  - 타임스탬프 포함
-  - 성공/실패 색상 구분
-  - 스크롤 가능한 로그 뷰
+- **프리팹 목록 관리**: 드래그 앤 드롭으로 프리팹 할당
+- **게임 설정**: 난이도 슬라이더 (1-3), 배속 슬라이더 (1.0-5.0)
+- **제어 버튼**: 인덱스로 시작, 랜덤 시작, 강제 종료
+- **상태 표시**: 실시간 실행 상태, 현재 실행 중인 미니게임 이름
+- **결과 로그**: 최근 20개 결과 저장, 타임스탬프 포함
 
-**구현 방식:**
+### GameFlowSetupWizard
 
-```csharp
-// EditorWindow 기반의 독립 윈도우
-public class MicrogameManagerTester : EditorWindow
-{
-    private MicrogameManager manager;
-    private SerializedObject serializedManager;
-    private SerializedProperty prefabsProperty;
-    
-    // 실시간 상태 업데이트를 위한 EditorApplication.update 구독
-    private void OnEnable()
-    {
-        EditorApplication.update += OnEditorUpdate;
-    }
-    
-    // 이벤트 구독을 통한 결과 자동 로깅
-    private void SubscribeToEvents()
-    {
-        if (manager != null)
-        {
-            manager.OnMicrogameResult += OnMicrogameResult;
-        }
-    }
-}
-```
+GameFlow 시스템의 모든 UI 요소를 자동으로 생성하는 마법사 도구입니다.
 
-**사용 팁:**
-- 게임 실행 중에는 시작 버튼이 자동으로 비활성화됩니다.
-- 게임 미실행 중에는 종료 버튼이 비활성화됩니다.
-- 프리팹이 null이면 경고가 표시됩니다.
-- 결과 로그는 최신 항목부터 표시됩니다.
+**사용 방법:**
+1. `Tools > Microgame System > GameFlow 설정 마법사` 선택
+2. MicrogameManager 참조 설정 (선택사항, 없으면 자동 생성)
+3. 배경색과 강조색 설정
+4. "GameFlow 시스템 생성" 버튼 클릭
+
+**자동 생성되는 항목:**
+- `GameFlowManager` 오브젝트
+- `GameScreensCanvas` (메인/준비/승리/패배 화면)
+  - MainMenuPanel (제목, Start 버튼)
+  - ReadyPanel (준비 텍스트)
+  - VictoryPanel (승리 메시지, 점수, 재시작 버튼)
+  - GameOverPanel (게임오버 메시지, 점수, 재시작 버튼)
+- `PansoriSceneCanvas` (판소리 씬)
+  - PansoriPanel (배경)
+  - CommandText ("XX해라!")
+  - ReactionText ("얼쑤!" / "에잇...")
+
+**자동 연결:**
+- 모든 컴포넌트 간 참조 자동 연결
+- 버튼 이벤트 자동 연결
 
 ## 제약사항 및 규칙
 
@@ -278,8 +373,11 @@ Unity 에디터에서 제공하는 도구들을 활용하세요:
 - **프리팹 검증**: `Tools > Microgames > Validate Prefab`으로 프리팹 규격 확인
 - **게임 테스트**: `Tools > Microgames > Test Microgame Manager`로 빠른 테스트
 - **템플릿 생성**: `Tools > Microgames > Create New Microgame`으로 새 게임 생성
+- **GameFlow 설정**: `Tools > Microgame System > GameFlow 설정 마법사`로 전체 게임 플로우 구성
 
 ## 빠른 시작
+
+### 미니게임 개발
 
 새 미니게임을 만들려면:
 
@@ -289,11 +387,21 @@ Unity 에디터에서 제공하는 도구들을 활용하세요:
 4. 게임 로직 구현
 5. 검증 도구로 체크리스트 확인
 
+### GameFlow 설정
+
+전체 게임 플로우를 설정하려면:
+
+1. Unity 에디터에서 `Tools > Microgame System > GameFlow 설정 마법사` 선택
+2. MicrogameManager 참조 설정 (없으면 자동 생성)
+3. "GameFlow 시스템 생성" 버튼 클릭
+4. 생성된 GameFlowManager의 MicrogameManager에 미니게임 프리팹 추가
+5. 플레이 모드에서 테스트
+
 자세한 내용은 [QUICK_START.md](QUICK_START.md)를 참조하세요.
 
 ## 예제
 
-`Assets/MicrogameSystem/Examples/MG_Jump_01/` 폴더에 완전히 작동하는 예제 미니게임이 있습니다. 참고하여 개발하세요.
+`Assets/MicrogameSystem/Games/Jaewon_Example_1/` 폴더에 완전히 작동하는 예제 미니게임이 있습니다. 참고하여 개발하세요.
 
 ## 문의
 

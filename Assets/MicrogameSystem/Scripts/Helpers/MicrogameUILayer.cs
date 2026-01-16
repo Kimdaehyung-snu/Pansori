@@ -1,30 +1,30 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
-namespace CautionPotion.Microgames
+namespace Pansori.Microgames
 {
     /// <summary>
-    /// 미니게임 ?�용 UI ?�이??관�??�퍼 컴포?�트
-    /// Canvas�??�동?�로 ?�성?�고 관리합?�다.
+    /// 미니게임 전용 UI 레이어 관리 헬퍼 컴포넌트
+    /// Canvas를 자동으로 생성하고 관리합니다.
     /// </summary>
     public class MicrogameUILayer : MonoBehaviour
     {
-        [Header("UI ?�정")]
-        [SerializeField] private int sortOrder = 100; // Canvas ?�렬 ?�서
-        [SerializeField] private bool worldSpace = false; // ?�드 ?�페?�스 ?��?
+        [Header("UI 설정")]
+        [SerializeField] private int sortOrder = 100; // Canvas 정렬 순서
+        [SerializeField] private bool worldSpace = false; // 월드 스페이스 여부
         
         /// <summary>
-        /// ?�성??Canvas
+        /// 생성된 Canvas
         /// </summary>
         private Canvas canvas;
         
         /// <summary>
-        /// Canvas??RectTransform
+        /// Canvas의 RectTransform
         /// </summary>
         private RectTransform rectTransform;
         
         /// <summary>
-        /// Canvas??GraphicRaycaster
+        /// Canvas의 GraphicRaycaster
         /// </summary>
         private GraphicRaycaster raycaster;
         
@@ -34,22 +34,22 @@ namespace CautionPotion.Microgames
         }
         
         /// <summary>
-        /// Canvas�??�정?�니??
+        /// Canvas를 설정합니다.
         /// </summary>
         private void SetupCanvas()
         {
-            // Canvas가 ?�으�??�성
+            // Canvas가 없으면 생성
             canvas = GetComponent<Canvas>();
             if (canvas == null)
             {
                 canvas = gameObject.AddComponent<Canvas>();
             }
             
-            // Canvas ?�정
+            // Canvas 설정
             canvas.renderMode = worldSpace ? RenderMode.WorldSpace : RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = sortOrder;
             
-            // CanvasScaler 추�? (?�크�??�페?�스??경우)
+            // CanvasScaler 추가 (스크린 스페이스인 경우)
             if (!worldSpace)
             {
                 CanvasScaler scaler = GetComponent<CanvasScaler>();
@@ -62,14 +62,14 @@ namespace CautionPotion.Microgames
                 }
             }
             
-            // GraphicRaycaster 추�?
+            // GraphicRaycaster 추가
             raycaster = GetComponent<GraphicRaycaster>();
             if (raycaster == null)
             {
                 raycaster = gameObject.AddComponent<GraphicRaycaster>();
             }
             
-            // RectTransform ?�정
+            // RectTransform 설정
             rectTransform = GetComponent<RectTransform>();
             if (rectTransform == null)
             {
@@ -86,14 +86,14 @@ namespace CautionPotion.Microgames
         }
         
         /// <summary>
-        /// UI ?�소�?추�??�니??
+        /// UI 요소를 추가합니다.
         /// </summary>
-        /// <param name="uiElement">추�???UI ?�소</param>
+        /// <param name="uiElement">추가할 UI 요소</param>
         public void AddUIElement(GameObject uiElement)
         {
             if (uiElement == null)
             {
-                Debug.LogWarning("[MicrogameUILayer] UI ?�소가 null?�니??");
+                Debug.LogWarning("[MicrogameUILayer] UI 요소가 null입니다.");
                 return;
             }
             
@@ -101,9 +101,9 @@ namespace CautionPotion.Microgames
         }
         
         /// <summary>
-        /// UI ?�소�??�거?�니??
+        /// UI 요소를 제거합니다.
         /// </summary>
-        /// <param name="uiElement">?�거??UI ?�소</param>
+        /// <param name="uiElement">제거할 UI 요소</param>
         public void RemoveUIElement(GameObject uiElement)
         {
             if (uiElement == null)
@@ -118,7 +118,7 @@ namespace CautionPotion.Microgames
         }
         
         /// <summary>
-        /// 모든 UI ?�소�??�거?�니??
+        /// 모든 UI 요소를 제거합니다.
         /// </summary>
         public void ClearAllUIElements()
         {
@@ -129,9 +129,9 @@ namespace CautionPotion.Microgames
         }
         
         /// <summary>
-        /// Canvas???�렬 ?�서�??�정?�니??
+        /// Canvas의 정렬 순서를 설정합니다.
         /// </summary>
-        /// <param name="order">?�렬 ?�서</param>
+        /// <param name="order">정렬 순서</param>
         public void SetSortOrder(int order)
         {
             sortOrder = order;
@@ -142,18 +142,18 @@ namespace CautionPotion.Microgames
         }
         
         /// <summary>
-        /// Canvas�?가?�옵?�다.
+        /// Canvas를 가져옵니다.
         /// </summary>
-        /// <returns>Canvas 컴포?�트</returns>
+        /// <returns>Canvas 컴포넌트</returns>
         public Canvas GetCanvas()
         {
             return canvas;
         }
         
         /// <summary>
-        /// RectTransform??가?�옵?�다.
+        /// RectTransform을 가져옵니다.
         /// </summary>
-        /// <returns>RectTransform 컴포?�트</returns>
+        /// <returns>RectTransform 컴포넌트</returns>
         public RectTransform GetRectTransform()
         {
             return rectTransform;

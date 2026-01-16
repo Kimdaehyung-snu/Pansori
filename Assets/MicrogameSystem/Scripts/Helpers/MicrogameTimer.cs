@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace CautionPotion.Microgames
+namespace Pansori.Microgames
 {
     /// <summary>
     /// 미니게임 타이머 헬퍼 컴포넌트
