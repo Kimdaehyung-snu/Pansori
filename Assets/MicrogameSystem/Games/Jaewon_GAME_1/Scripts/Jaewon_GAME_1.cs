@@ -8,6 +8,10 @@ namespace Pansori.Microgames.Games
     /// <summary>
     /// 흥부 톱질 미니게임
     /// 좌우 화살표를 번갈아 눌러 박을 타는 게임
+    /// 
+    /// [와리오웨어 스타일 결과 애니메이션 적용]
+    /// - 성공 시: 박이 깨지는 연출 + 화면 플래시 + 결과 애니메이션
+    /// - 실패 시: 놀부 등장 + 화면 흔들림 + 결과 애니메이션
     /// </summary>
     public class Jaewon_GAME_1 : MicrogameBase
     {
@@ -30,6 +34,10 @@ namespace Pansori.Microgames.Games
         [Header("UI")]
         [SerializeField] private TMP_Text clickCountText; // 클릭 횟수 표시 UI
         [SerializeField] private TMP_Text timerText; // 남은 시간 표시 UI
+        
+        [Header("결과 연출 설정")]
+        [SerializeField] private bool useCustomResultAnimation = true; // 커스텀 결과 연출 사용 여부
+        [SerializeField] private float resultDisplayDelay = 0.5f; // 결과 표시 전 연출 시간
         
         /// <summary>
         /// 현재 게임 이름
@@ -270,6 +278,9 @@ namespace Pansori.Microgames.Games
             }
         }
         
+        /// <summary>
+        /// 성공 처리 (와리오웨어 스타일 연출 포함)
+        /// </summary>
         private void OnSuccess()
         {
             Debug.Log("[Jaewon_GAME_1] 성공!");
@@ -280,9 +291,30 @@ namespace Pansori.Microgames.Games
             
             // 흥부 부부 유지 (이미 표시 중)
             
-            ReportResult(true);
+            // 화면 플래시 효과 (성공)
+            FlashScreen(true);
+            
+            // 깨진 박에 이펙트 적용
+            if (gourdBroken != null)
+            {
+                PlayQuickEffect(gourdBroken.transform, true, null);
+            }
+            
+            // 결과 애니메이션을 사용하여 결과 보고
+            // 애니메이션이 완료된 후 결과가 매니저에게 전달됩니다
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(true);
+            }
+            else
+            {
+                ReportResult(true);
+            }
         }
         
+        /// <summary>
+        /// 실패 처리 (와리오웨어 스타일 연출 포함)
+        /// </summary>
         private void OnFailure()
         {
             Debug.Log("[Jaewon_GAME_1] 실패!");
@@ -292,7 +324,47 @@ namespace Pansori.Microgames.Games
             if (heungbuWife != null) heungbuWife.SetActive(false);
             if (nolbu != null) nolbu.SetActive(true);
             
-            ReportResult(false);
+            // 화면 플래시 효과 (실패)
+            FlashScreen(false);
+            
+            // 놀부에 이펙트 적용 (흔들림)
+            if (nolbu != null)
+            {
+                PlayQuickEffect(nolbu.transform, false, null);
+            }
+            
+            // 결과 애니메이션을 사용하여 결과 보고
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(false);
+            }
+            else
+            {
+                ReportResult(false);
+            }
+        }
+        
+        /// <summary>
+        /// 결과 애니메이션을 오버라이드하여 게임별 커스텀 연출을 추가합니다.
+        /// </summary>
+        protected override void PlayResultAnimation(bool success, System.Action onComplete = null)
+        {
+            // 게임별 추가 연출을 여기에 구현할 수 있습니다.
+            // 예: 특정 캐릭터 애니메이션 트리거, 파티클 이펙트 등
+            
+            if (success)
+            {
+                // 성공 시 추가 연출: 깨진 박에서 보물이 나오는 효과 등
+                Debug.Log("[Jaewon_GAME_1] 성공 커스텀 연출 시작");
+            }
+            else
+            {
+                // 실패 시 추가 연출: 놀부가 웃는 효과 등
+                Debug.Log("[Jaewon_GAME_1] 실패 커스텀 연출 시작");
+            }
+            
+            // 기본 결과 애니메이션 재생
+            base.PlayResultAnimation(success, onComplete);
         }
         
         protected override void ResetGameState()

@@ -21,31 +21,35 @@ namespace Pansori.Microgames
     /// <summary>
     /// 게임 전체 흐름을 관리하는 상태 머신
     /// 메인 화면 → 준비 화면 → 판소리 씬 → 마이크로게임 → 승리/패배 화면
+    /// ScriptableObject 설정 연동 및 강화된 이벤트 시스템을 지원합니다.
     /// </summary>
     public class GameFlowManager : MonoBehaviour
     {
+        [Header("시스템 설정")]
+        [SerializeField] private MicrogameSystemSettings settings;
+
         [Header("참조")]
         [SerializeField] private MicrogameManager microgameManager;
         [SerializeField] private PansoriSceneUI pansoriSceneUI;
         [SerializeField] private GameScreens gameScreens;
 
-        [Header("게임 설정")]
-        [SerializeField] private int winCountForVictory = 20; // 승리 화면으로 가기 위한 승리 횟수
-        [SerializeField] private int loseCountForGameOver = 4; // 패배 화면으로 가기 위한 패배 횟수
-        [SerializeField] private int winsPerSpeedIncrease = 4; // 속도 증가를 위한 승리 횟수 (4의 배수)
+        [Header("게임 설정 (설정 없을 시 사용)")]
+        [SerializeField] private int winCountForVictory = 20;
+        [SerializeField] private int loseCountForGameOver = 4;
+        [SerializeField] private int winsPerSpeedIncrease = 4;
 
-        [Header("속도 설정")]
-        [SerializeField] private float baseSpeed = 1.0f; // 기본 속도
-        [SerializeField] private float speedIncrement = 0.2f; // 속도 증가량
-        [SerializeField] private float maxSpeed = 2.5f; // 최대 속도
+        [Header("속도 설정 (설정 없을 시 사용)")]
+        [SerializeField] private float baseSpeed = 1.0f;
+        [SerializeField] private float speedIncrement = 0.2f;
+        [SerializeField] private float maxSpeed = 2.5f;
 
-        [Header("타이밍 설정")]
-        [SerializeField] private float readyDuration = 2f; // 준비 화면 표시 시간
-        [SerializeField] private float pansoriCommandDelay = 1f; // "XX해라!" 표시 전 대기 시간
-        [SerializeField] private float reactionDisplayDuration = 1.5f; // 환호/야유 반응 표시 시간
+        [Header("타이밍 설정 (설정 없을 시 사용)")]
+        [SerializeField] private float readyDuration = 2f;
+        [SerializeField] private float pansoriCommandDelay = 1f;
+        [SerializeField] private float reactionDisplayDuration = 1.5f;
 
-        [Header("난이도 설정")]
-        [SerializeField] private int baseDifficulty = 1; // 기본 난이도
+        [Header("난이도 설정 (설정 없을 시 사용)")]
+        [SerializeField] private int baseDifficulty = 1;
 
         /// <summary>
         /// 현재 게임 상태
@@ -68,9 +72,21 @@ namespace Pansori.Microgames
         private float currentSpeed;
 
         /// <summary>
+        /// 현재 난이도
+        /// </summary>
+        private int currentDifficulty;
+
+        /// <summary>
         /// 마지막 마이크로게임 결과
         /// </summary>
         private bool lastMicrogameSuccess;
+
+        /// <summary>
+        /// 다음 마이크로게임 인덱스 (미리 결정)
+        /// </summary>
+        private int nextMicrogameIndex = -1;
+
+        #region Properties
 
         /// <summary>
         /// 현재 게임 상태 (외부에서 읽기 전용)
@@ -93,13 +109,85 @@ namespace Pansori.Microgames
         public float CurrentSpeed => currentSpeed;
 
         /// <summary>
+        /// 현재 난이도
+        /// </summary>
+        public int CurrentDifficulty => currentDifficulty;
+
+        /// <summary>
+        /// 현재 스테이지 (승리 횟수 + 1)
+        /// </summary>
+        public int CurrentStage => winCount + 1;
+
+        /// <summary>
+        /// 시스템 설정
+        /// </summary>
+        public MicrogameSystemSettings Settings => settings;
+
+        /// <summary>
+        /// MicrogameManager 참조
+        /// </summary>
+        public MicrogameManager MicrogameManager => microgameManager;
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
         /// 상태 변경 이벤트
         /// </summary>
         public event Action<GameState> OnStateChanged;
 
+        /// <summary>
+        /// 속도 변경 이벤트
+        /// </summary>
+        public event Action<float> OnSpeedChanged;
+
+        /// <summary>
+        /// 난이도 변경 이벤트
+        /// </summary>
+        public event Action<int> OnDifficultyChanged;
+
+        /// <summary>
+        /// 스테이지 변경 이벤트 (승리 횟수 + 1)
+        /// </summary>
+        public event Action<int> OnStageChanged;
+
+        /// <summary>
+        /// 승리 이벤트 (총 승리 횟수)
+        /// </summary>
+        public event Action<int> OnWin;
+
+        /// <summary>
+        /// 패배 이벤트 (총 패배 횟수)
+        /// </summary>
+        public event Action<int> OnLose;
+
+        /// <summary>
+        /// 게임 완료 이벤트 (승리/패배 여부, 승리 횟수, 패배 횟수)
+        /// </summary>
+        public event Action<bool, int, int> OnGameComplete;
+
+        #endregion
+
+        #region Settings Accessors
+
+        private int WinCountForVictory => settings != null ? settings.WinCountForVictory : winCountForVictory;
+        private int LoseCountForGameOver => settings != null ? settings.LoseCountForGameOver : loseCountForGameOver;
+        private int WinsPerSpeedIncrease => settings != null ? settings.WinsPerSpeedIncrease : winsPerSpeedIncrease;
+        private float BaseSpeed => settings != null ? settings.BaseSpeed : baseSpeed;
+        private float SpeedIncrement => settings != null ? settings.SpeedIncrement : speedIncrement;
+        private float MaxSpeed => settings != null ? settings.MaxSpeed : maxSpeed;
+        private float ReadyDuration => settings != null ? settings.ReadyDuration : readyDuration;
+        private float CommandDelay => settings != null ? settings.CommandDelay : pansoriCommandDelay;
+        private float ReactionDuration => settings != null ? settings.ReactionDisplayDuration : reactionDisplayDuration;
+        private int BaseDifficulty => settings != null ? settings.BaseDifficulty : baseDifficulty;
+
+        #endregion
+
         private void Awake()
         {
-            currentSpeed = baseSpeed;
+            currentSpeed = BaseSpeed;
+            currentDifficulty = BaseDifficulty;
         }
 
         private void Start()
@@ -124,9 +212,19 @@ namespace Pansori.Microgames
         }
 
         /// <summary>
+        /// 설정을 변경합니다. (런타임에서 프로필 변경 시 사용)
+        /// </summary>
+        public void SetSettings(MicrogameSystemSettings newSettings)
+        {
+            settings = newSettings;
+            
+            // 현재 속도와 난이도 재계산
+            UpdateSpeedAndDifficulty();
+        }
+
+        /// <summary>
         /// 게임 상태를 변경합니다.
         /// </summary>
-        /// <param name="newState">새로운 상태</param>
         public void ChangeState(GameState newState)
         {
             GameState previousState = currentState;
@@ -174,6 +272,9 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowMainMenu();
             }
+            
+            // 메인 BGM 재생 (자진모리)
+            PlayMainBGMWithCurrentSpeed();
 
             Debug.Log("[GameFlowManager] 메인 메뉴 진입");
         }
@@ -185,7 +286,7 @@ namespace Pansori.Microgames
         {
             if (gameScreens != null)
             {
-                gameScreens.ShowReadyScreen(readyDuration, () =>
+                gameScreens.ShowReadyScreen(ReadyDuration, () =>
                 {
                     // 준비 화면 종료 후 판소리 씬으로 전환
                     ChangeState(GameState.PansoriScene);
@@ -194,7 +295,7 @@ namespace Pansori.Microgames
             else
             {
                 // 화면 없으면 바로 전환
-                StartCoroutine(DelayedStateChange(GameState.PansoriScene, readyDuration));
+                StartCoroutine(DelayedStateChange(GameState.PansoriScene, ReadyDuration));
             }
 
             Debug.Log("[GameFlowManager] 준비 화면 진입");
@@ -203,12 +304,17 @@ namespace Pansori.Microgames
         /// <summary>
         /// 판소리 씬 진입
         /// </summary>
-        /// <param name="fromMicrogame">마이크로게임에서 돌아온 경우</param>
         private void OnEnterPansoriScene(bool fromMicrogame)
         {
             if (gameScreens != null)
             {
                 gameScreens.HideAllScreens();
+            }
+            
+            // 메인 BGM 재생 (자진모리) - 마이크로게임에서 돌아왔으면 재생 시작
+            if (fromMicrogame)
+            {
+                PlayMainBGMWithCurrentSpeed();
             }
 
             if (fromMicrogame)
@@ -216,7 +322,7 @@ namespace Pansori.Microgames
                 // 마이크로게임 결과에 따른 반응 표시
                 if (pansoriSceneUI != null)
                 {
-                    pansoriSceneUI.ShowReaction(lastMicrogameSuccess, reactionDisplayDuration, () =>
+                    pansoriSceneUI.ShowReaction(lastMicrogameSuccess, ReactionDuration, () =>
                     {
                         // 승리/패배 조건 확인
                         CheckGameEndCondition();
@@ -224,7 +330,7 @@ namespace Pansori.Microgames
                 }
                 else
                 {
-                    StartCoroutine(DelayedCheckGameEnd(reactionDisplayDuration));
+                    StartCoroutine(DelayedCheckGameEnd(ReactionDuration));
                 }
             }
             else
@@ -235,11 +341,6 @@ namespace Pansori.Microgames
 
             Debug.Log($"[GameFlowManager] 판소리 씬 진입 (마이크로게임에서: {fromMicrogame})");
         }
-
-        /// <summary>
-        /// 다음 마이크로게임 인덱스 (미리 결정)
-        /// </summary>
-        private int nextMicrogameIndex = -1;
 
         /// <summary>
         /// 다음 마이크로게임 준비
@@ -253,14 +354,13 @@ namespace Pansori.Microgames
             string nextGameName = GetNextGameName();
 
             // 목숨/스테이지 정보 가져오기
-            int totalLives = microgameManager != null ? microgameManager.MaxLives : 4;
+            int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
             int consumedLives = microgameManager != null ? (microgameManager.MaxLives - microgameManager.CurrentLives) : loseCount;
-            int currentStage = winCount + 1;
 
             if (pansoriSceneUI != null)
             {
                 // 명령과 함께 게임 정보 표시
-                pansoriSceneUI.ShowCommandWithInfo(nextGameName, totalLives, consumedLives, currentStage, pansoriCommandDelay, () =>
+                pansoriSceneUI.ShowCommandWithInfo(nextGameName, totalLives, consumedLives, CurrentStage, CommandDelay, () =>
                 {
                     // 명령 표시 후 마이크로게임으로 전환
                     ChangeState(GameState.Microgame);
@@ -268,7 +368,7 @@ namespace Pansori.Microgames
             }
             else
             {
-                StartCoroutine(DelayedStateChange(GameState.Microgame, pansoriCommandDelay));
+                StartCoroutine(DelayedStateChange(GameState.Microgame, CommandDelay));
             }
         }
 
@@ -297,7 +397,7 @@ namespace Pansori.Microgames
                     return gameName;
                 }
             }
-            return "게임"; // 기본값
+            return "게임";
         }
 
         /// <summary>
@@ -309,21 +409,24 @@ namespace Pansori.Microgames
             {
                 pansoriSceneUI.HideAll();
             }
+            
+            // 메인 BGM 정지 (미니게임 BGM이 대신 재생됨)
+            StopMainBGM();
 
             // 마이크로게임 시작 (미리 결정한 인덱스 사용)
             if (microgameManager != null)
             {
                 if (nextMicrogameIndex >= 0)
                 {
-                    microgameManager.StartMicrogame(nextMicrogameIndex, baseDifficulty, currentSpeed);
+                    microgameManager.StartMicrogame(nextMicrogameIndex, currentDifficulty, currentSpeed);
                 }
                 else
                 {
-                    microgameManager.StartRandomMicrogame(baseDifficulty, currentSpeed);
+                    microgameManager.StartRandomMicrogame(currentDifficulty, currentSpeed);
                 }
             }
 
-            Debug.Log($"[GameFlowManager] 마이크로게임 시작 (인덱스: {nextMicrogameIndex}, 속도: {currentSpeed})");
+            Debug.Log($"[GameFlowManager] 마이크로게임 시작 (인덱스: {nextMicrogameIndex}, 난이도: {currentDifficulty}, 속도: {currentSpeed})");
         }
 
         /// <summary>
@@ -340,6 +443,12 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowVictoryScreen(winCount);
             }
+            
+            // 메인 BGM 재생
+            PlayMainBGMWithCurrentSpeed();
+            
+            // 게임 완료 이벤트 발생
+            OnGameComplete?.Invoke(true, winCount, loseCount);
 
             Debug.Log($"[GameFlowManager] 승리! 총 승리 횟수: {winCount}");
         }
@@ -358,6 +467,12 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowGameOverScreen(winCount, loseCount);
             }
+            
+            // 메인 BGM 재생
+            PlayMainBGMWithCurrentSpeed();
+            
+            // 게임 완료 이벤트 발생
+            OnGameComplete?.Invoke(false, winCount, loseCount);
 
             Debug.Log($"[GameFlowManager] 게임오버! 승리: {winCount}, 패배: {loseCount}");
         }
@@ -365,7 +480,6 @@ namespace Pansori.Microgames
         /// <summary>
         /// 마이크로게임 결과 처리
         /// </summary>
-        /// <param name="success">성공 여부</param>
         private void HandleMicrogameResult(bool success)
         {
             lastMicrogameSuccess = success;
@@ -373,17 +487,19 @@ namespace Pansori.Microgames
             if (success)
             {
                 winCount++;
+                OnWin?.Invoke(winCount);
+                OnStageChanged?.Invoke(CurrentStage);
+                
                 Debug.Log($"[GameFlowManager] 승리! 현재 승리 횟수: {winCount}");
 
-                // 속도 증가 확인 (4의 배수마다)
-                if (winCount > 0 && winCount % winsPerSpeedIncrease == 0)
-                {
-                    IncreaseSpeed();
-                }
+                // 속도/난이도 업데이트
+                UpdateSpeedAndDifficulty();
             }
             else
             {
                 loseCount++;
+                OnLose?.Invoke(loseCount);
+                
                 Debug.Log($"[GameFlowManager] 패배! 현재 패배 횟수: {loseCount}");
             }
 
@@ -392,15 +508,61 @@ namespace Pansori.Microgames
         }
 
         /// <summary>
+        /// 속도와 난이도를 업데이트합니다.
+        /// </summary>
+        private void UpdateSpeedAndDifficulty()
+        {
+            float previousSpeed = currentSpeed;
+            int previousDifficulty = currentDifficulty;
+
+            if (settings != null)
+            {
+                currentSpeed = settings.CalculateSpeed(winCount);
+                currentDifficulty = settings.CalculateDifficulty(winCount);
+            }
+            else
+            {
+                // 수동 계산 (설정이 없을 때)
+                if (WinsPerSpeedIncrease > 0 && winCount > 0 && winCount % WinsPerSpeedIncrease == 0)
+                {
+                    currentSpeed = Mathf.Min(currentSpeed + SpeedIncrement, MaxSpeed);
+                }
+            }
+
+            // 이벤트 발생
+            if (Math.Abs(previousSpeed - currentSpeed) > 0.001f)
+            {
+                OnSpeedChanged?.Invoke(currentSpeed);
+                
+                // 메인 BGM 속도도 업데이트
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.SetMainBGMSpeed(currentSpeed);
+                }
+                
+                Debug.Log($"[GameFlowManager] 속도 변경: {previousSpeed:F2} → {currentSpeed:F2}");
+            }
+
+            if (previousDifficulty != currentDifficulty)
+            {
+                OnDifficultyChanged?.Invoke(currentDifficulty);
+                Debug.Log($"[GameFlowManager] 난이도 변경: {previousDifficulty} → {currentDifficulty}");
+            }
+        }
+
+        /// <summary>
         /// 게임 종료 조건 확인
         /// </summary>
         private void CheckGameEndCondition()
         {
-            if (winCount >= winCountForVictory)
+            bool isVictory = settings != null ? settings.IsVictory(winCount) : winCount >= WinCountForVictory;
+            bool isGameOver = settings != null ? settings.IsGameOver(loseCount) : loseCount >= LoseCountForGameOver;
+
+            if (isVictory)
             {
                 ChangeState(GameState.Victory);
             }
-            else if (loseCount >= loseCountForGameOver)
+            else if (isGameOver)
             {
                 ChangeState(GameState.GameOver);
             }
@@ -412,30 +574,22 @@ namespace Pansori.Microgames
         }
 
         /// <summary>
-        /// 속도를 증가시킵니다.
-        /// </summary>
-        private void IncreaseSpeed()
-        {
-            float previousSpeed = currentSpeed;
-            currentSpeed = Mathf.Min(currentSpeed + speedIncrement, maxSpeed);
-
-            Debug.Log($"[GameFlowManager] 속도 증가: {previousSpeed:F2} → {currentSpeed:F2}");
-        }
-
-        /// <summary>
         /// 게임 데이터를 초기화합니다.
         /// </summary>
         private void ResetGameData()
         {
             winCount = 0;
             loseCount = 0;
-            currentSpeed = baseSpeed;
+            currentSpeed = BaseSpeed;
+            currentDifficulty = BaseDifficulty;
             lastMicrogameSuccess = false;
+            nextMicrogameIndex = -1;
 
             // MicrogameManager의 목숨도 초기화
             if (microgameManager != null)
             {
                 microgameManager.ResetLives();
+                microgameManager.ResetStatistics();
             }
 
             Debug.Log("[GameFlowManager] 게임 데이터 초기화");
@@ -480,5 +634,70 @@ namespace Pansori.Microgames
             yield return new WaitForSeconds(delay);
             CheckGameEndCondition();
         }
+        
+        #region Main BGM Control
+        
+        /// <summary>
+        /// 현재 속도로 메인 BGM 재생
+        /// </summary>
+        private void PlayMainBGMWithCurrentSpeed()
+        {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayMainBGM(currentSpeed);
+            }
+        }
+        
+        /// <summary>
+        /// 메인 BGM 정지
+        /// </summary>
+        private void StopMainBGM()
+        {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.StopMainBGM();
+            }
+        }
+        
+        #endregion
+
+        #region Debug Methods
+
+        /// <summary>
+        /// 디버그용: 특정 상태로 강제 변경
+        /// </summary>
+        public void DebugSetState(GameState state)
+        {
+            ChangeState(state);
+        }
+
+        /// <summary>
+        /// 디버그용: 승리 횟수 설정
+        /// </summary>
+        public void DebugSetWinCount(int count)
+        {
+            winCount = Mathf.Max(0, count);
+            UpdateSpeedAndDifficulty();
+            OnStageChanged?.Invoke(CurrentStage);
+        }
+
+        /// <summary>
+        /// 디버그용: 패배 횟수 설정
+        /// </summary>
+        public void DebugSetLoseCount(int count)
+        {
+            loseCount = Mathf.Max(0, count);
+        }
+
+        /// <summary>
+        /// 디버그용: 현재 속도 설정
+        /// </summary>
+        public void DebugSetSpeed(float speed)
+        {
+            currentSpeed = Mathf.Clamp(speed, BaseSpeed, MaxSpeed);
+            OnSpeedChanged?.Invoke(currentSpeed);
+        }
+
+        #endregion
     }
 }

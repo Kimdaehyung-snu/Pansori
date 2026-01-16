@@ -24,10 +24,14 @@ public class SoundManager : PansoriSingleton<SoundManager>
     [Header("Microgame Result Sounds")]
     [SerializeField] private AudioClip microgameSuccessClip;  // 성공 효과음
     [SerializeField] private AudioClip microgameFailClip;     // 실패 효과음
+    
+    [Header("Main BGM (자진모리)")]
+    [SerializeField] private AudioClip mainBGMClip; // 자진모리 브금
 
     
     private AudioSource bgSound;
     private AudioSource currentMicrogameBgSound;
+    private AudioSource mainBGMSource; // 메인 BGM 소스
     
  
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -226,6 +230,85 @@ public class SoundManager : PansoriSingleton<SoundManager>
             Debug.LogWarning($"[SoundManager] 미니게임 {(success ? "성공" : "실패")} 사운드가 설정되지 않았습니다.");
         }
     }
+    
+    #endregion
+    
+    #region Main BGM (자진모리)
+    
+    /// <summary>
+    /// 메인 BGM AudioSource 초기화
+    /// </summary>
+    private void InitializeMainBGMSource()
+    {
+        if (mainBGMSource == null)
+        {
+            GameObject mainBGMObj = new GameObject("MainBGMSource");
+            mainBGMObj.transform.SetParent(transform);
+            mainBGMSource = mainBGMObj.AddComponent<AudioSource>();
+            mainBGMSource.outputAudioMixerGroup = mixer.FindMatchingGroups("BGM")[0];
+            mainBGMSource.loop = true;
+            mainBGMSource.volume = 0.3f;
+            mainBGMSource.playOnAwake = false;
+        }
+    }
+    
+    /// <summary>
+    /// 메인 BGM 재생 (자진모리 브금, 속도 반영)
+    /// </summary>
+    /// <param name="speed">게임 속도 (pitch에 반영)</param>
+    public void PlayMainBGM(float speed = 1.0f)
+    {
+        if (mainBGMClip == null)
+        {
+            Debug.LogWarning("[SoundManager] mainBGMClip(자진모리 브금)이 설정되지 않았습니다.");
+            return;
+        }
+        
+        InitializeMainBGMSource();
+        
+        // 이미 재생 중이면 속도만 업데이트
+        if (mainBGMSource.isPlaying && mainBGMSource.clip == mainBGMClip)
+        {
+            SetMainBGMSpeed(speed);
+            return;
+        }
+        
+        mainBGMSource.clip = mainBGMClip;
+        mainBGMSource.pitch = Mathf.Clamp(speed, 0.5f, 3.0f);
+        mainBGMSource.Play();
+        
+        Debug.Log($"[SoundManager] 메인 BGM 재생: {mainBGMClip.name} (속도: {speed})");
+    }
+    
+    /// <summary>
+    /// 메인 BGM 정지
+    /// </summary>
+    public void StopMainBGM()
+    {
+        if (mainBGMSource != null && mainBGMSource.isPlaying)
+        {
+            mainBGMSource.Stop();
+            Debug.Log("[SoundManager] 메인 BGM 정지");
+        }
+    }
+    
+    /// <summary>
+    /// 메인 BGM 속도(pitch) 변경
+    /// </summary>
+    /// <param name="speed">새로운 속도</param>
+    public void SetMainBGMSpeed(float speed)
+    {
+        if (mainBGMSource != null)
+        {
+            mainBGMSource.pitch = Mathf.Clamp(speed, 0.5f, 3.0f);
+            Debug.Log($"[SoundManager] 메인 BGM 속도 변경: {speed}");
+        }
+    }
+    
+    /// <summary>
+    /// 메인 BGM이 현재 재생 중인지 확인
+    /// </summary>
+    public bool IsMainBGMPlaying => mainBGMSource != null && mainBGMSource.isPlaying;
     
     #endregion
 }

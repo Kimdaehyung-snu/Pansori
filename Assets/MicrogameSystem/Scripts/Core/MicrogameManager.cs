@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,18 +7,22 @@ namespace Pansori.Microgames
     /// <summary>
     /// 미니게임 최상단 매니저
     /// 모든 미니게임의 생명주기를 관리합니다.
+    /// 셔플, 통계 추적, 자동 스캔 기능을 지원합니다.
     /// </summary>
     public class MicrogameManager : MonoBehaviour
     {
+        [Header("시스템 설정")]
+        [SerializeField] private MicrogameSystemSettings settings;
+        
         [Header("미니게임 프리팹 목록")]
-        [SerializeField] private GameObject[] microgamePrefabs;
+        [SerializeField] private List<GameObject> microgamePrefabs = new List<GameObject>();
         
         [Header("게임 정보")]
-        [SerializeField] private int maxLives = 3; // 최대 목숨 (초기값)
-        [SerializeField] private int currentLives = 3; // 현재 남은 목숨
-        [SerializeField] private int currentStage = 1; // 현재 스테이지
-        [SerializeField] private float infoDisplayDuration = 2f; // 정보 표시 시간 (초)
-        [SerializeField] private MicrogameInfoUI infoUI; // 정보 UI 컴포넌트 참조
+        [SerializeField] private int maxLives = 4;
+        [SerializeField] private int currentLives = 4;
+        [SerializeField] private int currentStage = 1;
+        [SerializeField] private float infoDisplayDuration = 2f;
+        [SerializeField] private MicrogameInfoUI infoUI;
         
         /// <summary>
         /// 소모된 목숨 개수
@@ -45,6 +48,56 @@ namespace Pansori.Microgames
         /// 현재 실행 중인 미니게임의 IMicrogame 컴포넌트
         /// </summary>
         private IMicrogame currentMicrogame;
+
+        #region Shuffle System
+        
+        /// <summary>
+        /// 셔플된 인덱스 큐 (중복 방지용)
+        /// </summary>
+        private Queue<int> shuffledIndices = new Queue<int>();
+        
+        /// <summary>
+        /// 최근 플레이한 게임 인덱스 히스토리 (연속 중복 방지)
+        /// </summary>
+        private Queue<int> recentPlayedHistory = new Queue<int>();
+        
+        #endregion
+
+        #region Statistics
+        
+        /// <summary>
+        /// 게임별 플레이 횟수
+        /// </summary>
+        private Dictionary<int, int> playCountByIndex = new Dictionary<int, int>();
+        
+        /// <summary>
+        /// 게임별 성공 횟수
+        /// </summary>
+        private Dictionary<int, int> successCountByIndex = new Dictionary<int, int>();
+        
+        /// <summary>
+        /// 마지막으로 플레이한 게임 인덱스
+        /// </summary>
+        private int lastPlayedIndex = -1;
+
+        /// <summary>
+        /// 총 플레이 횟수
+        /// </summary>
+        public int TotalPlayCount { get; private set; }
+
+        /// <summary>
+        /// 총 성공 횟수
+        /// </summary>
+        public int TotalSuccessCount { get; private set; }
+
+        /// <summary>
+        /// 총 실패 횟수
+        /// </summary>
+        public int TotalFailureCount => TotalPlayCount - TotalSuccessCount;
+
+        #endregion
+
+        #region Events
         
         /// <summary>
         /// 미니게임 결과 이벤트 (외부에서 구독 가능)
@@ -52,16 +105,119 @@ namespace Pansori.Microgames
         public event Action<bool> OnMicrogameResult;
         
         /// <summary>
+        /// 미니게임 시작 이벤트 (인덱스, 난이도, 속도)
+        /// </summary>
+        public event Action<int, int, float> OnMicrogameStarted;
+        
+        /// <summary>
+        /// 목숨 변경 이벤트 (현재 목숨, 최대 목숨)
+        /// </summary>
+        public event Action<int, int> OnLivesChanged;
+        
+        #endregion
+
+        #region Properties
+        
+        /// <summary>
         /// 현재 미니게임이 실행 중인지 여부
         /// </summary>
         public bool IsMicrogameRunning => currentMicrogameInstance != null && currentMicrogameInstance.activeSelf;
+        
+        /// <summary>
+        /// 현재 남은 목숨 (외부에서 설정 가능)
+        /// </summary>
+        public int CurrentLives
+        {
+            get => currentLives;
+            set
+            {
+                int oldLives = currentLives;
+                currentLives = Mathf.Max(0, value);
+                consumedLives = maxLives - currentLives;
+                
+                if (oldLives != currentLives)
+                {
+                    OnLivesChanged?.Invoke(currentLives, maxLives);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 최대 목숨 (외부에서 설정 가능)
+        /// </summary>
+        public int MaxLives
+        {
+            get => maxLives;
+            set
+            {
+                maxLives = Mathf.Max(1, value);
+                currentLives = maxLives - consumedLives;
+                OnLivesChanged?.Invoke(currentLives, maxLives);
+            }
+        }
+        
+        /// <summary>
+        /// 현재 스테이지 (외부에서 설정 가능)
+        /// </summary>
+        public int CurrentStage
+        {
+            get => currentStage;
+            set => currentStage = Mathf.Max(1, value);
+        }
+        
+        /// <summary>
+        /// 등록된 미니게임 프리팹 개수
+        /// </summary>
+        public int MicrogamePrefabCount => microgamePrefabs?.Count ?? 0;
+        
+        /// <summary>
+        /// 시스템 설정
+        /// </summary>
+        public MicrogameSystemSettings Settings => settings;
+
+        /// <summary>
+        /// 현재 실행 중인 미니게임 인덱스
+        /// </summary>
+        public int CurrentMicrogameIndex => lastPlayedIndex;
+
+        /// <summary>
+        /// 현재 실행 중인 미니게임 이름
+        /// </summary>
+        public string CurrentMicrogameName
+        {
+            get
+            {
+                if (currentMicrogameInstance == null) return string.Empty;
+                if (currentMicrogame is MicrogameBase microgameBase)
+                {
+                    return microgameBase.currentGameName;
+                }
+                return currentMicrogameInstance.name;
+            }
+        }
+        
+        #endregion
         
         /// <summary>
         /// 초기화 - 프리팹 풀 생성
         /// </summary>
         private void Awake()
         {
+            ApplySettings();
             InitializePool();
+        }
+
+        /// <summary>
+        /// 설정을 적용합니다.
+        /// </summary>
+        private void ApplySettings()
+        {
+            if (settings != null)
+            {
+                maxLives = settings.MaxLives;
+                currentLives = maxLives;
+                infoDisplayDuration = settings.InfoDisplayDuration;
+            }
         }
         
         /// <summary>
@@ -95,90 +251,95 @@ namespace Pansori.Microgames
             
             Debug.Log($"[MicrogameManager] 프리팹 풀 초기화 완료 - 총 {microgameInstances.Count}개 인스턴스");
         }
+
+        /// <summary>
+        /// 프리팹 목록을 설정합니다. (에디터/런타임에서 사용)
+        /// </summary>
+        /// <param name="prefabs">프리팹 목록</param>
+        public void SetMicrogamePrefabs(List<GameObject> prefabs)
+        {
+            microgamePrefabs = prefabs ?? new List<GameObject>();
+            
+            // 풀이 이미 초기화되어 있으면 재초기화
+            if (microgameInstances != null)
+            {
+                ClearPool();
+                InitializePool();
+            }
+        }
+
+        /// <summary>
+        /// 프리팹을 목록에 추가합니다.
+        /// </summary>
+        /// <param name="prefab">추가할 프리팹</param>
+        public void AddMicrogamePrefab(GameObject prefab)
+        {
+            if (prefab == null) return;
+            if (microgamePrefabs.Contains(prefab)) return;
+            
+            microgamePrefabs.Add(prefab);
+            
+            // 풀에도 추가
+            if (microgameInstances != null && poolParent != null)
+            {
+                GameObject instance = Instantiate(prefab, poolParent);
+                instance.name = prefab.name + "_Instance";
+                instance.SetActive(false);
+                microgameInstances[prefab] = instance;
+            }
+        }
+
+        /// <summary>
+        /// 프리팹 목록을 초기화합니다.
+        /// </summary>
+        public void ClearMicrogamePrefabs()
+        {
+            ClearPool();
+            microgamePrefabs.Clear();
+        }
+
+        /// <summary>
+        /// 풀을 정리합니다.
+        /// </summary>
+        private void ClearPool()
+        {
+            if (microgameInstances != null)
+            {
+                foreach (var kvp in microgameInstances)
+                {
+                    if (kvp.Value != null)
+                    {
+                        Destroy(kvp.Value);
+                    }
+                }
+                microgameInstances.Clear();
+            }
+        }
         
         /// <summary>
         /// 프리팹에 해당하는 인스턴스를 풀에서 가져옵니다.
         /// </summary>
-        /// <param name="prefab">프리팹</param>
-        /// <returns>인스턴스 (없으면 null)</returns>
         private GameObject GetOrCreateInstance(GameObject prefab)
         {
-            if (prefab == null)
-            {
-                return null;
-            }
+            if (prefab == null) return null;
             
-            // 풀에서 인스턴스 찾기
             if (microgameInstances != null && microgameInstances.TryGetValue(prefab, out GameObject instance))
             {
                 return instance;
             }
             
-            // 풀에 없으면 경고 (초기화되지 않은 프리팹일 수 있음)
-            Debug.LogWarning($"[MicrogameManager] 풀에서 인스턴스를 찾을 수 없습니다: {prefab.name}. 풀이 초기화되지 않았을 수 있습니다.");
+            Debug.LogWarning($"[MicrogameManager] 풀에서 인스턴스를 찾을 수 없습니다: {prefab.name}");
             return null;
         }
-        
-        /// <summary>
-        /// 현재 남은 목숨 (외부에서 설정 가능)
-        /// </summary>
-        public int CurrentLives
-        {
-            get => currentLives;
-            set
-            {
-                currentLives = Mathf.Max(0, value);
-                consumedLives = maxLives - currentLives;
-                
-                // UI 업데이트
-                if (infoUI != null)
-                {
-                    infoUI.UpdateLivesDisplay(maxLives, consumedLives);
-                }
-            }
-        }
-        
-        /// <summary>
-        /// 최대 목숨 (외부에서 설정 가능)
-        /// </summary>
-        public int MaxLives
-        {
-            get => maxLives;
-            set
-            {
-                maxLives = Mathf.Max(1, value);
-                currentLives = maxLives - consumedLives;
-                
-                // UI 업데이트
-                if (infoUI != null)
-                {
-                    infoUI.UpdateLivesDisplay(maxLives, consumedLives);
-                }
-            }
-        }
-        
-        /// <summary>
-        /// 현재 스테이지 (외부에서 설정 가능)
-        /// </summary>
-        public int CurrentStage
-        {
-            get => currentStage;
-            set => currentStage = Mathf.Max(1, value);
-        }
-        
-        /// <summary>
-        /// 등록된 미니게임 프리팹 개수
-        /// </summary>
-        public int MicrogamePrefabCount => microgamePrefabs?.Length ?? 0;
+
+        #region Microgame Selection
         
         /// <summary>
         /// 인덱스로 미니게임 프리팹 가져오기
         /// </summary>
-        /// <param name="index">인덱스</param>
-        /// <returns>프리팹 (없으면 null)</returns>
         public GameObject GetMicrogamePrefab(int index)
         {
-            if (microgamePrefabs == null || index < 0 || index >= microgamePrefabs.Length)
+            if (microgamePrefabs == null || index < 0 || index >= microgamePrefabs.Count)
             {
                 return null;
             }
@@ -188,14 +349,11 @@ namespace Pansori.Microgames
         /// <summary>
         /// 인덱스로 미니게임 이름 가져오기
         /// </summary>
-        /// <param name="index">인덱스</param>
-        /// <returns>게임 이름 (없으면 빈 문자열)</returns>
         public string GetMicrogameName(int index)
         {
             GameObject prefab = GetMicrogamePrefab(index);
             if (prefab == null) return string.Empty;
             
-            // 풀에서 인스턴스 가져와서 이름 확인
             if (microgameInstances != null && microgameInstances.TryGetValue(prefab, out GameObject instance))
             {
                 IMicrogame microgame = instance.GetComponent<IMicrogame>();
@@ -209,29 +367,105 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
-        /// 랜덤 미니게임 인덱스 가져오기
+        /// 랜덤 미니게임 인덱스 가져오기 (셔플 시스템 적용)
         /// </summary>
-        /// <returns>랜덤 인덱스 (-1이면 프리팹 없음)</returns>
         public int GetRandomMicrogameIndex()
         {
-            if (microgamePrefabs == null || microgamePrefabs.Length == 0)
+            if (microgamePrefabs == null || microgamePrefabs.Count == 0)
             {
                 return -1;
             }
-            return UnityEngine.Random.Range(0, microgamePrefabs.Length);
+
+            // 셔플이 비활성화된 경우 또는 설정이 없는 경우 단순 랜덤
+            if (settings == null || !settings.EnableShuffle)
+            {
+                return UnityEngine.Random.Range(0, microgamePrefabs.Count);
+            }
+
+            // 셔플된 인덱스가 없으면 새로 생성
+            if (shuffledIndices.Count == 0)
+            {
+                GenerateShuffledIndices();
+            }
+
+            // 셔플된 인덱스에서 하나 꺼내기
+            int selectedIndex = shuffledIndices.Dequeue();
+
+            // 연속 중복 방지 체크
+            int maxAttempts = microgamePrefabs.Count;
+            int attempts = 0;
+            while (recentPlayedHistory.Contains(selectedIndex) && attempts < maxAttempts)
+            {
+                // 다시 큐에 넣고 다른 것 선택
+                shuffledIndices.Enqueue(selectedIndex);
+                
+                if (shuffledIndices.Count == 0)
+                {
+                    GenerateShuffledIndices();
+                }
+                
+                selectedIndex = shuffledIndices.Dequeue();
+                attempts++;
+            }
+
+            return selectedIndex;
         }
+
+        /// <summary>
+        /// 셔플된 인덱스 배열을 생성합니다.
+        /// </summary>
+        private void GenerateShuffledIndices()
+        {
+            List<int> indices = new List<int>();
+            for (int i = 0; i < microgamePrefabs.Count; i++)
+            {
+                indices.Add(i);
+            }
+
+            // Fisher-Yates 셔플
+            for (int i = indices.Count - 1; i > 0; i--)
+            {
+                int j = UnityEngine.Random.Range(0, i + 1);
+                int temp = indices[i];
+                indices[i] = indices[j];
+                indices[j] = temp;
+            }
+
+            shuffledIndices.Clear();
+            foreach (int index in indices)
+            {
+                shuffledIndices.Enqueue(index);
+            }
+        }
+
+        /// <summary>
+        /// 플레이 히스토리에 인덱스를 추가합니다.
+        /// </summary>
+        private void AddToPlayHistory(int index)
+        {
+            if (settings == null) return;
+
+            recentPlayedHistory.Enqueue(index);
+            
+            // 히스토리 크기 유지
+            while (recentPlayedHistory.Count > settings.ShuffleHistorySize)
+            {
+                recentPlayedHistory.Dequeue();
+            }
+        }
+
+        #endregion
+
+        #region Game Start/End
         
         /// <summary>
         /// 인덱스로 미니게임을 시작합니다.
         /// </summary>
-        /// <param name="index">프리팹 배열 인덱스</param>
-        /// <param name="difficulty">난이도 (1~3)</param>
-        /// <param name="speed">배속 (1.0f 이상)</param>
         public void StartMicrogame(int index, int difficulty, float speed)
         {
-            if (index < 0 || index >= microgamePrefabs.Length)
+            if (index < 0 || index >= microgamePrefabs.Count)
             {
-                Debug.LogError($"[MicrogameManager] 유효하지 않은 인덱스: {index} (배열 크기: {microgamePrefabs.Length})");
+                Debug.LogError($"[MicrogameManager] 유효하지 않은 인덱스: {index} (배열 크기: {microgamePrefabs.Count})");
                 return;
             }
             
@@ -241,16 +475,22 @@ namespace Pansori.Microgames
                 return;
             }
             
-            StartMicrogame(microgamePrefabs[index], difficulty, speed);
+            StartMicrogame(microgamePrefabs[index], index, difficulty, speed);
         }
-        
+
         /// <summary>
         /// 프리팹으로 미니게임을 시작합니다.
         /// </summary>
-        /// <param name="prefab">미니게임 프리팹</param>
-        /// <param name="difficulty">난이도 (1~3)</param>
-        /// <param name="speed">배속 (1.0f 이상)</param>
         public void StartMicrogame(GameObject prefab, int difficulty, float speed)
+        {
+            int index = microgamePrefabs.IndexOf(prefab);
+            StartMicrogame(prefab, index, difficulty, speed);
+        }
+        
+        /// <summary>
+        /// 미니게임을 시작합니다. (내부용)
+        /// </summary>
+        private void StartMicrogame(GameObject prefab, int index, int difficulty, float speed)
         {
             if (prefab == null)
             {
@@ -286,36 +526,52 @@ namespace Pansori.Microgames
                 return;
             }
             
+            // 통계 업데이트
+            lastPlayedIndex = index;
+            TotalPlayCount++;
+            
+            if (!playCountByIndex.ContainsKey(index))
+            {
+                playCountByIndex[index] = 0;
+            }
+            playCountByIndex[index]++;
+            
+            // 플레이 히스토리 추가
+            AddToPlayHistory(index);
+            
             // 결과 이벤트 구독
             currentMicrogame.OnResultReported = HandleMicrogameResult;
             
-            // 바로 게임 시작 (정보 표시는 PansoriSceneUI에서 이미 처리됨)
+            // 인스턴스 활성화
             currentMicrogameInstance.SetActive(true);
             
-            // 미니게임 BGM 재생 (프리팹 이름으로 매칭, 속도 반영)
+            // 미니게임 BGM 재생 (속도 반영)
             if (SoundManager.Instance != null)
             {
                 SoundManager.Instance.PlayMicrogameBGM(prefab.name, speed);
             }
             
             Debug.Log($"[MicrogameManager] 미니게임 시작: {prefab.name} (난이도: {difficulty}, 배속: {speed})");
+            
+            // 시작 이벤트 발생
+            OnMicrogameStarted?.Invoke(index, difficulty, speed);
+            
+            // 게임 시작 호출
             currentMicrogame.OnGameStart(difficulty, speed);
         }
         
         /// <summary>
         /// 랜덤 미니게임을 시작합니다.
         /// </summary>
-        /// <param name="difficulty">난이도 (1~3)</param>
-        /// <param name="speed">배속 (1.0f 이상)</param>
         public void StartRandomMicrogame(int difficulty, float speed)
         {
-            if (microgamePrefabs == null || microgamePrefabs.Length == 0)
+            if (microgamePrefabs == null || microgamePrefabs.Count == 0)
             {
                 Debug.LogError("[MicrogameManager] 미니게임 프리팹이 설정되지 않았습니다.");
                 return;
             }
             
-            int randomIndex = UnityEngine.Random.Range(0, microgamePrefabs.Length);
+            int randomIndex = GetRandomMicrogameIndex();
             StartMicrogame(randomIndex, difficulty, speed);
         }
         
@@ -324,10 +580,7 @@ namespace Pansori.Microgames
         /// </summary>
         public void EndCurrentMicrogame()
         {
-            if (currentMicrogameInstance == null)
-            {
-                return;
-            }
+            if (currentMicrogameInstance == null) return;
             
             // 결과 이벤트 구독 해제
             if (currentMicrogame != null)
@@ -343,7 +596,6 @@ namespace Pansori.Microgames
             
             // 인스턴스 비활성화 (풀로 반환)
             currentMicrogameInstance.SetActive(false);
-            // ResetGameState는 OnDisable에서 자동 호출됨
             
             currentMicrogameInstance = null;
             currentMicrogame = null;
@@ -354,10 +606,23 @@ namespace Pansori.Microgames
         /// <summary>
         /// 미니게임 결과를 처리합니다.
         /// </summary>
-        /// <param name="success">성공 여부</param>
         private void HandleMicrogameResult(bool success)
         {
             Debug.Log($"[MicrogameManager] 미니게임 결과: {(success ? "성공" : "실패")}");
+            
+            // 통계 업데이트
+            if (success)
+            {
+                TotalSuccessCount++;
+                if (lastPlayedIndex >= 0)
+                {
+                    if (!successCountByIndex.ContainsKey(lastPlayedIndex))
+                    {
+                        successCountByIndex[lastPlayedIndex] = 0;
+                    }
+                    successCountByIndex[lastPlayedIndex]++;
+                }
+            }
             
             // 결과 사운드 재생
             if (SoundManager.Instance != null)
@@ -386,11 +651,7 @@ namespace Pansori.Microgames
             consumedLives++;
             currentLives = maxLives - consumedLives;
             
-            // UI 업데이트
-            if (infoUI != null)
-            {
-                infoUI.UpdateLivesDisplay(maxLives, consumedLives);
-            }
+            OnLivesChanged?.Invoke(currentLives, maxLives);
             
             Debug.Log($"[MicrogameManager] 목숨 감소 - 남은 목숨: {currentLives}, 소모된 목숨: {consumedLives}");
             
@@ -413,15 +674,85 @@ namespace Pansori.Microgames
             consumedLives = 0;
             currentLives = maxLives;
             
-            // UI 업데이트
             if (infoUI != null)
             {
-                infoUI.UpdateLivesDisplay(maxLives, consumedLives);
                 infoUI.HideGameOver();
             }
             
+            OnLivesChanged?.Invoke(currentLives, maxLives);
+            
             Debug.Log($"[MicrogameManager] 목숨 초기화 - 목숨: {currentLives}");
         }
+
+        /// <summary>
+        /// 모든 통계를 초기화합니다.
+        /// </summary>
+        public void ResetStatistics()
+        {
+            TotalPlayCount = 0;
+            TotalSuccessCount = 0;
+            playCountByIndex.Clear();
+            successCountByIndex.Clear();
+            lastPlayedIndex = -1;
+            shuffledIndices.Clear();
+            recentPlayedHistory.Clear();
+            
+            Debug.Log("[MicrogameManager] 통계 초기화");
+        }
+
+        /// <summary>
+        /// 특정 게임의 플레이 횟수를 가져옵니다.
+        /// </summary>
+        public int GetPlayCount(int index)
+        {
+            return playCountByIndex.TryGetValue(index, out int count) ? count : 0;
+        }
+
+        /// <summary>
+        /// 특정 게임의 성공 횟수를 가져옵니다.
+        /// </summary>
+        public int GetSuccessCount(int index)
+        {
+            return successCountByIndex.TryGetValue(index, out int count) ? count : 0;
+        }
+
+        /// <summary>
+        /// 특정 게임의 성공률을 가져옵니다.
+        /// </summary>
+        public float GetSuccessRate(int index)
+        {
+            int playCount = GetPlayCount(index);
+            if (playCount == 0) return 0f;
+            return (float)GetSuccessCount(index) / playCount;
+        }
+
+        #endregion
+
+        #region Debug Methods
+
+        /// <summary>
+        /// 디버그용: 현재 게임을 강제로 성공 처리합니다.
+        /// </summary>
+        public void DebugForceSuccess()
+        {
+            if (currentMicrogame != null)
+            {
+                HandleMicrogameResult(true);
+            }
+        }
+
+        /// <summary>
+        /// 디버그용: 현재 게임을 강제로 실패 처리합니다.
+        /// </summary>
+        public void DebugForceFailure()
+        {
+            if (currentMicrogame != null)
+            {
+                HandleMicrogameResult(false);
+            }
+        }
+
+        #endregion
         
         /// <summary>
         /// 컴포넌트가 파괴될 때 정리 작업
@@ -429,21 +760,8 @@ namespace Pansori.Microgames
         private void OnDestroy()
         {
             EndCurrentMicrogame();
+            ClearPool();
             
-            // 풀의 모든 인스턴스 정리
-            if (microgameInstances != null)
-            {
-                foreach (var kvp in microgameInstances)
-                {
-                    if (kvp.Value != null)
-                    {
-                        Destroy(kvp.Value);
-                    }
-                }
-                microgameInstances.Clear();
-            }
-            
-            // 풀 부모 오브젝트 정리
             if (poolParent != null)
             {
                 Destroy(poolParent.gameObject);

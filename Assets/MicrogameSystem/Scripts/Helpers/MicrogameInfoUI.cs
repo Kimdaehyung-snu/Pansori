@@ -2,13 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace Pansori.Microgames
 {
     /// <summary>
     /// 미니게임 시작 전 정보 표시 UI 컴포넌트
     /// 게임 이름, 목숨, 스테이지 정보를 표시합니다.
+    /// 목숨 스프라이트 표시는 PansoriSceneUI에서 담당합니다.
     /// </summary>
     public class MicrogameInfoUI : MonoBehaviour
     {
@@ -17,13 +17,6 @@ namespace Pansori.Microgames
         [SerializeField] private TMP_Text livesText;
         [SerializeField] private TMP_Text stageText;
         [SerializeField] private TMP_Text gameOverText; // 게임오버 텍스트
-        
-        [Header("목숨 스프라이트 설정")]
-        [SerializeField] private Sprite lifeSprite; // 목숨 스프라이트
-        [SerializeField] private Sprite consumedLifeSprite; // 소모된 목숨 스프라이트 (선택사항)
-        [SerializeField] private Transform livesContainer; // 목숨 스프라이트를 배치할 부모 Transform
-        [SerializeField] private float lifeSpriteSpacing = 10f; // 스프라이트 간 간격
-        [SerializeField] private Vector2 lifeSpriteSize = new Vector2(50, 50); // 스프라이트 크기
         
         [Header("UI 설정")]
         [SerializeField] private int sortOrder = 200; // Canvas 정렬 순서 (다른 UI 위에 표시)
@@ -34,11 +27,6 @@ namespace Pansori.Microgames
         private Canvas canvas;
         
         /// <summary>
-        /// 생성된 목숨 스프라이트 리스트
-        /// </summary>
-        private List<GameObject> lifeSpriteObjects = new List<GameObject>();
-        
-        /// <summary>
         /// 자동 숨김 코루틴 참조
         /// </summary>
         private Coroutine autoHideCoroutine;
@@ -46,28 +34,6 @@ namespace Pansori.Microgames
         private void Awake()
         {
             SetupCanvas();
-            SetupLivesContainer();
-        }
-        
-        /// <summary>
-        /// 목숨 컨테이너를 설정합니다.
-        /// </summary>
-        private void SetupLivesContainer()
-        {
-            // 컨테이너가 없으면 자동 생성
-            if (livesContainer == null)
-            {
-                GameObject containerObj = new GameObject("LivesContainer");
-                containerObj.transform.SetParent(transform, false);
-                livesContainer = containerObj.transform;
-                
-                RectTransform rectTransform = containerObj.AddComponent<RectTransform>();
-                rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                rectTransform.pivot = new Vector2(0.5f, 1f);
-                rectTransform.anchoredPosition = new Vector2(0, -50);
-                rectTransform.sizeDelta = new Vector2(500, 100);
-            }
         }
         
         /// <summary>
@@ -151,7 +117,7 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
-        /// 게임 정보를 표시합니다. (목숨 스프라이트 포함)
+        /// 게임 정보를 표시합니다.
         /// </summary>
         /// <param name="gameName">게임 이름</param>
         /// <param name="totalLives">총 목숨</param>
@@ -161,7 +127,6 @@ namespace Pansori.Microgames
         public void ShowInfoWithLives(string gameName, int totalLives, int consumedLives, int stage, float autoHideDuration = 0f)
         {
             ShowInfo(gameName, totalLives - consumedLives, stage);
-            UpdateLivesDisplay(totalLives, consumedLives);
             
             // 자동 숨김 설정
             if (autoHideDuration > 0f)
@@ -216,113 +181,6 @@ namespace Pansori.Microgames
             HideGameOver();
             
             Debug.Log("[MicrogameInfoUI] 정보 숨김");
-        }
-        
-        /// <summary>
-        /// 목숨 스프라이트 표시를 업데이트합니다.
-        /// </summary>
-        /// <param name="totalLives">총 목숨 개수</param>
-        /// <param name="consumedLives">소모된 목숨 개수</param>
-        public void UpdateLivesDisplay(int totalLives, int consumedLives)
-        {
-            // 기존 스프라이트 정리
-            ClearLifeSprites();
-            
-            if (lifeSprite == null || livesContainer == null)
-            {
-                Debug.LogWarning("[MicrogameInfoUI] 목숨 스프라이트 또는 컨테이너가 설정되지 않았습니다.");
-                return;
-            }
-            
-            // 총 목숨만큼 스프라이트 생성
-            for (int i = 0; i < totalLives; i++)
-            {
-                GameObject spriteObj = CreateLifeSprite(i, totalLives);
-                
-                // 우측에서부터 consumedLives개는 소모된 상태로 표시
-                bool isConsumed = i >= (totalLives - consumedLives);
-                SetLifeSpriteState(spriteObj, isConsumed);
-                
-                lifeSpriteObjects.Add(spriteObj);
-            }
-            
-            Debug.Log($"[MicrogameInfoUI] 목숨 표시 업데이트 - 총: {totalLives}, 소모: {consumedLives}");
-        }
-        
-        /// <summary>
-        /// 목숨 스프라이트를 생성합니다.
-        /// </summary>
-        /// <param name="index">인덱스 (0부터 시작)</param>
-        /// <param name="totalLives">총 목숨 개수</param>
-        /// <returns>생성된 스프라이트 오브젝트</returns>
-        private GameObject CreateLifeSprite(int index, int totalLives)
-        {
-            GameObject spriteObj = new GameObject($"Life_{index}");
-            spriteObj.transform.SetParent(livesContainer, false);
-            
-            Image image = spriteObj.AddComponent<Image>();
-            image.sprite = lifeSprite;
-            
-            RectTransform rectTransform = spriteObj.GetComponent<RectTransform>();
-            rectTransform.sizeDelta = lifeSpriteSize;
-            
-            // 좌측부터 나열 (우측 정렬)
-            float startX = -(totalLives - 1) * (lifeSpriteSize.x + lifeSpriteSpacing) / 2f;
-            float xPos = startX + index * (lifeSpriteSize.x + lifeSpriteSpacing);
-            rectTransform.anchoredPosition = new Vector2(xPos, 0);
-            
-            return spriteObj;
-        }
-        
-        /// <summary>
-        /// 목숨 스프라이트의 상태를 설정합니다.
-        /// </summary>
-        /// <param name="spriteObj">스프라이트 오브젝트</param>
-        /// <param name="isConsumed">소모되었는지 여부</param>
-        private void SetLifeSpriteState(GameObject spriteObj, bool isConsumed)
-        {
-            Image image = spriteObj.GetComponent<Image>();
-            if (image == null)
-                return;
-            
-            if (isConsumed)
-            {
-                // 소모된 목숨 처리
-                if (consumedLifeSprite != null)
-                {
-                    image.sprite = consumedLifeSprite;
-                }
-                else
-                {
-                    // 스프라이트가 없으면 반투명 처리
-                    Color color = image.color;
-                    color.a = 0.3f;
-                    image.color = color;
-                }
-            }
-            else
-            {
-                // 정상 목숨
-                image.sprite = lifeSprite;
-                Color color = image.color;
-                color.a = 1.0f;
-                image.color = color;
-            }
-        }
-        
-        /// <summary>
-        /// 기존 목숨 스프라이트를 모두 제거합니다.
-        /// </summary>
-        private void ClearLifeSprites()
-        {
-            foreach (GameObject spriteObj in lifeSpriteObjects)
-            {
-                if (spriteObj != null)
-                {
-                    Destroy(spriteObj);
-                }
-            }
-            lifeSpriteObjects.Clear();
         }
         
         /// <summary>

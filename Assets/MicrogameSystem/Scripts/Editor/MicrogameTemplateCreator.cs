@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.IO;
 using Pansori.Microgames;
@@ -6,295 +6,388 @@ using Pansori.Microgames;
 namespace Pansori.Microgames.Editor
 {
     /// <summary>
-    /// 미니게임 템플릿 생성 마법사
-    /// 새 미니게임을 쉽게 생성할 수 있도록 도와줍니다.
+    /// 마이크로게임 템플릿 생성 도구
+    /// 새 마이크로게임 폴더, 스크립트 템플릿, 프리팹을 자동으로 생성합니다.
     /// </summary>
     public class MicrogameTemplateCreator : EditorWindow
     {
         private string gameName = "MG_NewGame_01";
         private string gameDescription = "새 미니게임";
+        private string gameCommand = "행동해라!";
+        
+        private bool createScripts = true;
+        private bool createPrefab = true;
+        private bool createFolders = true;
+        private bool addHelperComponents = true;
+        private bool addTimerComponent = true;
+        private bool addInputHandler = true;
+        
         private Vector2 scrollPosition;
         
-        [MenuItem("Tools/Microgames/Create New Microgame")]
+        [MenuItem("Tools/Microgames/Create New Microgame", false, 30)]
         public static void ShowWindow()
         {
-            GetWindow<MicrogameTemplateCreator>("Create Microgame");
+            var window = GetWindow<MicrogameTemplateCreator>("Create Microgame");
+            window.minSize = new Vector2(400, 450);
         }
         
         private void OnGUI()
         {
-            GUILayout.Label("미니게임 생성 마법사", EditorStyles.boldLabel);
-            EditorGUILayout.Space();
-            
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             
-            // 미니게임 이름 입력
-            EditorGUILayout.LabelField("미니게임 이름:", EditorStyles.boldLabel);
-            gameName = EditorGUILayout.TextField("이름 (예: MG_Jump_01)", gameName);
-            EditorGUILayout.HelpBox("이름은 MG_로 시작하는 것을 권장합니다.", MessageType.Info);
+            GUILayout.Label("새 마이크로게임 생성", EditorStyles.boldLabel);
+            
+            EditorGUILayout.HelpBox(
+                "새 마이크로게임을 위한 폴더 구조, 스크립트, 프리팹을 자동으로 생성합니다.\n" +
+                "MicrogameBase를 상속한 매니저 스크립트가 포함됩니다.",
+                MessageType.Info);
             
             EditorGUILayout.Space();
             
-            // 설명 입력
-            EditorGUILayout.LabelField("설명 (선택사항):", EditorStyles.boldLabel);
-            gameDescription = EditorGUILayout.TextArea(gameDescription, GUILayout.Height(60));
+            // 기본 정보
+            EditorGUILayout.LabelField("기본 정보", EditorStyles.boldLabel);
+            gameName = EditorGUILayout.TextField("게임 이름 (영문)", gameName);
+            gameDescription = EditorGUILayout.TextField("게임 설명 (한글)", gameDescription);
+            gameCommand = EditorGUILayout.TextField("게임 명령어", gameCommand);
+            
+            if (!IsValidName(gameName))
+            {
+                EditorGUILayout.HelpBox("게임 이름은 영문, 숫자, 언더스코어(_)만 사용 가능합니다.", MessageType.Warning);
+            }
             
             EditorGUILayout.Space();
             
-            // 생성할 항목 체크박스
-            EditorGUILayout.LabelField("생성할 항목:", EditorStyles.boldLabel);
-            bool createScripts = EditorGUILayout.Toggle("스크립트 파일", true);
-            bool createPrefab = EditorGUILayout.Toggle("프리팹", true);
-            bool createFolders = EditorGUILayout.Toggle("폴더 구조 (Scripts, Prefabs, Arts, Audios)", true);
+            // 생성 옵션
+            EditorGUILayout.LabelField("생성 옵션", EditorStyles.boldLabel);
+            createFolders = EditorGUILayout.Toggle("폴더 구조 생성", createFolders);
+            createScripts = EditorGUILayout.Toggle("스크립트 생성", createScripts);
+            createPrefab = EditorGUILayout.Toggle("프리팹 생성", createPrefab);
             
             EditorGUILayout.Space();
             
-            // 경로 표시
-            string targetPath = Path.Combine("Assets", "MicrogameSystem", "Games", gameName);
-            EditorGUILayout.LabelField("생성 경로:", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField(targetPath, EditorStyles.wordWrappedLabel);
+            // 헬퍼 컴포넌트 옵션
+            EditorGUILayout.LabelField("헬퍼 컴포넌트", EditorStyles.boldLabel);
+            EditorGUI.BeginDisabledGroup(!createPrefab);
+            addHelperComponents = EditorGUILayout.Toggle("기본 헬퍼 추가", addHelperComponents);
             
-            EditorGUILayout.EndScrollView();
+            EditorGUI.BeginDisabledGroup(!addHelperComponents);
+            addTimerComponent = EditorGUILayout.Toggle("  타이머 컴포넌트", addTimerComponent);
+            addInputHandler = EditorGUILayout.Toggle("  입력 핸들러", addInputHandler);
+            EditorGUI.EndDisabledGroup();
+            EditorGUI.EndDisabledGroup();
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            
+            // 미리보기
+            EditorGUILayout.LabelField("생성될 파일 미리보기", EditorStyles.boldLabel);
+            EditorGUI.BeginDisabledGroup(true);
+            
+            string basePath = "Assets/MicrogameSystem/Games/" + gameName;
+            
+            if (createFolders)
+            {
+                EditorGUILayout.TextField("폴더", basePath);
+                EditorGUILayout.TextField("스크립트 폴더", basePath + "/Scripts");
+                EditorGUILayout.TextField("프리팹 폴더", basePath + "/Prefabs");
+                EditorGUILayout.TextField("아트 폴더", basePath + "/Art");
+            }
+            
+            if (createScripts)
+            {
+                EditorGUILayout.TextField("매니저 스크립트", basePath + "/Scripts/" + gameName + "Manager.cs");
+            }
+            
+            if (createPrefab)
+            {
+                EditorGUILayout.TextField("프리팹", basePath + "/Prefabs/" + gameName + ".prefab");
+            }
+            
+            EditorGUI.EndDisabledGroup();
             
             EditorGUILayout.Space();
             
             // 생성 버튼
-            if (GUILayout.Button("미니게임 생성", GUILayout.Height(40)))
+            EditorGUI.BeginDisabledGroup(!IsValidName(gameName));
+            GUI.backgroundColor = new Color(0.4f, 0.8f, 0.4f);
+            if (GUILayout.Button("마이크로게임 생성", GUILayout.Height(40)))
             {
-                if (string.IsNullOrEmpty(gameName))
-                {
-                    EditorUtility.DisplayDialog("오류", "미니게임 이름을 입력해주세요.", "확인");
-                    return;
-                }
-                
-                CreateMicrogame(gameName, gameDescription, createScripts, createPrefab, createFolders);
+                CreateMicrogame();
             }
+            GUI.backgroundColor = Color.white;
+            EditorGUI.EndDisabledGroup();
+            
+            EditorGUILayout.EndScrollView();
         }
         
-        /// <summary>
-        /// 미니게임 생성
-        /// </summary>
-        private void CreateMicrogame(string name, string description, bool createScripts, bool createPrefab, bool createFolders)
+        private bool IsValidName(string name)
         {
-            string basePath = Path.Combine("Assets", "MicrogameSystem", "Games", name);
+            if (string.IsNullOrEmpty(name)) return false;
+            
+            foreach (char c in name)
+            {
+                if (!char.IsLetterOrDigit(c) && c != '_') return false;
+            }
+            
+            return true;
+        }
+        
+        private void CreateMicrogame()
+        {
+            string basePath = "Assets/MicrogameSystem/Games/" + gameName;
             
             try
             {
-                // 폴더 구조 생성
+                // 1. 폴더 생성
                 if (createFolders)
                 {
                     CreateFolderStructure(basePath);
                 }
                 
-                // 스크립트 생성
+                // 2. 스크립트 생성
                 if (createScripts)
                 {
-                    CreateScripts(basePath, name, description);
-                }
-                
-                // 프리팹 생성
-                if (createPrefab)
-                {
-                    CreatePrefab(basePath, name);
+                    CreateManagerScript(basePath);
                 }
                 
                 AssetDatabase.Refresh();
                 
-                EditorUtility.DisplayDialog("완료", 
-                    $"미니게임 '{name}'이(가) 성공적으로 생성되었습니다!\n\n경로: {basePath}", 
-                    "확인");
-                
-                // 생성된 폴더 선택
-                Object folder = AssetDatabase.LoadAssetAtPath<Object>(basePath);
-                if (folder != null)
+                // 3. 프리팹 생성 (스크립트 컴파일 후)
+                if (createPrefab)
                 {
-                    Selection.activeObject = folder;
-                    EditorGUIUtility.PingObject(folder);
+                    // 스크립트가 컴파일될 때까지 기다려야 할 수 있음
+                    EditorApplication.delayCall += () =>
+                    {
+                        CreatePrefabAsset(basePath);
+                        
+                        EditorUtility.DisplayDialog("완료",
+                            "마이크로게임이 생성되었습니다!\n\n" +
+                            "위치: " + basePath + "\n\n" +
+                            "다음 단계:\n" +
+                            "1. " + gameName + "Manager.cs 스크립트 편집\n" +
+                            "2. 프리팹에 게임 요소 추가\n" +
+                            "3. Tools > Microgames > Scan Prefabs로 등록",
+                            "확인");
+                    };
                 }
+                else
+                {
+                    EditorUtility.DisplayDialog("완료",
+                        "마이크로게임 템플릿이 생성되었습니다!\n\n" +
+                        "위치: " + basePath,
+                        "확인");
+                }
+                
             }
             catch (System.Exception e)
             {
-                EditorUtility.DisplayDialog("오류", 
-                    $"미니게임 생성 중 오류가 발생했습니다:\n\n{e.Message}", 
-                    "확인");
-                Debug.LogError($"[MicrogameTemplateCreator] 오류: {e}");
+                EditorUtility.DisplayDialog("오류", "생성 중 오류가 발생했습니다:\n" + e.Message, "확인");
+                Debug.LogError("[MicrogameTemplateCreator] 오류: " + e);
             }
         }
         
-        /// <summary>
-        /// 폴더 구조 생성
-        /// </summary>
         private void CreateFolderStructure(string basePath)
         {
-            string[] folders = { "Scripts", "Prefabs", "Arts", "Audios" };
-            
-            foreach (string folder in folders)
+            // 기본 폴더가 없으면 생성
+            if (!Directory.Exists("Assets/MicrogameSystem/Games"))
             {
-                string folderPath = Path.Combine(basePath, folder);
-                if (!Directory.Exists(folderPath))
-                {
-                    Directory.CreateDirectory(folderPath);
-                    AssetDatabase.ImportAsset(folderPath);
-                }
+                Directory.CreateDirectory("Assets/MicrogameSystem/Games");
             }
+            
+            // 게임별 폴더 생성
+            if (!Directory.Exists(basePath))
+            {
+                Directory.CreateDirectory(basePath);
+            }
+            
+            Directory.CreateDirectory(basePath + "/Scripts");
+            Directory.CreateDirectory(basePath + "/Prefabs");
+            Directory.CreateDirectory(basePath + "/Art");
+            
+            Debug.Log("[MicrogameTemplateCreator] 폴더 구조 생성 완료: " + basePath);
         }
         
-        /// <summary>
-        /// 스크립트 생성
-        /// </summary>
-        private void CreateScripts(string basePath, string name, string description)
+        private void CreateManagerScript(string basePath)
         {
-            string scriptsPath = Path.Combine(basePath, "Scripts");
+            string scriptPath = basePath + "/Scripts/" + gameName + "Manager.cs";
             
-            // 매니저 스크립트 생성
-            string managerScript = GenerateManagerScript(name, description);
-            string managerPath = Path.Combine(scriptsPath, $"{name}_Manager.cs");
-            File.WriteAllText(managerPath, managerScript);
+            string scriptContent = GenerateManagerScript();
             
-            AssetDatabase.ImportAsset(managerPath);
+            File.WriteAllText(scriptPath, scriptContent);
+            
+            Debug.Log("[MicrogameTemplateCreator] 매니저 스크립트 생성: " + scriptPath);
         }
         
-        /// <summary>
-        /// 매니저 스크립트 생성
-        /// </summary>
-        private string GenerateManagerScript(string name, string description)
+        private string GenerateManagerScript()
         {
-            return $@"using UnityEngine;
+            string template = @"using System;
+using UnityEngine;
 using Pansori.Microgames;
 
-namespace Pansori.Microgames.Games
-{{
+/// <summary>
+/// {DESCRIPTION}
+/// 명령어: {COMMAND}
+/// </summary>
+public class {NAME}Manager : MicrogameBase
+{
+    [Header(""{DESCRIPTION} 설정"")]
+    [SerializeField] private float gameDuration = 5f;
+    
+    // 게임 고유 변수들
+    private float timer;
+    private bool hasSucceeded = false;
+    
     /// <summary>
-    /// {description}
-    /// 
-    /// TODO: 게임 설명을 여기에 작성하세요.
+    /// 이 게임의 표시 이름
     /// </summary>
-    public class {name}_Manager : MicrogameBase
-    {{
-        [Header(""게임 오브젝트"")]
-        // TODO: 게임 오브젝트 참조를 추가하세요
+    public override string currentGameName => ""{COMMAND}"";
+    
+    /// <summary>
+    /// 게임 시작 시 호출
+    /// </summary>
+    public override void OnGameStart(int difficulty, float speed)
+    {
+        base.OnGameStart(difficulty, speed);
         
-        [Header(""게임 설정"")]
-        // TODO: 게임 설정 변수를 추가하세요
+        // 게임 상태 초기화
+        timer = gameDuration / speed;
+        hasSucceeded = false;
         
-        [Header(""헬퍼 컴포넌트"")]
-        [SerializeField] private MicrogameTimer timer;
-        [SerializeField] private MicrogameInputHandler inputHandler;
-        [SerializeField] private MicrogameUILayer uiLayer;
+        // TODO: 게임 초기화 로직 추가
+        Debug.Log($""[{NAME}] 게임 시작 - 난이도: {difficulty}, 속도: {speed}"");
+    }
+    
+    private void Update()
+    {
+        if (isGameEnded) return;
         
-        protected override void Awake()
-        {{
-            base.Awake();
-            
-            // TODO: 초기화 로직을 추가하세요
-        }}
+        // 타이머 업데이트
+        timer -= Time.deltaTime;
         
-        public override void OnGameStart(int difficulty, float speed)
-        {{
-            base.OnGameStart(difficulty, speed);
-            
-            // TODO: 게임 시작 로직을 추가하세요
-            
-            // 타이머 시작 예시
-            if (timer != null)
-            {{
-                timer.StartTimer(5f, speed);
-                timer.OnTimerEnd += OnTimeUp;
-            }}
-            
-            // 입력 핸들러 이벤트 구독 예시
-            if (inputHandler != null)
-            {{
-                inputHandler.OnKeyPressed += HandleKeyPress;
-            }}
-        }}
-        
-        private void HandleKeyPress(KeyCode key)
-        {{
-            // TODO: 키 입력 처리 로직을 추가하세요
-        }}
-        
-        private void OnTimeUp()
-        {{
-            // TODO: 시간 초과 처리 로직을 추가하세요
-            ReportResult(false); // 또는 true
-        }}
-        
-        private void OnSuccess()
-        {{
-            ReportResult(true);
-        }}
-        
-        private void OnFailure()
-        {{
-            ReportResult(false);
-        }}
-        
-        protected override void ResetGameState()
-        {{
-            // TODO: 모든 오브젝트를 초기 상태로 리셋하는 로직을 추가하세요
-            
-            // 타이머 중지
-            if (timer != null)
-            {{
-                timer.Stop();
-                timer.OnTimerEnd -= OnTimeUp;
-            }}
-            
-            // 입력 핸들러 이벤트 구독 해제
-            if (inputHandler != null)
-            {{
-                inputHandler.OnKeyPressed -= HandleKeyPress;
-            }}
-        }}
-    }}
-}}
-";
+        // 시간 초과 시 실패
+        if (timer <= 0)
+        {
+            OnTimeOut();
+            return;
         }
         
-        /// <summary>
-        /// 프리팹 생성
-        /// </summary>
-        private void CreatePrefab(string basePath, string name)
+        // TODO: 게임 로직 추가
+        // 예시: 승리 조건 확인
+        // if (승리조건)
+        // {
+        //     OnSuccess();
+        // }
+    }
+    
+    /// <summary>
+    /// 성공 처리
+    /// </summary>
+    private void OnSuccess()
+    {
+        if (isGameEnded) return;
+        
+        hasSucceeded = true;
+        Debug.Log(""[{NAME}] 성공!"");
+        
+        // 결과 애니메이션과 함께 보고
+        ReportResultWithAnimation(true);
+    }
+    
+    /// <summary>
+    /// 실패 처리 (시간 초과)
+    /// </summary>
+    private void OnTimeOut()
+    {
+        if (isGameEnded) return;
+        
+        Debug.Log(""[{NAME}] 시간 초과!"");
+        
+        // 결과 애니메이션과 함께 보고
+        ReportResultWithAnimation(false);
+    }
+    
+    /// <summary>
+    /// 게임 상태 초기화 (재사용을 위해 필수 구현)
+    /// </summary>
+    protected override void ResetGameState()
+    {
+        timer = gameDuration;
+        hasSucceeded = false;
+        
+        // TODO: 게임 요소들 초기 상태로 복원
+    }
+    
+    /// <summary>
+    /// 게임 종료 시 호출
+    /// </summary>
+    protected override void OnGameEnd()
+    {
+        base.OnGameEnd();
+        
+        // TODO: 게임 종료 시 정리 작업
+    }
+}
+";
+            // 플레이스홀더 치환
+            template = template.Replace("{NAME}", gameName);
+            template = template.Replace("{DESCRIPTION}", gameDescription);
+            template = template.Replace("{COMMAND}", gameCommand);
+            
+            return template;
+        }
+        
+        private void CreatePrefabAsset(string basePath)
         {
-            string prefabsPath = Path.Combine(basePath, "Prefabs");
+            string prefabPath = basePath + "/Prefabs/" + gameName + ".prefab";
             
-            // 빈 게임 오브젝트 생성
-            GameObject prefabObject = new GameObject(name);
+            // 게임 오브젝트 생성
+            GameObject gameObject = new GameObject(gameName);
             
-            // 매니저 스크립트 추가
-            string managerScriptName = $"{name}_Manager";
-            System.Type managerType = System.Type.GetType($"Pansori.Microgames.Games.{managerScriptName}, Assembly-CSharp");
+            // 매니저 스크립트 추가 시도
+            string managerTypeName = gameName + "Manager";
+            System.Type managerType = null;
+            
+            // 모든 어셈블리에서 타입 검색
+            foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+            {
+                managerType = assembly.GetType(managerTypeName);
+                if (managerType != null) break;
+            }
+            
             if (managerType != null)
             {
-                prefabObject.AddComponent(managerType);
+                gameObject.AddComponent(managerType);
             }
             else
             {
-                Debug.LogWarning($"[MicrogameTemplateCreator] {managerScriptName} 스크립트를 찾을 수 없습니다. 프리팹에 수동으로 추가해주세요.");
+                Debug.LogWarning("[MicrogameTemplateCreator] 매니저 스크립트를 찾을 수 없습니다. 수동으로 추가해주세요: " + managerTypeName);
             }
             
-            // 헬퍼 컴포넌트 추가 (선택사항)
-            GameObject timerObj = new GameObject("Timer");
-            timerObj.transform.SetParent(prefabObject.transform);
-            timerObj.AddComponent<MicrogameTimer>();
-            
-            GameObject inputObj = new GameObject("InputHandler");
-            inputObj.transform.SetParent(prefabObject.transform);
-            inputObj.AddComponent<MicrogameInputHandler>();
-            
-            GameObject uiObj = new GameObject("UILayer");
-            uiObj.transform.SetParent(prefabObject.transform);
-            uiObj.AddComponent<MicrogameUILayer>();
+            // 헬퍼 컴포넌트 추가
+            if (addHelperComponents)
+            {
+                if (addTimerComponent)
+                {
+                    gameObject.AddComponent<MicrogameTimer>();
+                }
+                
+                if (addInputHandler)
+                {
+                    gameObject.AddComponent<MicrogameInputHandler>();
+                }
+            }
             
             // 프리팹으로 저장
-            string prefabPath = Path.Combine(prefabsPath, $"{name}.prefab");
-            PrefabUtility.SaveAsPrefabAsset(prefabObject, prefabPath);
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(gameObject, prefabPath);
             
             // 임시 오브젝트 삭제
-            DestroyImmediate(prefabObject);
+            DestroyImmediate(gameObject);
             
-            AssetDatabase.ImportAsset(prefabPath);
+            // 생성된 프리팹 선택
+            Selection.activeObject = prefab;
+            EditorGUIUtility.PingObject(prefab);
+            
+            Debug.Log("[MicrogameTemplateCreator] 프리팹 생성 완료: " + prefabPath);
         }
     }
 }
