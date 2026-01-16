@@ -322,6 +322,12 @@ namespace Pansori.Microgames
             {
                 currentMicrogameInstance.SetActive(true);
                 
+                // 미니게임 BGM 재생 (프리팹 이름으로 매칭, 속도 반영)
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.PlayMicrogameBGM(prefab.name, speed);
+                }
+                
                 Debug.Log($"[MicrogameManager] 미니게임 시작: {prefab.name} (난이도: {difficulty}, 배속: {speed})");
                 currentMicrogame.OnGameStart(difficulty, speed);
             }
@@ -360,6 +366,12 @@ namespace Pansori.Microgames
                 currentMicrogame.OnResultReported = null;
             }
             
+            // 미니게임 BGM 정지
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.StopMicrogameBGM();
+            }
+            
             // 인스턴스 비활성화 (풀로 반환)
             currentMicrogameInstance.SetActive(false);
             // ResetGameState는 OnDisable에서 자동 호출됨
@@ -377,6 +389,12 @@ namespace Pansori.Microgames
         private void HandleMicrogameResult(bool success)
         {
             Debug.Log($"[MicrogameManager] 미니게임 결과: {(success ? "성공" : "실패")}");
+            
+            // 결과 사운드 재생
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayMicrogameResultSound(success);
+            }
             
             // 외부 이벤트 호출
             OnMicrogameResult?.Invoke(success);

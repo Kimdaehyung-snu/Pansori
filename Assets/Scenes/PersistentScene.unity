@@ -1067,6 +1067,7 @@ GameObject:
   - component: {fileID: 662487963}
   - component: {fileID: 662487962}
   - component: {fileID: 662487961}
+  - component: {fileID: 662487965}
   m_Layer: 5
   m_Name: MicroGameUI
   m_TagString: Untagged
@@ -1157,6 +1158,28 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &662487965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662487960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f681966b12fa2f740b128ea81823515d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameInfoUI
+  gameNameText: {fileID: 0}
+  livesText: {fileID: 0}
+  stageText: {fileID: 0}
+  gameOverText: {fileID: 0}
+  lifeSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  consumedLifeSprite: {fileID: 0}
+  livesContainer: {fileID: 148906300}
+  lifeSpriteSpacing: 10
+  lifeSpriteSize: {x: 50, y: 50}
+  sortOrder: 200
 --- !u!1 &740838050 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 499855927985680251, guid: 86394cd144bb72e459440b5045515466, type: 3}
@@ -1256,7 +1279,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 98132d48c11386f45b53af5c64315fa0, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameUILayer
+  m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.MicrogameUILayer
 --- !u!114 &765007280 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4045709295464944868, guid: 86394cd144bb72e459440b5045515466, type: 3}
@@ -1267,7 +1290,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6857de9c52fb7ee4093e8da578d606be, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameInputHandler
+  m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.MicrogameInputHandler
 --- !u!114 &765007281 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4212960341795776174, guid: 86394cd144bb72e459440b5045515466, type: 3}
@@ -1278,7 +1301,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b0ded04db28d0234b960aaf66eea064e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameTimer
+  m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.MicrogameTimer
 --- !u!4 &765007282 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6417557573039866988, guid: 86394cd144bb72e459440b5045515466, type: 3}
@@ -2854,7 +2877,7 @@ MonoBehaviour:
   currentLives: 4
   currentStage: 1
   infoDisplayDuration: 2
-  infoUI: {fileID: 1780083647}
+  infoUI: {fileID: 662487965}
 --- !u!4 &1780083646
 Transform:
   m_ObjectHideFlags: 0
@@ -2879,19 +2902,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 1780083644}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f681966b12fa2f740b128ea81823515d, type: 3}
+  m_Script: {fileID: 11500000, guid: 792466e28eaa96d4195b16a15175f754, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameInfoUI
-  gameNameText: {fileID: 0}
-  livesText: {fileID: 0}
-  stageText: {fileID: 0}
-  gameOverText: {fileID: 0}
-  lifeSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  consumedLifeSprite: {fileID: 0}
-  livesContainer: {fileID: 148906300}
-  lifeSpriteSpacing: 10
-  lifeSpriteSize: {x: 50, y: 50}
-  sortOrder: 200
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  mixer: {fileID: 24100000, guid: d7704af070e910c4cbe092151688f4b3, type: 2}
+  bgList: []
+  microgameBgList: []
+  microgameSuccessClip: {fileID: 0}
+  microgameFailClip: {fileID: 0}
 --- !u!1 &1807685297
 GameObject:
   m_ObjectHideFlags: 0
