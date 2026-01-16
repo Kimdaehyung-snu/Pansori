@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -9,6 +10,7 @@ namespace Pansori.Microgames
     /// <summary>
     /// 판소리 씬 UI 및 연출 관리
     /// 마이크로게임 사이에 표시되는 판소리 무대를 관리합니다.
+    /// 게임 정보(목숨, 스테이지)도 함께 표시합니다.
     /// </summary>
     public class PansoriSceneUI : MonoBehaviour
     {
@@ -17,6 +19,17 @@ namespace Pansori.Microgames
         [SerializeField] private Image backgroundImage; // 배경 이미지
         [SerializeField] private TMP_Text commandText; // "XX해라!" 명령 텍스트
         [SerializeField] private TMP_Text reactionText; // 환호/야유 반응 텍스트
+        
+        [Header("게임 정보 UI")]
+        [SerializeField] private TMP_Text livesText; // 목숨 텍스트
+        [SerializeField] private TMP_Text stageText; // 스테이지 텍스트
+        [SerializeField] private Transform livesContainer; // 목숨 스프라이트 컨테이너
+        
+        [Header("목숨 스프라이트 설정")]
+        [SerializeField] private Sprite lifeSprite; // 목숨 스프라이트
+        [SerializeField] private Sprite consumedLifeSprite; // 소모된 목숨 스프라이트 (선택사항)
+        [SerializeField] private float lifeSpriteSpacing = 10f; // 스프라이트 간 간격
+        [SerializeField] private Vector2 lifeSpriteSize = new Vector2(50, 50); // 스프라이트 크기
         
         [Header("캐릭터 (플레이스홀더)")]
         [SerializeField] private GameObject performerObject; // 소리꾼 오브젝트
@@ -40,9 +53,15 @@ namespace Pansori.Microgames
         private Coroutine currentCoroutine;
         private Canvas canvas;
         
+        /// <summary>
+        /// 생성된 목숨 스프라이트 리스트
+        /// </summary>
+        private List<GameObject> lifeSpriteObjects = new List<GameObject>();
+        
         private void Awake()
         {
             SetupCanvas();
+            SetupLivesContainer();
             HideAll();
         }
         
@@ -57,7 +76,7 @@ namespace Pansori.Microgames
                 canvas = gameObject.AddComponent<Canvas>();
             }
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 50; // MicrogameInfoUI(200) 보다 낮게 설정
+            canvas.sortingOrder = 50;
             
             // CanvasScaler 설정
             CanvasScaler scaler = GetComponent<CanvasScaler>();
@@ -73,6 +92,27 @@ namespace Pansori.Microgames
             if (GetComponent<GraphicRaycaster>() == null)
             {
                 gameObject.AddComponent<GraphicRaycaster>();
+            }
+        }
+        
+        /// <summary>
+        /// 목숨 컨테이너를 설정합니다.
+        /// </summary>
+        private void SetupLivesContainer()
+        {
+            // 컨테이너가 없으면 자동 생성
+            if (livesContainer == null)
+            {
+                GameObject containerObj = new GameObject("LivesContainer");
+                containerObj.transform.SetParent(transform, false);
+                livesContainer = containerObj.transform;
+                
+                RectTransform rectTransform = containerObj.AddComponent<RectTransform>();
+                rectTransform.anchorMin = new Vector2(0.5f, 1f);
+                rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                rectTransform.pivot = new Vector2(0.5f, 1f);
+                rectTransform.anchoredPosition = new Vector2(0, -50);
+                rectTransform.sizeDelta = new Vector2(500, 100);
             }
         }
         
@@ -102,10 +142,31 @@ namespace Pansori.Microgames
                 reactionText.gameObject.SetActive(false);
             }
             
+            // 게임 정보 UI 숨기기
+            HideGameInfo();
+            
             if (canvas != null)
             {
                 canvas.enabled = false;
             }
+        }
+        
+        /// <summary>
+        /// 게임 정보 UI 숨기기
+        /// </summary>
+        private void HideGameInfo()
+        {
+            if (livesText != null)
+            {
+                livesText.gameObject.SetActive(false);
+            }
+            
+            if (stageText != null)
+            {
+                stageText.gameObject.SetActive(false);
+            }
+            
+            ClearLifeSprites();
         }
         
         /// <summary>
@@ -131,7 +192,7 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
-        /// "XX해라!" 명령 표시
+        /// "XX해라!" 명령 표시 (기존 메서드 - 호환성 유지)
         /// </summary>
         /// <param name="gameName">게임 이름</param>
         /// <param name="delay">표시 전 대기 시간</param>
@@ -139,6 +200,26 @@ namespace Pansori.Microgames
         public void ShowCommand(string gameName, float delay, Action onComplete)
         {
             Show();
+            currentCoroutine = StartCoroutine(ShowCommandCoroutine(gameName, delay, onComplete));
+        }
+        
+        /// <summary>
+        /// "XX해라!" 명령과 게임 정보를 함께 표시
+        /// </summary>
+        /// <param name="gameName">게임 이름</param>
+        /// <param name="totalLives">총 목숨</param>
+        /// <param name="consumedLives">소모된 목숨</param>
+        /// <param name="stage">현재 스테이지</param>
+        /// <param name="delay">표시 전 대기 시간</param>
+        /// <param name="onComplete">완료 콜백</param>
+        public void ShowCommandWithInfo(string gameName, int totalLives, int consumedLives, int stage, float delay, Action onComplete)
+        {
+            Show();
+            
+            // 게임 정보 표시
+            UpdateLivesDisplay(totalLives, consumedLives);
+            UpdateStageDisplay(stage);
+            
             currentCoroutine = StartCoroutine(ShowCommandCoroutine(gameName, delay, onComplete));
         }
         
@@ -195,6 +276,9 @@ namespace Pansori.Microgames
                 commandText.gameObject.SetActive(false);
             }
             
+            // 게임 정보 숨기기
+            HideGameInfo();
+            
             // 배경색 변경
             if (backgroundImage != null)
             {
@@ -228,6 +312,128 @@ namespace Pansori.Microgames
             }
             
             onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 목숨 표시 업데이트
+        /// </summary>
+        /// <param name="totalLives">총 목숨</param>
+        /// <param name="consumedLives">소모된 목숨</param>
+        public void UpdateLivesDisplay(int totalLives, int consumedLives)
+        {
+            // 텍스트 업데이트
+            if (livesText != null)
+            {
+                int remainingLives = totalLives - consumedLives;
+                livesText.text = $"목숨: {remainingLives}";
+                livesText.gameObject.SetActive(true);
+            }
+            
+            // 스프라이트 업데이트
+            ClearLifeSprites();
+            
+            if (lifeSprite == null || livesContainer == null)
+            {
+                return;
+            }
+            
+            // 총 목숨만큼 스프라이트 생성
+            for (int i = 0; i < totalLives; i++)
+            {
+                GameObject spriteObj = CreateLifeSprite(i, totalLives);
+                
+                // 우측에서부터 consumedLives개는 소모된 상태로 표시
+                bool isConsumed = i >= (totalLives - consumedLives);
+                SetLifeSpriteState(spriteObj, isConsumed);
+                
+                lifeSpriteObjects.Add(spriteObj);
+            }
+            
+            Debug.Log($"[PansoriSceneUI] 목숨 표시 업데이트 - 총: {totalLives}, 소모: {consumedLives}");
+        }
+        
+        /// <summary>
+        /// 스테이지 표시 업데이트
+        /// </summary>
+        /// <param name="stage">현재 스테이지</param>
+        public void UpdateStageDisplay(int stage)
+        {
+            if (stageText != null)
+            {
+                stageText.text = $"스테이지: {stage}";
+                stageText.gameObject.SetActive(true);
+            }
+        }
+        
+        /// <summary>
+        /// 목숨 스프라이트를 생성합니다.
+        /// </summary>
+        private GameObject CreateLifeSprite(int index, int totalLives)
+        {
+            GameObject spriteObj = new GameObject($"Life_{index}");
+            spriteObj.transform.SetParent(livesContainer, false);
+            
+            Image image = spriteObj.AddComponent<Image>();
+            image.sprite = lifeSprite;
+            
+            RectTransform rectTransform = spriteObj.GetComponent<RectTransform>();
+            rectTransform.sizeDelta = lifeSpriteSize;
+            
+            // 좌측부터 나열 (중앙 정렬)
+            float startX = -(totalLives - 1) * (lifeSpriteSize.x + lifeSpriteSpacing) / 2f;
+            float xPos = startX + index * (lifeSpriteSize.x + lifeSpriteSpacing);
+            rectTransform.anchoredPosition = new Vector2(xPos, 0);
+            
+            return spriteObj;
+        }
+        
+        /// <summary>
+        /// 목숨 스프라이트의 상태를 설정합니다.
+        /// </summary>
+        private void SetLifeSpriteState(GameObject spriteObj, bool isConsumed)
+        {
+            Image image = spriteObj.GetComponent<Image>();
+            if (image == null)
+                return;
+            
+            if (isConsumed)
+            {
+                // 소모된 목숨 처리
+                if (consumedLifeSprite != null)
+                {
+                    image.sprite = consumedLifeSprite;
+                }
+                else
+                {
+                    // 스프라이트가 없으면 반투명 처리
+                    Color color = image.color;
+                    color.a = 0.3f;
+                    image.color = color;
+                }
+            }
+            else
+            {
+                // 정상 목숨
+                image.sprite = lifeSprite;
+                Color color = image.color;
+                color.a = 1.0f;
+                image.color = color;
+            }
+        }
+        
+        /// <summary>
+        /// 기존 목숨 스프라이트를 모두 제거합니다.
+        /// </summary>
+        private void ClearLifeSprites()
+        {
+            foreach (GameObject spriteObj in lifeSpriteObjects)
+            {
+                if (spriteObj != null)
+                {
+                    Destroy(spriteObj);
+                }
+            }
+            lifeSpriteObjects.Clear();
         }
         
         /// <summary>

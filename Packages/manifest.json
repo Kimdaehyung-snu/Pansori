@@ -51,6 +51,7 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0"
+    "com.unity.modules.xr": "1.0.0",
+    "is.nurture.mcp": "https://github.com/nurture-tech/unity-mcp.git?path=packages/unity#v0.3.1"
   }
 }

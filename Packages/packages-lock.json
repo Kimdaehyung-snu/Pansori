@@ -283,6 +283,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "is.nurture.mcp": {
+      "version": "https://github.com/nurture-tech/unity-mcp.git?path=packages/unity#v0.3.1",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "f504381a4c260bdf412844c5f5cf245ce6c0a672"
+    },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
       "depth": 0,

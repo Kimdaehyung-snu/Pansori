@@ -277,9 +277,6 @@ namespace Pansori.Microgames
                 return;
             }
             
-            // 인스턴스 비활성화 (정보 표시 전까지)
-            currentMicrogameInstance.SetActive(false);
-            
             // IMicrogame 컴포넌트 찾기
             currentMicrogame = currentMicrogameInstance.GetComponent<IMicrogame>();
             if (currentMicrogame == null)
@@ -292,45 +289,17 @@ namespace Pansori.Microgames
             // 결과 이벤트 구독
             currentMicrogame.OnResultReported = HandleMicrogameResult;
             
-            // 게임 이름 가져오기
-            string gameName = prefab.name;
-            if (currentMicrogame is MicrogameBase)
+            // 바로 게임 시작 (정보 표시는 PansoriSceneUI에서 이미 처리됨)
+            currentMicrogameInstance.SetActive(true);
+            
+            // 미니게임 BGM 재생 (프리팹 이름으로 매칭, 속도 반영)
+            if (SoundManager.Instance != null)
             {
-                gameName = ((MicrogameBase)currentMicrogame).currentGameName;
+                SoundManager.Instance.PlayMicrogameBGM(prefab.name, speed);
             }
             
-            // 정보 UI 표시 (자동 숨김 시간 전달)
-            if (infoUI != null)
-            {
-                infoUI.ShowInfoWithLives(gameName, maxLives, consumedLives, currentStage, infoDisplayDuration);
-            }
-            
-            // 코루틴으로 정보 표시 후 게임 시작
-            StartCoroutine(StartMicrogameWithInfo(prefab, difficulty, speed));
-        }
-        
-        /// <summary>
-        /// 정보 표시 후 게임을 시작하는 코루틴
-        /// </summary>
-        private IEnumerator StartMicrogameWithInfo(GameObject prefab, int difficulty, float speed)
-        {
-            // 정보 표시 시간 대기 (MicrogameInfoUI가 자동으로 숨김)
-            yield return new WaitForSeconds(infoDisplayDuration);
-            
-            // 프리팹 활성화 및 게임 시작
-            if (currentMicrogameInstance != null && currentMicrogame != null)
-            {
-                currentMicrogameInstance.SetActive(true);
-                
-                // 미니게임 BGM 재생 (프리팹 이름으로 매칭, 속도 반영)
-                if (SoundManager.Instance != null)
-                {
-                    SoundManager.Instance.PlayMicrogameBGM(prefab.name, speed);
-                }
-                
-                Debug.Log($"[MicrogameManager] 미니게임 시작: {prefab.name} (난이도: {difficulty}, 배속: {speed})");
-                currentMicrogame.OnGameStart(difficulty, speed);
-            }
+            Debug.Log($"[MicrogameManager] 미니게임 시작: {prefab.name} (난이도: {difficulty}, 배속: {speed})");
+            currentMicrogame.OnGameStart(difficulty, speed);
         }
         
         /// <summary>
