@@ -1,0 +1,300 @@
+# 미니게임 시스템 개발자 가이드
+
+이 문서는 와리오 라이크 게임의 개별 미니게임을 제작하는 개발자를 위한 표준 규격입니다.
+
+## 목차
+
+1. [시스템 개요](#시스템-개요)
+2. [아키텍처](#아키텍처)
+3. [인터페이스 및 베이스 클래스](#인터페이스-및-베이스-클래스)
+4. [헬퍼 컴포넌트](#헬퍼-컴포넌트)
+5. [에디터 도구](#에디터-도구)
+6. [제약사항 및 규칙](#제약사항-및-규칙)
+7. [체크리스트](#체크리스트)
+
+## 시스템 개요
+
+모든 미니게임은 단일 프리팹(Prefab) 형태로 제출되어야 하며, `IMicrogame` 인터페이스를 구현해야 합니다. `MicrogameBase` 클래스를 상속받아 구현하는 것을 강력히 권장합니다.
+
+### 폴더 구조
+
+```
+Assets/MicrogameSystem/
+  Scripts/
+    Core/              # 핵심 인터페이스 및 매니저
+    Helpers/           # 헬퍼 컴포넌트
+    Templates/         # 템플릿 스크립트
+    Editor/            # 에디터 도구
+  Examples/            # 예제 미니게임
+  Games/               # 실제 미니게임 (서브 개발자가 추가)
+    [GameName]/
+      Scripts/
+      Prefabs/
+      Arts/
+      Audios/
+```
+
+## 아키텍처
+
+### 계층 구조
+
+```
+MicrogameManager (최상단 매니저)
+  ↓ 프리팹 인스턴스화 및 OnGameStart 호출
+MicrogameBase (각 미니게임의 베이스 클래스)
+  ↓ 게임 로직 관리
+하위 컴포넌트들 (게임별 로직, UI, 오브젝트 등)
+```
+
+### 생명주기
+
+1. **준비**: 프리팹 인스턴스화, Awake/Start 호출
+2. **개시**: `OnGameStart(difficulty, speed)` 호출
+3. **진행**: 3~5초간 플레이
+4. **판정**: `ReportResult()` 호출
+5. **종료**: `OnDisable()` → `ResetGameState()` 호출
+
+## 인터페이스 및 베이스 클래스
+
+### IMicrogame 인터페이스
+
+```csharp
+public interface IMicrogame
+{
+    void OnGameStart(int difficulty, float speed);
+    System.Action<bool> OnResultReported { get; set; }
+}
+```
+
+- `OnGameStart`: 게임 시작 시 매니저가 호출 (난이도: 1~3, 배속: 1.0f~)
+- `OnResultReported`: 결과 전달 이벤트 (true: 성공 / false: 실패)
+
+### MicrogameBase 추상 클래스
+
+`MicrogameBase`는 `IMicrogame`을 구현한 추상 클래스로, 다음 기능을 제공합니다:
+
+- **생명주기 관리**: 게임 시작/종료 자동 처리
+- **결과 보고**: `ReportResult(bool success)` 메서드로 결과 전달
+- **상태 리셋**: `ResetGameState()` 추상 메서드로 상태 리셋 강제
+- **난이도/속도 저장**: `currentDifficulty`, `currentSpeed` 프로퍼티 제공
+
+#### 주요 메서드
+
+- `OnGameStart(int difficulty, float speed)`: 게임 시작 (가상 메서드, 오버라이드 가능)
+- `ReportResult(bool success)`: 결과 보고 (protected 메서드)
+- `ResetGameState()`: 상태 리셋 (추상 메서드, 반드시 구현 필요)
+- `OnGameEnd()`: 게임 종료 시 호출 (가상 메서드, 오버라이드 가능)
+
+## 헬퍼 컴포넌트
+
+### MicrogameTimer
+
+난이도와 속도를 반영한 타이머 컴포넌트입니다.
+
+```csharp
+[SerializeField] private MicrogameTimer timer;
+
+void Start()
+{
+    timer.OnTimerEnd += HandleTimerEnd;
+}
+
+public override void OnGameStart(int difficulty, float speed)
+{
+    base.OnGameStart(difficulty, speed);
+    timer.StartTimer(5f, speed); // 속도 자동 반영
+}
+```
+
+### MicrogameInputHandler
+
+표준화된 입력 처리 컴포넌트입니다.
+
+```csharp
+[SerializeField] private MicrogameInputHandler inputHandler;
+
+void Start()
+{
+    inputHandler.OnKeyPressed += HandleKeyPress;
+    inputHandler.OnMouseClick += HandleMouseClick;
+}
+
+private void HandleKeyPress(KeyCode key)
+{
+    if (key == KeyCode.Space)
+    {
+        // 스페이스바 처리
+    }
+}
+```
+
+### MicrogameUILayer
+
+미니게임 전용 UI 레이어 관리 컴포넌트입니다.
+
+```csharp
+[SerializeField] private MicrogameUILayer uiLayer;
+
+void Start()
+{
+    // UI 요소 추가
+    GameObject uiElement = new GameObject("UIElement");
+    uiLayer.AddUIElement(uiElement);
+}
+```
+
+## 에디터 도구
+
+미니게임 개발을 돕기 위한 Unity 에디터 확장 도구들이 제공됩니다.
+
+### MicrogameTemplateCreator
+
+새 미니게임을 빠르게 생성하는 마법사 도구입니다.
+
+**사용 방법:**
+1. `Tools > Microgames > Create New Microgame` 선택
+2. 미니게임 이름 입력
+3. 생성할 항목 선택 (스크립트, 프리팹, 폴더 구조)
+4. "미니게임 생성" 버튼 클릭
+
+**생성되는 항목:**
+- 폴더 구조 (Scripts, Prefabs, Arts, Audios)
+- 매니저 스크립트 템플릿
+- 기본 프리팹 (헬퍼 컴포넌트 포함)
+
+### MicrogameValidator
+
+프리팹이 미니게임 규격을 준수하는지 검증하는 도구입니다.
+
+**사용 방법:**
+1. `Tools > Microgames > Validate Prefab` 선택
+2. 검증할 프리팹을 할당
+3. "검증 시작" 버튼 클릭
+
+**검증 항목:**
+- Transform 초기값 확인 (위치, 회전, 스케일)
+- IMicrogame 인터페이스 구현 확인
+- ResetGameState() 메서드 구현 확인
+- 필수 컴포넌트 확인 (선택사항)
+
+### MicrogameManagerTester
+
+MicrogameManager를 쉽게 테스트할 수 있는 독립적인 에디터 윈도우입니다.
+
+**사용 방법:**
+1. `Tools > Microgames > Test Microgame Manager` 선택
+2. 씬에서 MicrogameManager 자동 찾기 또는 수동 할당
+3. 프리팹 목록에 테스트할 미니게임 프리팹 추가
+4. 난이도와 배속 설정
+5. "인덱스로 시작" 또는 "랜덤 시작" 버튼으로 게임 시작
+
+**주요 기능:**
+
+- **Manager 선택**: 씬에서 자동 검색 또는 수동 할당
+- **프리팹 목록 관리**: 
+  - SerializedObject를 사용하여 프리팹 배열 표시 및 편집
+  - 드래그 앤 드롭으로 프리팹 할당
+  - 각 프리팹 옆 "시작" 버튼으로 바로 테스트
+- **게임 설정**:
+  - 난이도 슬라이더 (1-3)
+  - 배속 슬라이더 (1.0-5.0)
+- **제어 버튼**:
+  - 인덱스로 시작: 선택한 프리팹으로 시작
+  - 랜덤 시작: 랜덤 프리팹으로 시작
+  - 강제 종료: 실행 중인 게임 강제 종료
+- **상태 표시**: 
+  - 실시간 실행 상태 (실행 중/대기 중)
+  - 현재 실행 중인 미니게임 이름 표시
+- **결과 로그**:
+  - 최근 20개 결과 저장
+  - 타임스탬프 포함
+  - 성공/실패 색상 구분
+  - 스크롤 가능한 로그 뷰
+
+**구현 방식:**
+
+```csharp
+// EditorWindow 기반의 독립 윈도우
+public class MicrogameManagerTester : EditorWindow
+{
+    private MicrogameManager manager;
+    private SerializedObject serializedManager;
+    private SerializedProperty prefabsProperty;
+    
+    // 실시간 상태 업데이트를 위한 EditorApplication.update 구독
+    private void OnEnable()
+    {
+        EditorApplication.update += OnEditorUpdate;
+    }
+    
+    // 이벤트 구독을 통한 결과 자동 로깅
+    private void SubscribeToEvents()
+    {
+        if (manager != null)
+        {
+            manager.OnMicrogameResult += OnMicrogameResult;
+        }
+    }
+}
+```
+
+**사용 팁:**
+- 게임 실행 중에는 시작 버튼이 자동으로 비활성화됩니다.
+- 게임 미실행 중에는 종료 버튼이 비활성화됩니다.
+- 프리팹이 null이면 경고가 표시됩니다.
+- 결과 로그는 최신 항목부터 표시됩니다.
+
+## 제약사항 및 규칙
+
+### 필수 규칙
+
+1. **씬 로드 금지**: `SceneManager.LoadScene`을 절대 사용하지 마세요. 모든 로직은 프리팹 내에서 완결되어야 합니다.
+2. **UI 사용**: 개별 게임의 UI는 `MicrogameUILayer`를 사용하세요.
+3. **카메라**: 메인 카메라를 직접 수정하지 마세요. 필요시 프리팹 내의 서브 카메라를 활용하세요.
+4. **Transform 초기값**: 프리팹의 루트 Transform은 (0, 0, 0) 위치, (0, 0, 0) 회전, (1, 1, 1) 스케일로 설정되어야 합니다.
+
+### 권장사항
+
+- `MicrogameBase`를 상속받아 구현하세요.
+- 헬퍼 컴포넌트(`MicrogameTimer`, `MicrogameInputHandler`, `MicrogameUILayer`)를 활용하세요.
+- 난이도와 속도를 게임 로직에 반영하세요.
+
+## 체크리스트
+
+제출 전 다음 항목을 확인하세요:
+
+- [ ] 프리팹의 Transform 값이 초기화되어 있는가? (위치: 0,0,0 / 회전: 0,0,0 / 스케일: 1,1,1)
+- [ ] 모든 에셋이 지정된 폴더 안에 포함되어 있는가?
+- [ ] 게임이 끝났을 때 `ReportResult`가 반드시 한 번은 호출되는가?
+- [ ] `OnDisable` 시점에 오브젝트들이 초기 위치로 돌아가는가? (재사용 가능 확인)
+- [ ] `Update` 문에서 매니저로부터 전달받은 `speed` 값이 반영되어 로직이 흐르는가?
+- [ ] `ResetGameState()` 메서드가 올바르게 구현되어 있는가?
+- [ ] 씬 로드를 사용하지 않았는가?
+
+### 에디터 도구 사용
+
+Unity 에디터에서 제공하는 도구들을 활용하세요:
+
+- **프리팹 검증**: `Tools > Microgames > Validate Prefab`으로 프리팹 규격 확인
+- **게임 테스트**: `Tools > Microgames > Test Microgame Manager`로 빠른 테스트
+- **템플릿 생성**: `Tools > Microgames > Create New Microgame`으로 새 게임 생성
+
+## 빠른 시작
+
+새 미니게임을 만들려면:
+
+1. Unity 에디터에서 `Tools > Microgames > Create New Microgame` 선택
+2. 미니게임 이름 입력 (예: "MG_Jump_01")
+3. 자동으로 폴더 구조 생성 및 템플릿 스크립트 생성
+4. 게임 로직 구현
+5. 검증 도구로 체크리스트 확인
+
+자세한 내용은 [QUICK_START.md](QUICK_START.md)를 참조하세요.
+
+## 예제
+
+`Assets/MicrogameSystem/Examples/MG_Jump_01/` 폴더에 완전히 작동하는 예제 미니게임이 있습니다. 참고하여 개발하세요.
+
+## 문의
+
+문제가 발생하거나 질문이 있으면 프로젝트 매니저에게 문의하세요.
