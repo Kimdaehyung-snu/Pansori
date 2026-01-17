@@ -1555,5 +1555,5 @@ MonoBehaviour:
   scrollTearDistance: 300
   scrollTearDuration: 0.5
   brushSoundClip: {fileID: 8300000, guid: 5815effbc8e4f79459b3884a138e36fd, type: 3}
-  cursorTexture: {fileID: 0}
+  cursorTexture: {fileID: 2800000, guid: 97c3c9722c1b472449e251e9b802d02e, type: 3}
   cursorHotspot: {x: 0, y: 0}

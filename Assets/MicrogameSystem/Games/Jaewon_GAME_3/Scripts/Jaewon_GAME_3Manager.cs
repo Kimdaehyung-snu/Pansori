@@ -60,8 +60,7 @@ public class Jaewon_GAME_3Manager : MicrogameBase
     [SerializeField] private AudioClip brushSoundClip; // 붓글씨.mp3
     
     [Header("커스텀 커서")]
-    [SerializeField] private Texture2D cursorTexture; // 커서 스프라이트 (Texture2D)
-    [SerializeField] private Vector2 cursorHotspot = Vector2.zero; // 커서 클릭 지점 (좌상단 기준)
+    [SerializeField] private Texture2D cursorTexture; // 커서 스프라이트 (Texture2D), 좌측 하단이 포인터 위치
     
     // 붓글씨 사운드용 AudioSource
     private AudioSource brushAudioSource;
@@ -197,10 +196,11 @@ public class Jaewon_GAME_3Manager : MicrogameBase
             timer.OnTimerEnd += OnTimeOut;
         }
         
-        // 커스텀 커서 적용
+        // 커스텀 커서 적용 (좌측 하단을 핫스팟으로 설정)
         if (cursorTexture != null)
         {
-            Cursor.SetCursor(cursorTexture, cursorHotspot, CursorMode.Auto);
+            Vector2 hotspot = new Vector2(0, cursorTexture.height);
+            Cursor.SetCursor(cursorTexture, hotspot, CursorMode.Auto);
         }
         
         Debug.Log($"[Jaewon_GAME_3] 게임 시작 - 한자: {(isTian ? "天" : "地")}, 목표: {requiredFillPercentage * 100f}%, 먹물: {maxInkAmount}");
