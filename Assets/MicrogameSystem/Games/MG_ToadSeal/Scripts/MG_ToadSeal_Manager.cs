@@ -25,7 +25,8 @@ namespace Pansori.Microgames.Games
         [SerializeField] float friction = 10f;   // 마찰(값↑ = 덜 미끄러짐)
 
         [SerializeField] float toadPushForce = 3f;   // 스페이스 1회: 왼쪽으로 버티는 힘(속도 감소량)
-        [SerializeField] float waterPushForce = 15.5f;  // 물이 계속 미는 힘(초당 가속)
+        [SerializeField] float waterDefaultPushForce = 15.5f;  // 물이 계속 미는 힘(초당 가속)
+        [SerializeField] float currentWaterPushForce;
 
         [SerializeField] float maxSpeed = 30f;      // 속도 제한
         [SerializeField] float maxPushbackDis;      // 밀려날 수 있는 최대 거리(이 이상이면 실패)
@@ -60,6 +61,7 @@ namespace Pansori.Microgames.Games
             velocity = 0f;
             isBlocking = false;
             backAnimHoldRemaining = 0f;
+            currentWaterPushForce = 0f;
 
             if (toad != null)
             {
@@ -78,7 +80,7 @@ namespace Pansori.Microgames.Games
             velocity = Mathf.MoveTowards(velocity, 0f, friction * Time.deltaTime);
 
             // 물 힘 적용: 매 프레임 오른쪽으로 가속(속도 누적)
-            velocity += waterPushForce * Time.deltaTime;
+            velocity += currentWaterPushForce * Time.deltaTime;
             // 속도 제한: 너무 빨라지는 것 방지
             velocity = Mathf.Clamp(velocity, -maxSpeed, maxSpeed);
 
@@ -124,6 +126,8 @@ namespace Pansori.Microgames.Games
         public override void OnGameStart(int difficulty, float speed)
         {
             isBlocking = true;  // 두꺼비 밀려나기 시작
+            // 성공 단계에 따라 물이 미는 힘이 강해짐
+            currentWaterPushForce = waterDefaultPushForce + (speed - 1) * difficulty;
 
             base.OnGameStart(difficulty, speed);
 
@@ -195,6 +199,7 @@ namespace Pansori.Microgames.Games
             isBlocking = false;
             velocity = 0f;
             backAnimHoldRemaining = 0f;
+            currentWaterPushForce = 0f;
             toad.position = startPos;
 
             toadAnimator.SetBool("IsSuccess", false);
