@@ -34,6 +34,7 @@ namespace Pansori.Microgames.Games
         /// 현재 게임 이름
         /// </summary>
         public override string currentGameName => "올라가라!";
+        public override string controlDescription => "스페이스로 올라가라!";
 
         [Header("헬퍼 컴포넌트")] 
         [SerializeField] private MicrogameTimer timer;
