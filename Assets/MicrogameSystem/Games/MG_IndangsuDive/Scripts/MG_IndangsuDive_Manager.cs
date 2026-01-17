@@ -22,12 +22,16 @@ namespace Pansori.Microgames.Games
         [SerializeField] Transform simcheong;  // 심청이
         [SerializeField] SpriteRenderer dragonPalace;  // 용궁
 
+        [Header("사운드 클립")]
+        [SerializeField] AudioClip diveSplashClip;
+
         [Header("용궁 스폰 설정")]
         [SerializeField, Range(0f, 0.95f)] float rightMarginViewport = 0.05f;   // 화면 오른쪽 여백(뷰포트 기준)
         private Camera cam;
 
         [Header("배 이동 설정")]
         [SerializeField] float defaultVel;  // 기본 배 속도
+        [SerializeField] float maxDis = 15f;
         private float currentVel;
 
         private Vector2 startBoatPos;   // 시작 위치(리셋용)
@@ -52,7 +56,7 @@ namespace Pansori.Microgames.Games
         /// </summary>
         public override string currentGameName => "뛰어내려라!";
 
-        public override string controlDescription => "용궁 위치에 맞게 스페이스바를 누르세요!";
+        public override string controlDescription => "용궁에 맞춰\n스페이스바를\n누르세요!";
 
         protected override void Awake()
         {
@@ -76,12 +80,28 @@ namespace Pansori.Microgames.Games
             boat.transform.position = p;
         }
 
+        private void FixedUpdate()
+        {
+            if (isGameEnded || isMoving == false)
+            {
+                return;
+            }
+
+            if (boat.transform.position.x - startBoatPos.x >= maxDis)
+            {
+                isMoving = false;
+                OnFailure();
+            }
+        }
+
         public override void OnGameStart(int difficulty, float speed)
         {
             SpawnDragonPalace();
 
             isMoving = true;
             currentVel = defaultVel * Mathf.Pow(4, speed) * difficulty;
+
+            SoundManager.Instance.PlayMicrogameBGM("MG_IndangsuDive");  // 배경음 재생
 
             base.OnGameStart(difficulty, speed);
             
@@ -112,6 +132,7 @@ namespace Pansori.Microgames.Games
             }
 
             isMoving = false;
+            SoundManager.Instance.SFXPlay("DiveSplash", diveSplashClip);
 
             if (IsOverlapping())    // 용궁과 배의 X 좌표가 겹치는지 확인
             {
@@ -256,6 +277,17 @@ namespace Pansori.Microgames.Games
 
             // 1D 구간 겹침
             return aMin <= bMax && bMin <= aMax;
+        }
+
+        private bool IsOutOfScreenX(Transform t)
+        {
+            if (t == null || cam == null)
+            { 
+                return false;
+            }
+
+            Vector3 v = cam.WorldToViewportPoint(t.position);
+            return v.x < 0f || v.x > 1f;
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Pansori.Microgames.Games
     /// 두꺼비가깨진 장독대에서 흘러나오는 물을 막는 마이크로 게임
     /// 
     /// - 스페이스를 연타 해 목표 지점(장독대 깨진 부분)에 도달하면 즉시 성공
-    /// - 제한 시간까지 도착하지 못하거나 maxPushbackDis 이상 멀어지면 실패
+    /// - 제한 시간까지 도착하지 못하거나 maxPushBackDis 이상 멀어지면 실패
     /// </summary>
     public class MG_ToadSeal_Manager : MicrogameBase
     {
@@ -29,7 +29,7 @@ namespace Pansori.Microgames.Games
         [SerializeField] float currentWaterPushForce;
 
         [SerializeField] float maxSpeed = 30f;      // 속도 제한
-        [SerializeField] float maxPushbackDis= 15f;      // 밀려날 수 있는 최대 거리(이 이상이면 실패)
+        [SerializeField] float maxPushBackDis= 15f;      // 밀려날 수 있는 최대 거리(이 이상이면 실패)
 
         private Vector2 startPos;   // 시작 위치(리셋용)
         private float velocity;     // 현재 x축 속도
@@ -124,7 +124,7 @@ namespace Pansori.Microgames.Games
 
                 OnSuccess();
             }
-            else if (toad.position.x - target.position.x >= maxPushbackDis)    // 밀려날 수 있는 최대 거리 벗어남
+            else if (toad.position.x - target.position.x >= maxPushBackDis)    // 밀려날 수 있는 최대 거리 벗어남
             {
                 isBlocking = false;
                 velocity = 0f;
