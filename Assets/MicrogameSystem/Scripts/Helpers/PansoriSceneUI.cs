@@ -32,6 +32,12 @@ namespace Pansori.Microgames
         [SerializeField] private float lifeSpriteSpacing = 10f; // 스프라이트 간 간격
         [SerializeField] private Vector2 lifeSpriteSize = new Vector2(50, 50); // 스프라이트 크기
         
+        [Header("관객 스프라이트 (목숨 표시)")]
+        [Tooltip("4개의 관객 스프라이트를 좌->우 순서(1,2,3,4)로 할당. 목숨 소모 시 퇴장 순서: 4>1>3>2")]
+        [SerializeField] private Image[] audienceSprites; // 4개의 관객 스프라이트 (좌->우: 1,2,3,4)
+        [SerializeField] private float audienceExitDuration = 0.5f; // 퇴장 애니메이션 시간
+        [SerializeField] private float audienceExitDistance = 500f; // 퇴장 거리 (화면 밖)
+        
         [Header("캐릭터 (플레이스홀더)")]
         [SerializeField] private GameObject performerObject; // 소리꾼 오브젝트
         [SerializeField] private GameObject audienceObject; // 관객 오브젝트
@@ -95,11 +101,27 @@ namespace Pansori.Microgames
         /// </summary>
         private List<GameObject> lifeSpriteObjects = new List<GameObject>();
         
+        /// <summary>
+        /// 관객 스프라이트 원래 위치 배열
+        /// </summary>
+        private Vector2[] audienceOriginalPositions;
+        
+        /// <summary>
+        /// 관객 퇴장 순서 (4>1>3>2 -> 인덱스: 3,0,2,1)
+        /// </summary>
+        private readonly int[] audienceExitOrder = { 3, 0, 2, 1 };
+        
+        /// <summary>
+        /// 이전에 소모된 목숨 수 (변경 감지용)
+        /// </summary>
+        private int previousConsumedLives = 0;
+        
         private void Awake()
         {
             SetupCanvas();
             SetupLivesContainer();
             SetupScreenFlashOverlay();
+            InitializeAudienceSprites();
             HideAll();
         }
         
@@ -185,6 +207,30 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
+        /// 관객 스프라이트 초기화 - 원래 위치 저장
+        /// </summary>
+        private void InitializeAudienceSprites()
+        {
+            if (audienceSprites == null || audienceSprites.Length == 0)
+            {
+                return;
+            }
+            
+            audienceOriginalPositions = new Vector2[audienceSprites.Length];
+            
+            for (int i = 0; i < audienceSprites.Length; i++)
+            {
+                if (audienceSprites[i] != null)
+                {
+                    RectTransform rectTransform = audienceSprites[i].rectTransform;
+                    audienceOriginalPositions[i] = rectTransform.anchoredPosition;
+                }
+            }
+            
+            Debug.Log($"[PansoriSceneUI] 관객 스프라이트 초기화 완료 - {audienceSprites.Length}개");
+        }
+        
+        /// <summary>
         /// 모든 UI 숨기기
         /// </summary>
         public void HideAll()
@@ -253,6 +299,9 @@ namespace Pansori.Microgames
             }
             
             ClearLifeSprites();
+            
+            // 관객 스프라이트 위치 초기화
+            ResetAudiencePositions();
         }
         
         /// <summary>
@@ -768,7 +817,14 @@ namespace Pansori.Microgames
                 livesText.gameObject.SetActive(true);
             }
             
-            // 스프라이트 업데이트
+            // 관객 스프라이트 시스템 사용 (인스펙터에서 할당된 경우)
+            if (audienceSprites != null && audienceSprites.Length > 0)
+            {
+                UpdateAudienceLivesDisplay(consumedLives);
+                return;
+            }
+            
+            // 기존 동적 스프라이트 생성 방식 (관객 스프라이트가 없는 경우)
             ClearLifeSprites();
             
             if (lifeSprite == null || livesContainer == null)
@@ -789,6 +845,32 @@ namespace Pansori.Microgames
             }
             
             Debug.Log($"[PansoriSceneUI] 목숨 표시 업데이트 - 총: {totalLives}, 소모: {consumedLives}");
+        }
+        
+        /// <summary>
+        /// 관객 스프라이트 기반 목숨 표시 업데이트
+        /// 소모된 목숨이 증가하면 해당 관객이 퇴장합니다.
+        /// 퇴장 순서: 4 > 1 > 3 > 2 (인덱스: 3, 0, 2, 1)
+        /// </summary>
+        /// <param name="consumedLives">소모된 목숨 수</param>
+        private void UpdateAudienceLivesDisplay(int consumedLives)
+        {
+            // 새로 소모된 목숨이 있는지 확인
+            if (consumedLives > previousConsumedLives)
+            {
+                // 새로 소모된 목숨만큼 퇴장 애니메이션 실행
+                for (int i = previousConsumedLives; i < consumedLives; i++)
+                {
+                    if (i < audienceExitOrder.Length)
+                    {
+                        int spriteIndex = audienceExitOrder[i];
+                        PlayAudienceExitAnimation(spriteIndex);
+                        Debug.Log($"[PansoriSceneUI] 관객 퇴장 - 순서: {i + 1}, 스프라이트 인덱스: {spriteIndex + 1}");
+                    }
+                }
+            }
+            
+            previousConsumedLives = consumedLives;
         }
         
         /// <summary>
@@ -873,6 +955,84 @@ namespace Pansori.Microgames
                 }
             }
             lifeSpriteObjects.Clear();
+        }
+        
+        /// <summary>
+        /// 관객 스프라이트 퇴장 애니메이션 재생
+        /// </summary>
+        /// <param name="spriteIndex">퇴장할 스프라이트 인덱스 (0~3)</param>
+        private void PlayAudienceExitAnimation(int spriteIndex)
+        {
+            if (audienceSprites == null || spriteIndex < 0 || spriteIndex >= audienceSprites.Length)
+            {
+                return;
+            }
+            
+            Image sprite = audienceSprites[spriteIndex];
+            if (sprite == null)
+            {
+                return;
+            }
+            
+            // 스프라이트 인덱스 0,1은 왼쪽으로, 2,3은 오른쪽으로 퇴장
+            bool exitLeft = (spriteIndex == 0 || spriteIndex == 1);
+            float exitDirection = exitLeft ? -1f : 1f;
+            
+            StartCoroutine(AudienceExitCoroutine(sprite, exitDirection));
+        }
+        
+        /// <summary>
+        /// 관객 퇴장 애니메이션 코루틴
+        /// </summary>
+        /// <param name="sprite">퇴장할 스프라이트</param>
+        /// <param name="direction">퇴장 방향 (-1: 왼쪽, 1: 오른쪽)</param>
+        private IEnumerator AudienceExitCoroutine(Image sprite, float direction)
+        {
+            if (sprite == null) yield break;
+            
+            RectTransform rectTransform = sprite.rectTransform;
+            Vector2 startPos = rectTransform.anchoredPosition;
+            Vector2 endPos = startPos + new Vector2(audienceExitDistance * direction, 0f);
+            
+            float elapsed = 0f;
+            
+            while (elapsed < audienceExitDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / audienceExitDuration);
+                
+                // EaseOutQuad 이징 적용 (자연스러운 감속)
+                float easedT = 1f - (1f - t) * (1f - t);
+                
+                rectTransform.anchoredPosition = Vector2.Lerp(startPos, endPos, easedT);
+                yield return null;
+            }
+            
+            rectTransform.anchoredPosition = endPos;
+            
+            Debug.Log($"[PansoriSceneUI] 관객 스프라이트 퇴장 완료 - 방향: {(direction < 0 ? "왼쪽" : "오른쪽")}");
+        }
+        
+        /// <summary>
+        /// 모든 관객 스프라이트를 원래 위치로 복원
+        /// </summary>
+        public void ResetAudiencePositions()
+        {
+            if (audienceSprites == null || audienceOriginalPositions == null)
+            {
+                return;
+            }
+            
+            for (int i = 0; i < audienceSprites.Length; i++)
+            {
+                if (audienceSprites[i] != null && i < audienceOriginalPositions.Length)
+                {
+                    audienceSprites[i].rectTransform.anchoredPosition = audienceOriginalPositions[i];
+                }
+            }
+            
+            previousConsumedLives = 0;
+            Debug.Log("[PansoriSceneUI] 관객 스프라이트 위치 초기화");
         }
         
         /// <summary>
