@@ -2968,7 +2968,9 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 4ef0786ebba837541b1e8cb2f5f25fe4, type: 3}
   - {fileID: 8300000, guid: 7f4d906f5dc06304b8326c909bdcda38, type: 3}
   - {fileID: 8300000, guid: 3ff6f7633e10da044a5b90e5e7d36257, type: 3}
-  microgameSuccessClips: []
+  microgameSuccessClips:
+  - {fileID: 8300000, guid: 1ed06dc6d9e706a4cac8bb0a9ba87259, type: 3}
+  - {fileID: 8300000, guid: 1730c060db6ecea4bb4153b89fc7a950, type: 3}
   microgameFailClip: {fileID: 8300000, guid: f22034b54dc717f4c8e3a8efaa08aa6a, type: 3}
   mainBGMClip: {fileID: 8300000, guid: 24b177fc3c3f9974fb06c64743526271, type: 3}
   pansoriSuccessClip: {fileID: 8300000, guid: df7cd591030527c4aa1390952abf0add, type: 3}
