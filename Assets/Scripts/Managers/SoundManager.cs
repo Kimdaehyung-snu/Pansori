@@ -104,6 +104,26 @@ public class SoundManager : PansoriSingleton<SoundManager>
     }
 
     /// <summary>
+    /// Loop 효과음 플레이 시 사용
+    /// AudioSource를 반환. 저장했다가 직접 Destroy 해야 함
+    /// </summary>
+    /// <param name="SFXName"></param>
+    /// <param name="clip"></param>
+    /// <returns></returns>
+    public AudioSource SFXLoopPlay(string SFXName, AudioClip clip)
+    {
+        GameObject go = new GameObject(SFXName + "Sound");
+        AudioSource audioSource = go.AddComponent<AudioSource>();
+        audioSource.outputAudioMixerGroup = mixer.FindMatchingGroups("SFX")[0];
+        audioSource.clip = clip;
+        audioSource.volume = 0.3f;
+        audioSource.loop = true;
+        audioSource.Play();
+
+        return audioSource;
+    }
+
+    /// <summary>
     /// 환경설정에서 브금 사운드 조절용
     /// 슬라이드 UI의 onValueChanged에 해당 함수를 추가하세요
     /// </summary>

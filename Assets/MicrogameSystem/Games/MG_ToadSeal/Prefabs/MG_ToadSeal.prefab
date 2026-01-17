@@ -58,6 +58,7 @@ MonoBehaviour:
   toad: {fileID: 1444110746909313985}
   target: {fileID: 7952816064206573188}
   toadClip: {fileID: 8300000, guid: 4bd6a2d9468378b468d01019ee25d39f, type: 3}
+  waterClip: {fileID: 8300000, guid: 18dd12619b20f5b4c980e4d265ec28da, type: 3}
   toadSealClip: {fileID: 8300000, guid: db8d574d7702c0344a3778e80b62213a, type: 3}
   friction: 10
   toadPushForce: 5
@@ -69,6 +70,7 @@ MonoBehaviour:
   backAnimHoldTime: 2.2
   simcheongAnimator: {fileID: 6417454157181093516}
   water: {fileID: 8657791158170897707}
+  waterAudioSource: {fileID: 0}
   timer: {fileID: 2899366196035620307}
   inputHandler: {fileID: 2349826645222259944}
   uiLayer: {fileID: 6382874846748425475}
