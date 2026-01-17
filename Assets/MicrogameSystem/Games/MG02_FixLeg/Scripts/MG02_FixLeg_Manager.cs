@@ -17,12 +17,18 @@ namespace Pansori.Microgames.Games
         [SerializeField] private RectTransform legTransform;
         [SerializeField] private RectTransform canvasTransform;
         [SerializeField] private TMP_Text timerText; // 남은 시간 표시 UI
-
+        [SerializeField] private GameObject successResultPanel;
+        [SerializeField] private GameObject failResultPanel;
+        [SerializeField] private RectTransform rotateAreaRect;
+        
         [Header("게임 설정")]
         // TODO: 게임 설정 변수를 추가하세요
+        [SerializeField] private float successAngleCondition = 10f;
+        
+        [Header("결과 연출 설정")]
+        [SerializeField] private bool useCustomResultAnimation = true; // 커스텀 결과 연출 사용 여부
+        [SerializeField] private float resultDisplayDelay = 0.5f; // 결과 표시 전 연출 시간
 
-        
-        
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
         [SerializeField] private MicrogameInputHandler inputHandler;
@@ -35,6 +41,7 @@ namespace Pansori.Microgames.Games
         private bool isDragging = false;
         private bool gameCleared = false;
         private Quaternion initialRotation; // 초기 회전값 저장
+        private float angleOffset;
 
         
         protected override void Awake()
@@ -64,7 +71,9 @@ namespace Pansori.Microgames.Games
             // 입력 핸들러 이벤트 구독 예시
             if (inputHandler != null)
             {
+                inputHandler.OnMouseDragStart += HandleDragStart;
                 inputHandler.OnMouseDrag += HandleDrag;
+                inputHandler.OnMouseDragEnd += HandleDragEnd;
             }
         }
 
@@ -90,7 +99,11 @@ namespace Pansori.Microgames.Games
             }
         }
 
-
+        private void HandleDragStart(Vector3 startPos)
+        {
+            angleOffset = legTransform.eulerAngles.z - GetMouseAngle(startPos);
+        }
+        
         // 2. 드래그 중: 회전 로직 실행
         private void HandleDrag(Vector3 startPos, Vector3 currentPos)
         {
@@ -98,7 +111,20 @@ namespace Pansori.Microgames.Games
             {
                 return;
             }
-            RotateLegToMouse(currentPos);
+
+            if (RectTransformUtility.RectangleContainsScreenPoint(rotateAreaRect, Input.mousePosition, null))
+            {
+                RotateLegToMouse(currentPos);
+            }
+    
+        }
+
+        private void HandleDragEnd(Vector3 endPos)
+        {
+            if (gameCleared)
+            {
+                return;
+            }
             CheckHealed();
         }
 
@@ -108,11 +134,13 @@ namespace Pansori.Microgames.Games
         {
             //현재 각도 확인
             float currentZ = legTransform.eulerAngles.z;
+            Debug.Log($"currentZ : {currentZ}");
             
             // 0~360도를 -180~180도로 변환 (판정 편의성)
             
-            // 오차 범위 5도 이내면 성공
-            if (Mathf.Abs(currentZ) < 5f) 
+            // 오차 범위 n도 이내면 성공
+
+            if (-5f <Mathf.Abs(currentZ)&& Mathf.Abs(currentZ)< 5f) 
             {
                 Debug.Log("제비 다리 치료 완료! 🩹");
             
@@ -129,29 +157,9 @@ namespace Pansori.Microgames.Games
 
         void RotateLegToMouse(Vector3 currentPos)
         {
-            Vector3 mouseWorldPos;
-            
-            // 월드 좌표를 스크린 좌표로 변환
-            Vector3 screenPos;
-            screenPos = Camera.main.WorldToScreenPoint(currentPos);
-     
-            
-            // 스크린 좌표를 Canvas 좌표로 변환
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(
-                canvasTransform,       // 기준 RectTransform
-                screenPos,            // 스크린 좌표
-                null,                 // Overlay 모드이므로 카메라는 null
-                out mouseWorldPos     // 변환된 좌표 저장
-            );
-            
-            //방향벡터
-            Vector3 direction = mouseWorldPos - legTransform.position;
-            
-            //각도계산
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            
-            //회전
-            legTransform.rotation = Quaternion.Euler(0, 0, angle);
+            // 오프셋 더해서 회전 적용
+            float currentMouseAngle = GetMouseAngle(currentPos);
+            legTransform.rotation = Quaternion.Euler(0, 0, currentMouseAngle + angleOffset);
         }
       
         private void OnTimeUp()
@@ -165,18 +173,34 @@ namespace Pansori.Microgames.Games
         
         private void OnSuccess()
         {
-            ReportResult(true);
+   
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(true);
+            }
+            else
+            {
+                ReportResult(true);
+            }
         }
         
         private void OnFailure()
         {
-            ReportResult(false);
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(false);
+            }
+            else
+            {
+                ReportResult(false);
+            }
         }
         
         protected override void ResetGameState()
         {
             // TODO: 모든 오브젝트를 초기 상태로 리셋하는 로직을 추가하세요
-  
+            successResultPanel.SetActive(false);
+            failResultPanel.SetActive(false);
             
             // 타이머 중지
             if (timer != null)
@@ -196,6 +220,67 @@ namespace Pansori.Microgames.Games
             {
                 inputHandler.OnMouseDrag += HandleDrag;
             }
+        }
+
+        /// <summary>
+        /// 결과 애니메이션을 오버라이드하여 게임별 커스텀 연출을 추가합니다.
+        /// </summary>
+        protected override void PlayResultAnimation(bool success, System.Action onComplete = null)
+        {
+            if (success)
+            {
+                // 성공 시: 성공 패널 열기
+                Debug.Log("[Jaewon_GAME_1] 성공 커스텀 연출 시작");
+                StartCoroutine(PlaySuccessResultAnimation(onComplete));
+            }
+            else
+            {
+                // 실패 시: 실패 패널 열기
+                Debug.Log("[Jaewon_GAME_1] 실패 커스텀 연출 시작");
+                StartCoroutine(PlayFailureResultAnimation(onComplete));
+            }
+        }
+
+        /// <summary>
+        /// 성공 결과 애니메이션
+        /// </summary>
+        private System.Collections.IEnumerator PlaySuccessResultAnimation(System.Action onComplete)
+        {
+            //패널열기
+            successResultPanel.SetActive(true);
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            // 완료 콜백
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// 실패 결과 애니메이션 
+        /// </summary>
+        private System.Collections.IEnumerator PlayFailureResultAnimation(System.Action onComplete)
+        {
+            //패널열기
+            failResultPanel.SetActive(true);
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            // 완료 콜백
+            onComplete?.Invoke();
+        }
+        
+        // 마우스 위치를 입력받아 다리와의 각도(도)를 반환하는 함수
+        private float GetMouseAngle(Vector3 targetPosition)
+        {
+            Vector3 mouseWorldPos;
+    
+            // 스크린 좌표 -> 월드 좌표 변환 
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(targetPosition);
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(
+                canvasTransform, screenPos, null, out mouseWorldPos
+            );
+
+            // 각도 계산 (Atan2)
+            Vector3 direction = mouseWorldPos - legTransform.position;
+            return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
         }
     }
 }

@@ -123,11 +123,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 913a512094f5f6c47960e658ce734adf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.Games.MG_Saddagi_Manager
+  resultAnimation: {fileID: 0}
+  useResultAnimation: 1
+  resultAnimationDelay: 0
   canvasRect: {fileID: 1196263176416914523}
   hitAreaRect: {fileID: 2825757560225722067}
   timerText: {fileID: 4991370350586442395}
   sadagiCountText: {fileID: 2807321562618443525}
+  attackerImage: {fileID: 1805456237641145274}
+  victimImage: {fileID: 9168333577716967020}
+  victimAnimator: {fileID: 3387739456920975083}
+  attackerAnimator: {fileID: 4399762324373237814}
+  generalSadagiSound: {fileID: 8300000, guid: 4bd6a2d9468378b468d01019ee25d39f, type: 3}
+  strongSadagiSound: {fileID: 8300000, guid: 4bd6a2d9468378b468d01019ee25d39f, type: 3}
+  missSadagiSound: {fileID: 8300000, guid: 4bd6a2d9468378b468d01019ee25d39f, type: 3}
   minSlapSpeed: 4000
+  useCustomResultAnimation: 1
+  resultDisplayDelay: 0.5
   saddagiMaxCount: 5
   timer: {fileID: 9048135470379242906}
   inputHandler: {fileID: 3672047803510038462}
@@ -433,6 +445,7 @@ GameObject:
   - component: {fileID: 4876658837583491162}
   - component: {fileID: 839342419117956048}
   - component: {fileID: 1805456237641145274}
+  - component: {fileID: 4399762324373237814}
   m_Layer: 0
   m_Name: Attacker
   m_TagString: Untagged
@@ -497,6 +510,28 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!95 &4399762324373237814
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6632650464427973659}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5fc80d2eded8b4c458b9328a617cbbd1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &6796653662315620250
 GameObject:
   m_ObjectHideFlags: 0
@@ -765,6 +800,7 @@ GameObject:
   - component: {fileID: 8880278263118812542}
   - component: {fileID: 4848502225508681853}
   - component: {fileID: 9168333577716967020}
+  - component: {fileID: 3387739456920975083}
   m_Layer: 0
   m_Name: Victim
   m_TagString: Untagged
@@ -819,7 +855,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -829,6 +865,28 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!95 &3387739456920975083
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8416269484974588754}
+  m_Enabled: 0
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: b8f403972a266ac419947f37dfdaa758, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &8748335726472895729
 GameObject:
   m_ObjectHideFlags: 0
