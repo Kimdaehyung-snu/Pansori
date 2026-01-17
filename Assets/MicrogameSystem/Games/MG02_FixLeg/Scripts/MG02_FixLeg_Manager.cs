@@ -1,0 +1,201 @@
+using System;
+using UnityEngine;
+using Pansori.Microgames;
+using TMPro;
+
+namespace Pansori.Microgames.Games
+{
+    /// <summary>
+    /// 부러진 제비의 다리를 올바른 방향으로 돌려놓아라!
+    /// 
+    /// TODO: 게임 설명을 여기에 작성하세요.
+    /// </summary>
+    public class MG02_FixLeg_Manager : MicrogameBase
+    {
+        [Header("게임 오브젝트")]
+        // TODO: 게임 오브젝트 참조를 추가하세요
+        [SerializeField] private RectTransform legTransform;
+        [SerializeField] private RectTransform canvasTransform;
+        [SerializeField] private TMP_Text timerText; // 남은 시간 표시 UI
+
+        [Header("게임 설정")]
+        // TODO: 게임 설정 변수를 추가하세요
+
+        
+        
+        [Header("헬퍼 컴포넌트")]
+        [SerializeField] private MicrogameTimer timer;
+        [SerializeField] private MicrogameInputHandler inputHandler;
+        [SerializeField] private MicrogameUILayer uiLayer;
+        
+        /// <summary>
+        /// 현재 게임 이름
+        /// </summary>
+        public override string currentGameName => "제비다리를 고쳐라!";
+        private bool isDragging = false;
+        private bool gameCleared = false;
+        private Quaternion initialRotation; // 초기 회전값 저장
+
+        
+        protected override void Awake()
+        {
+            base.Awake();
+            
+            // TODO: 초기화 로직을 추가하세요
+            initialRotation = legTransform.rotation;
+            
+        }
+        
+        public override void OnGameStart(int difficulty, float speed)
+        {
+            base.OnGameStart(difficulty, speed);
+            
+            // TODO: 게임 시작 로직을 추가하세요
+            legTransform.rotation = initialRotation;
+            gameCleared = false;
+            // 타이머 시작 예시
+            if (timer != null)
+            {
+                timer.StartTimer(5f, speed);
+                timer.OnTimerEnd += OnTimeUp;
+                UpdateTimerUI(); // 초기 시간 표시
+            }
+            
+            // 입력 핸들러 이벤트 구독 예시
+            if (inputHandler != null)
+            {
+                inputHandler.OnMouseDrag += HandleDrag;
+            }
+        }
+
+        private void Update()
+        {
+            // 게임이 진행 중일 때만 시간 업데이트
+            if (!isGameEnded && timer != null && timer.IsRunning)
+            {
+                UpdateTimerUI();
+            }
+        }
+
+        /// <summary>
+        /// 남은 시간 UI 업데이트
+        /// </summary>
+        private void UpdateTimerUI()
+        {
+            if (timerText != null && timer != null)
+            {
+                float remainingTime = timer.GetRemainingTime();
+                // 소수점 첫째 자리까지 표시
+                timerText.text = $"남은 시간: {remainingTime:F1}초";
+            }
+        }
+
+
+        // 2. 드래그 중: 회전 로직 실행
+        private void HandleDrag(Vector3 startPos, Vector3 currentPos)
+        {
+            if (gameCleared)
+            {
+                return;
+            }
+            RotateLegToMouse(currentPos);
+            CheckHealed();
+        }
+
+
+
+        void CheckHealed()
+        {
+            //현재 각도 확인
+            float currentZ = legTransform.eulerAngles.z;
+            
+            // 0~360도를 -180~180도로 변환 (판정 편의성)
+            
+            // 오차 범위 5도 이내면 성공
+            if (Mathf.Abs(currentZ) < 5f) 
+            {
+                Debug.Log("제비 다리 치료 완료! 🩹");
+            
+                // 성공 시 각도를 0으로 딱 맞춰주기
+                legTransform.rotation = Quaternion.Euler(0, 0, 0);
+            
+                // 더 이상 드래그 안 되게
+                gameCleared = true; 
+                
+                // 목표 달성 성공 처리
+                OnSuccess();
+            }
+        }
+
+        void RotateLegToMouse(Vector3 currentPos)
+        {
+            Vector3 mouseWorldPos;
+            
+            // 월드 좌표를 스크린 좌표로 변환
+            Vector3 screenPos;
+            screenPos = Camera.main.WorldToScreenPoint(currentPos);
+     
+            
+            // 스크린 좌표를 Canvas 좌표로 변환
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(
+                canvasTransform,       // 기준 RectTransform
+                screenPos,            // 스크린 좌표
+                null,                 // Overlay 모드이므로 카메라는 null
+                out mouseWorldPos     // 변환된 좌표 저장
+            );
+            
+            //방향벡터
+            Vector3 direction = mouseWorldPos - legTransform.position;
+            
+            //각도계산
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            
+            //회전
+            legTransform.rotation = Quaternion.Euler(0, 0, angle);
+        }
+      
+        private void OnTimeUp()
+        {
+            // TODO: 시간 초과 처리 로직을 추가하세요
+            if (gameCleared==false)
+            {
+                OnFailure();
+            }
+        }
+        
+        private void OnSuccess()
+        {
+            ReportResult(true);
+        }
+        
+        private void OnFailure()
+        {
+            ReportResult(false);
+        }
+        
+        protected override void ResetGameState()
+        {
+            // TODO: 모든 오브젝트를 초기 상태로 리셋하는 로직을 추가하세요
+  
+            
+            // 타이머 중지
+            if (timer != null)
+            {
+                timer.Stop();
+                timer.OnTimerEnd -= OnTimeUp;
+            }
+            
+            // 타이머 UI 초기화
+            if (timerText != null)
+            {
+                timerText.text = "남은 시간: 0.0초";
+            }
+            
+            // 입력 핸들러 이벤트 구독 해제
+            if (inputHandler != null)
+            {
+                inputHandler.OnMouseDrag += HandleDrag;
+            }
+        }
+    }
+}
