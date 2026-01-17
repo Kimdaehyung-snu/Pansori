@@ -22,8 +22,10 @@ namespace Pansori.Microgames.Games
         [SerializeField] Transform simcheong;  // 심청이
         [SerializeField] SpriteRenderer dragonPalace;  // 용궁
 
-        [Header("사운드 클립")]
+        [Header("사운드 관련")]
         [SerializeField] AudioClip diveSplashClip;
+        [SerializeField] AudioClip seaWaveClip;
+        private AudioSource seaAudioSource;
 
         [Header("용궁 스폰 설정")]
         [SerializeField, Range(0f, 0.95f)] float rightMarginViewport = 0.05f;   // 화면 오른쪽 여백(뷰포트 기준)
@@ -101,7 +103,7 @@ namespace Pansori.Microgames.Games
             isMoving = true;
             currentVel = defaultVel * Mathf.Pow(4, speed) * difficulty;
 
-            SoundManager.Instance.PlayMicrogameBGM("MG_IndangsuDive");  // 배경음 재생
+            seaAudioSource = SoundManager.Instance.SFXLoopPlay("WaterPush", seaWaveClip);
 
             base.OnGameStart(difficulty, speed);
             
@@ -209,6 +211,8 @@ namespace Pansori.Microgames.Games
             simcheong.position = startSimcheongPos;
             currentVel = defaultVel;
             isMoving = false;
+
+            Destroy(seaAudioSource);
 
             // 타이머 중지
             if (timer != null)

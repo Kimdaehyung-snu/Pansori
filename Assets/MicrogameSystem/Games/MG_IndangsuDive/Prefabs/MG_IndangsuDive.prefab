@@ -369,6 +369,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 209a9618210914947b850cc0f218059a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.Games.MG_IndangsuDive_Manager
+  thumbnailSprite: {fileID: 0}
   resultAnimation: {fileID: 0}
   useResultAnimation: 1
   resultAnimationDelay: 0
@@ -376,6 +377,7 @@ MonoBehaviour:
   simcheong: {fileID: 8095070527951537953}
   dragonPalace: {fileID: 3835630018206368367}
   diveSplashClip: {fileID: 8300000, guid: 12f7d958e14133a4ba5ffddb0a46d7e2, type: 3}
+  seaWaveClip: {fileID: 8300000, guid: 889b6637f83b6934c89bbb3388c68085, type: 3}
   rightMarginViewport: 0.1
   defaultVel: 2
   maxDis: 20
