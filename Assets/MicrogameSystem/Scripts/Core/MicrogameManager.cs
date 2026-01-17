@@ -52,6 +52,11 @@ namespace Pansori.Microgames
         #region Shuffle System
         
         /// <summary>
+        /// 기본 히스토리 크기 (settings가 없을 때 사용)
+        /// </summary>
+        private const int DEFAULT_SHUFFLE_HISTORY_SIZE = 3;
+        
+        /// <summary>
         /// 셔플된 인덱스 큐 (중복 방지용)
         /// </summary>
         private Queue<int> shuffledIndices = new Queue<int>();
@@ -396,36 +401,49 @@ namespace Pansori.Microgames
                 return -1;
             }
 
-            // 셔플이 비활성화된 경우 또는 설정이 없는 경우 단순 랜덤
-            if (settings == null || !settings.EnableShuffle)
-            {
-                return UnityEngine.Random.Range(0, microgamePrefabs.Count);
-            }
+            int selectedIndex;
+            bool useShuffle = settings != null && settings.EnableShuffle;
 
-            // 셔플된 인덱스가 없으면 새로 생성
-            if (shuffledIndices.Count == 0)
+            if (useShuffle)
             {
-                GenerateShuffledIndices();
-            }
-
-            // 셔플된 인덱스에서 하나 꺼내기
-            int selectedIndex = shuffledIndices.Dequeue();
-
-            // 연속 중복 방지 체크
-            int maxAttempts = microgamePrefabs.Count;
-            int attempts = 0;
-            while (recentPlayedHistory.Contains(selectedIndex) && attempts < maxAttempts)
-            {
-                // 다시 큐에 넣고 다른 것 선택
-                shuffledIndices.Enqueue(selectedIndex);
-                
+                // 셔플된 인덱스가 없으면 새로 생성
                 if (shuffledIndices.Count == 0)
                 {
                     GenerateShuffledIndices();
                 }
-                
+
+                // 셔플된 인덱스에서 하나 꺼내기
                 selectedIndex = shuffledIndices.Dequeue();
-                attempts++;
+
+                // 연속 중복 방지 체크 (셔플 모드)
+                int maxAttempts = microgamePrefabs.Count;
+                int attempts = 0;
+                while (recentPlayedHistory.Contains(selectedIndex) && attempts < maxAttempts)
+                {
+                    // 다시 큐에 넣고 다른 것 선택
+                    shuffledIndices.Enqueue(selectedIndex);
+                    
+                    if (shuffledIndices.Count == 0)
+                    {
+                        GenerateShuffledIndices();
+                    }
+                    
+                    selectedIndex = shuffledIndices.Dequeue();
+                    attempts++;
+                }
+            }
+            else
+            {
+                // 단순 랜덤이지만 히스토리 중복 방지는 적용
+                int maxAttempts = microgamePrefabs.Count;
+                int attempts = 0;
+                
+                do
+                {
+                    selectedIndex = UnityEngine.Random.Range(0, microgamePrefabs.Count);
+                    attempts++;
+                }
+                while (recentPlayedHistory.Contains(selectedIndex) && attempts < maxAttempts);
             }
 
             return selectedIndex;
@@ -463,12 +481,13 @@ namespace Pansori.Microgames
         /// </summary>
         private void AddToPlayHistory(int index)
         {
-            if (settings == null) return;
-
             recentPlayedHistory.Enqueue(index);
             
+            // 히스토리 크기 결정 (settings가 있으면 설정값, 없으면 기본값 사용)
+            int historySize = settings != null ? settings.ShuffleHistorySize : DEFAULT_SHUFFLE_HISTORY_SIZE;
+            
             // 히스토리 크기 유지
-            while (recentPlayedHistory.Count > settings.ShuffleHistorySize)
+            while (recentPlayedHistory.Count > historySize)
             {
                 recentPlayedHistory.Dequeue();
             }
