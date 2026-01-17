@@ -86,6 +86,11 @@ namespace Pansori.Microgames
         /// </summary>
         private int nextMicrogameIndex = -1;
 
+        /// <summary>
+        /// 속도 증가 발생 여부 (지화자! 연출용)
+        /// </summary>
+        private bool didSpeedIncrease = false;
+
         #region Properties
 
         /// <summary>
@@ -319,27 +324,15 @@ namespace Pansori.Microgames
 
             if (fromMicrogame)
             {
-                // 판소리 씬 반응 사운드 재생
-                if (SoundManager.Instance != null)
+                // 성공 + 속도 증가 시 "지화자!" 연출 먼저 표시
+                if (lastMicrogameSuccess && didSpeedIncrease)
                 {
-                    SoundManager.Instance.PlayPansoriReactionSound(lastMicrogameSuccess);
-                }
-                
-                // 마이크로게임 결과에 따른 반응 표시 (목숨 정보 포함)
-                if (pansoriSceneUI != null)
-                {
-                    int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
-                    int consumedLives = microgameManager != null ? (microgameManager.MaxLives - microgameManager.CurrentLives) : loseCount;
-                    
-                    pansoriSceneUI.ShowReactionWithInfo(lastMicrogameSuccess, totalLives, consumedLives, CurrentStage, ReactionDuration, () =>
-                    {
-                        // 승리/패배 조건 확인
-                        CheckGameEndCondition();
-                    });
+                    ShowSpeedUpThenReaction();
                 }
                 else
                 {
-                    StartCoroutine(DelayedCheckGameEnd(ReactionDuration));
+                    // 기존 흐름: 반응 표시 후 다음 게임 준비
+                    ShowReactionAndContinue();
                 }
             }
             else
@@ -348,7 +341,71 @@ namespace Pansori.Microgames
                 PrepareNextMicrogame();
             }
 
-            Debug.Log($"[GameFlowManager] 판소리 씬 진입 (마이크로게임에서: {fromMicrogame})");
+            Debug.Log($"[GameFlowManager] 판소리 씬 진입 (마이크로게임에서: {fromMicrogame}, 속도증가: {didSpeedIncrease})");
+        }
+
+        /// <summary>
+        /// 속도 증가 연출 후 반응 표시
+        /// </summary>
+        private void ShowSpeedUpThenReaction()
+        {
+            // 플래그 초기화
+            didSpeedIncrease = false;
+            
+            if (pansoriSceneUI != null)
+            {
+                // "지화자!" 연출 표시
+                pansoriSceneUI.ShowSpeedUpNotification(ReactionDuration, () =>
+                {
+                    // 연출 완료 후 기존 반응 표시 흐름 진행
+                    ShowReactionAndContinue();
+                });
+            }
+            else
+            {
+                // UI가 없으면 바로 다음 단계로
+                StartCoroutine(DelayedShowReaction(ReactionDuration));
+            }
+            
+            Debug.Log("[GameFlowManager] 속도 증가 연출 시작 (지화자!)");
+        }
+
+        /// <summary>
+        /// 반응 표시 후 게임 계속
+        /// </summary>
+        private void ShowReactionAndContinue()
+        {
+            // 판소리 씬 반응 사운드 재생
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayPansoriReactionSound(lastMicrogameSuccess);
+            }
+            
+            // 마이크로게임 결과에 따른 반응 표시 (목숨 정보 포함)
+            if (pansoriSceneUI != null)
+            {
+                int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
+                int consumedLives = microgameManager != null ? (microgameManager.MaxLives - microgameManager.CurrentLives) : loseCount;
+                
+                pansoriSceneUI.ShowReactionWithInfo(lastMicrogameSuccess, totalLives, consumedLives, CurrentStage, ReactionDuration, () =>
+                {
+                    // 승리/패배 조건 확인
+                    CheckGameEndCondition();
+                });
+            }
+            else
+            {
+                StartCoroutine(DelayedCheckGameEnd(ReactionDuration));
+            }
+        }
+
+        /// <summary>
+        /// 지연된 반응 표시 코루틴
+        /// </summary>
+        private IEnumerator DelayedShowReaction(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            ShowReactionAndContinue();
         }
 
         /// <summary>
@@ -553,8 +610,11 @@ namespace Pansori.Microgames
                 }
             }
 
+            // 속도 증가 여부 체크 (지화자! 연출용)
+            didSpeedIncrease = Math.Abs(previousSpeed - currentSpeed) > 0.001f;
+
             // 이벤트 발생
-            if (Math.Abs(previousSpeed - currentSpeed) > 0.001f)
+            if (didSpeedIncrease)
             {
                 OnSpeedChanged?.Invoke(currentSpeed);
                 
@@ -564,7 +624,7 @@ namespace Pansori.Microgames
                     SoundManager.Instance.SetMainBGMSpeed(currentSpeed);
                 }
                 
-                Debug.Log($"[GameFlowManager] 속도 변경: {previousSpeed:F2} → {currentSpeed:F2}");
+                Debug.Log($"[GameFlowManager] 속도 변경: {previousSpeed:F2} → {currentSpeed:F2} (지화자! 연출 예정)");
             }
 
             if (previousDifficulty != currentDifficulty)
@@ -608,6 +668,7 @@ namespace Pansori.Microgames
             currentDifficulty = BaseDifficulty;
             lastMicrogameSuccess = false;
             nextMicrogameIndex = -1;
+            didSpeedIncrease = false;
 
             // MicrogameManager의 목숨도 초기화
             if (microgameManager != null)

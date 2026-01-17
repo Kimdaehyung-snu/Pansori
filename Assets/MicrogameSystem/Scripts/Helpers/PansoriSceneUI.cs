@@ -79,6 +79,12 @@ namespace Pansori.Microgames
         [SerializeField] private Animator pansoriSpriteAnimator; // 판소리 스프라이트 애니메이터
         [SerializeField] private GameObject pansoriSpriteAnimatorObject; // 애니메이터 오브젝트 (활성화/비활성화용)
         
+        [Header("속도 증가 알림 설정 (지화자!)")]
+        [SerializeField] private string speedUpNotificationText = "지화자!"; // 속도 증가 알림 텍스트
+        [SerializeField] private Color speedUpTextColor = new Color(1f, 0.8f, 0f); // 속도 증가 텍스트 색상 (금색)
+        [SerializeField] private Color speedUpBackgroundColor = new Color(1f, 0.95f, 0.7f); // 속도 증가 배경색
+        [SerializeField] private float speedUpScalePunchAmount = 1.5f; // 속도 증가 스케일 펀치 크기
+        
         private Coroutine currentCoroutine;
         private Canvas canvas;
         private RectTransform canvasRectTransform;
@@ -392,6 +398,118 @@ namespace Pansori.Microgames
             UpdateLivesDisplay(totalLives, consumedLives);
             UpdateStageDisplay(stage);
             currentCoroutine = StartCoroutine(ShowReactionWithInfoCoroutine(success, duration, onComplete));
+        }
+        
+        /// <summary>
+        /// 속도 증가 알림 표시 ("지화자!" 연출)
+        /// 4단계마다 속도/난이도가 증가할 때 호출됩니다.
+        /// </summary>
+        /// <param name="duration">표시 시간</param>
+        /// <param name="onComplete">완료 콜백</param>
+        public void ShowSpeedUpNotification(float duration, Action onComplete)
+        {
+            Show();
+            currentCoroutine = StartCoroutine(ShowSpeedUpNotificationCoroutine(duration, onComplete));
+        }
+        
+        /// <summary>
+        /// 속도 증가 알림 표시 코루틴
+        /// </summary>
+        private IEnumerator ShowSpeedUpNotificationCoroutine(float duration, Action onComplete)
+        {
+            // 명령 텍스트 숨기기
+            if (commandText != null)
+            {
+                commandText.gameObject.SetActive(false);
+            }
+            
+            // 게임 정보 숨기기
+            HideGameInfo();
+            
+            // 화면 플래시 효과 (특별한 색상으로)
+            if (useScreenFlash && screenFlashOverlay != null)
+            {
+                StartCoroutine(PlaySpeedUpScreenFlash());
+            }
+            
+            // 배경색 변경 (특별한 색상으로)
+            if (useBackgroundColorChange && backgroundImage != null)
+            {
+                StartCoroutine(TransitionBackgroundColor(speedUpBackgroundColor, backgroundColorTransitionDuration));
+            }
+            
+            // 캐릭터 성공 애니메이션
+            if (useCharacterAnimation)
+            {
+                PlayCharacterAnimation(successAnimTrigger);
+            }
+            
+            // 속도 증가 사운드 재생
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlaySpeedUpSound();
+            }
+            
+            // 반응 텍스트에 "지화자!" 표시
+            if (reactionText != null)
+            {
+                reactionText.text = speedUpNotificationText;
+                reactionText.color = speedUpTextColor;
+                reactionText.gameObject.SetActive(true);
+                
+                // 더 강한 스케일 펀치 효과
+                yield return StartCoroutine(ScalePunchEffect(reactionText.rectTransform, speedUpScalePunchAmount, 0.4f));
+            }
+            
+            // 대기
+            yield return new WaitForSeconds(duration);
+            
+            // 반응 텍스트 숨기기
+            if (reactionText != null)
+            {
+                reactionText.gameObject.SetActive(false);
+            }
+            
+            // 배경색 복원
+            if (useBackgroundColorChange && backgroundImage != null)
+            {
+                yield return StartCoroutine(TransitionBackgroundColor(normalBackgroundColor, backgroundColorTransitionDuration));
+            }
+            
+            // 캐릭터 Idle로 복귀
+            PlayCharacterAnimation(idleAnimTrigger);
+            
+            Debug.Log("[PansoriSceneUI] 속도 증가 알림 완료 (지화자!)");
+            
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 속도 증가 전용 화면 플래시 효과
+        /// </summary>
+        private IEnumerator PlaySpeedUpScreenFlash()
+        {
+            if (screenFlashOverlay == null) yield break;
+            
+            Color flashColor = speedUpBackgroundColor;
+            flashColor.a = screenFlashAlpha;
+            
+            screenFlashOverlay.gameObject.SetActive(true);
+            screenFlashOverlay.color = flashColor;
+            
+            // 페이드 아웃
+            float elapsed = 0f;
+            while (elapsed < screenFlashDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / screenFlashDuration;
+                Color color = flashColor;
+                color.a = Mathf.Lerp(screenFlashAlpha, 0f, t);
+                screenFlashOverlay.color = color;
+                yield return null;
+            }
+            
+            screenFlashOverlay.gameObject.SetActive(false);
         }
         
         /// <summary>

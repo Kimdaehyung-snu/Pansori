@@ -33,6 +33,9 @@ public class SoundManager : PansoriSingleton<SoundManager>
     [SerializeField] private AudioClip pansoriSuccessClip;  // 판소리 씬 성공 반응 사운드
     [SerializeField] private AudioClip pansoriFailClip;     // 판소리 씬 실패 반응 사운드
     
+    [Header("Speed Up Sound (지화자!)")]
+    [SerializeField] private AudioClip speedUpClip;         // 속도/난이도 증가 시 재생되는 사운드
+    
     [Header("Fade Settings")]
     [SerializeField] private float fadeInDuration = 0.2f;
     [SerializeField] private float fadeOutDuration = 0.2f;
@@ -388,6 +391,26 @@ public class SoundManager : PansoriSingleton<SoundManager>
         else
         {
             Debug.LogWarning($"[SoundManager] 판소리 {(success ? "성공" : "실패")} 반응 사운드가 설정되지 않았습니다.");
+        }
+    }
+    
+    #endregion
+    
+    #region Speed Up Sound
+    
+    /// <summary>
+    /// 속도/난이도 증가 시 사운드 재생 ("지화자!" 연출용)
+    /// </summary>
+    public void PlaySpeedUpSound()
+    {
+        if (speedUpClip != null)
+        {
+            SFXPlay("SpeedUp", speedUpClip);
+            Debug.Log("[SoundManager] 속도 증가 사운드 재생 (지화자!)");
+        }
+        else
+        {
+            Debug.LogWarning("[SoundManager] 속도 증가 사운드(speedUpClip)가 설정되지 않았습니다.");
         }
     }
     
