@@ -319,6 +319,12 @@ namespace Pansori.Microgames
 
             if (fromMicrogame)
             {
+                // 판소리 씬 반응 사운드 재생
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.PlayPansoriReactionSound(lastMicrogameSuccess);
+                }
+                
                 // 마이크로게임 결과에 따른 반응 표시 (목숨 정보 포함)
                 if (pansoriSceneUI != null)
                 {

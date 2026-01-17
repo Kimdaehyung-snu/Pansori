@@ -663,11 +663,7 @@ namespace Pansori.Microgames
                 }
             }
             
-            // 결과 사운드 재생
-            if (SoundManager.Instance != null)
-            {
-                SoundManager.Instance.PlayMicrogameResultSound(success);
-            }
+            // 결과 사운드는 MicrogameBase에서 결과 판정 직후 이미 재생됨
             
             // 외부 이벤트 호출
             OnMicrogameResult?.Invoke(success);
