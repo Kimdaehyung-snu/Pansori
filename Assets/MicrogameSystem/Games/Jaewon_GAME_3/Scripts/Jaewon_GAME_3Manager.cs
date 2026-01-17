@@ -559,8 +559,11 @@ public class Jaewon_GAME_3Manager : MicrogameBase
     {
         hasSucceeded = false;
         
-        // 기본 커서로 복원
-        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        // 커스텀 커서가 설정된 경우에만 기본 커서로 복원
+        if (cursorTexture != null)
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
         
         // 타이머 중지 및 이벤트 해제
         if (timer != null)
@@ -642,7 +645,10 @@ public class Jaewon_GAME_3Manager : MicrogameBase
             drawingCanvas.CanDraw = false;
         }
         
-        // 기본 커서로 복원
-        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        // 커스텀 커서가 설정된 경우에만 기본 커서로 복원
+        if (cursorTexture != null)
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
     }
 }
