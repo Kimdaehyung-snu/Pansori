@@ -54,6 +54,14 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     [SerializeField] private float hyungBounceHeight = 50f;
     [SerializeField] private float hyungBounceSpeed = 8f;
     
+    [Header("성공 애니메이션 스프라이트")]
+    [SerializeField] private Sprite[] winSprites; // brothers_player_win_0, brothers_player_win_1
+    [SerializeField] private float spriteSwapInterval = 0.5f;
+    
+    [Header("실패 애니메이션 설정")]
+    [SerializeField] private Image failAnimationImage; // 전체 화면 Image
+    [SerializeField] private Animator failAnimator; // b_win 애니메이션 재생용
+    
     [Header("헬퍼 컴포넌트")]
     [SerializeField] private MicrogameTimer timer;
     
@@ -67,6 +75,10 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     
     // 애니메이션 상태
     private bool isThrowingAnimation = false;
+    
+    // 양팔 Image 컴포넌트 캐싱
+    private Image leftArmImage;
+    private Image rightArmImage;
     
     /// <summary>
     /// 이 게임의 표시 이름
@@ -83,6 +95,12 @@ public class Jaewon_GAME_2Manager : MicrogameBase
         
         // 플레이어 스택에서 드래그 가능한 쌀가마니 컴포넌트 수집
         CollectDraggableRiceBags();
+        
+        // 양팔 Image 컴포넌트 캐싱
+        if (successLeftArm != null)
+            leftArmImage = successLeftArm.GetComponent<Image>();
+        if (successRightArm != null)
+            rightArmImage = successRightArm.GetComponent<Image>();
     }
     
     /// <summary>
@@ -202,6 +220,7 @@ public class Jaewon_GAME_2Manager : MicrogameBase
         if (successRightArm != null) successRightArm.SetActive(false);
         if (failHyungCelebration != null) failHyungCelebration.SetActive(false);
         if (failText != null) failText.gameObject.SetActive(false);
+        if (failAnimationImage != null) failAnimationImage.gameObject.SetActive(false);
     }
     
     private void Update()
@@ -468,7 +487,7 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     }
     
     /// <summary>
-    /// 성공 애니메이션: 1인칭 시점에서 양팔 환호
+    /// 성공 애니메이션: 1인칭 시점에서 양팔 환호 + 스프라이트 교체
     /// </summary>
     private IEnumerator PlaySuccessAnimation(Action onComplete)
     {
@@ -477,6 +496,16 @@ public class Jaewon_GAME_2Manager : MicrogameBase
         // 양팔 활성화
         if (successLeftArm != null) successLeftArm.SetActive(true);
         if (successRightArm != null) successRightArm.SetActive(true);
+        
+        // 초기 스프라이트 설정
+        if (winSprites != null && winSprites.Length >= 2)
+        {
+            if (leftArmImage != null) leftArmImage.sprite = winSprites[0];
+            if (rightArmImage != null) rightArmImage.sprite = winSprites[1];
+        }
+        
+        // 스프라이트 교체 코루틴 시작 (병렬)
+        Coroutine spriteSwapCoroutine = StartCoroutine(AnimateSpriteSwap());
         
         // 팔 올리기 애니메이션
         RectTransform leftArmRect = successLeftArm?.GetComponent<RectTransform>();
@@ -508,82 +537,60 @@ public class Jaewon_GAME_2Manager : MicrogameBase
             yield return null;
         }
         
-        // 잠시 유지
+        // 잠시 유지 (스프라이트 교체 계속 진행)
         yield return new WaitForSeconds(0.8f);
+        
+        // 스프라이트 교체 코루틴 중지
+        if (spriteSwapCoroutine != null)
+        {
+            StopCoroutine(spriteSwapCoroutine);
+        }
         
         onComplete?.Invoke();
     }
     
     /// <summary>
-    /// 실패 애니메이션: 멀리서 세레모니하는 형 + "고얀 놈!" 텍스트
+    /// 스프라이트 교체 애니메이션 (양팔이 서로 반대 스프라이트를 0.5초마다 교대)
+    /// </summary>
+    private IEnumerator AnimateSpriteSwap()
+    {
+        if (winSprites == null || winSprites.Length < 2) yield break;
+        
+        int currentIndex = 0;
+        while (true)
+        {
+            // 왼팔: currentIndex, 오른팔: 반대 인덱스
+            if (leftArmImage != null)
+                leftArmImage.sprite = winSprites[currentIndex % winSprites.Length];
+            if (rightArmImage != null)
+                rightArmImage.sprite = winSprites[(currentIndex + 1) % winSprites.Length];
+            
+            yield return new WaitForSeconds(spriteSwapInterval);
+            currentIndex++;
+        }
+    }
+    
+    /// <summary>
+    /// 실패 애니메이션: 전체 화면에 good_brothers b_win 애니메이션 재생
     /// </summary>
     private IEnumerator PlayFailureAnimation(Action onComplete)
     {
         Debug.Log("[Jaewon_GAME_2] 실패 애니메이션 시작");
         
-        // 형 세레모니 활성화
-        if (failHyungCelebration != null) failHyungCelebration.SetActive(true);
-        
-        // 텍스트 활성화
-        if (failText != null)
+        // 전체 화면 애니메이션 Image 활성화
+        if (failAnimationImage != null)
         {
-            failText.gameObject.SetActive(true);
-            failText.text = "고얀 놈!";
-            
-            // 텍스트 스케일 애니메이션
-            RectTransform textRect = failText.GetComponent<RectTransform>();
-            if (textRect != null)
-            {
-                textRect.localScale = Vector3.zero;
-                
-                float scaleUpDuration = 0.3f;
-                float elapsed = 0f;
-                
-                while (elapsed < scaleUpDuration)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = elapsed / scaleUpDuration;
-                    
-                    // EaseOutBack
-                    float easeT = 1f + 2.70158f * Mathf.Pow(t - 1f, 3f) + 1.70158f * Mathf.Pow(t - 1f, 2f);
-                    textRect.localScale = Vector3.one * easeT;
-                    
-                    yield return null;
-                }
-                
-                textRect.localScale = Vector3.one;
-            }
+            failAnimationImage.gameObject.SetActive(true);
         }
         
-        // 형 바운스 애니메이션
-        if (failHyungCelebration != null)
+        // b_win 애니메이션 재생
+        if (failAnimator != null)
         {
-            RectTransform hyungRect = failHyungCelebration.GetComponent<RectTransform>();
-            if (hyungRect != null)
-            {
-                Vector2 originalPos = hyungRect.anchoredPosition;
-                
-                float bounceDuration = 1f;
-                float elapsed = 0f;
-                
-                while (elapsed < bounceDuration)
-                {
-                    elapsed += Time.deltaTime;
-                    float t = elapsed / bounceDuration;
-                    
-                    // 바운스
-                    float bounce = Mathf.Sin(t * Mathf.PI * hyungBounceSpeed) * hyungBounceHeight * (1f - t);
-                    hyungRect.anchoredPosition = originalPos + new Vector2(0, bounce);
-                    
-                    yield return null;
-                }
-                
-                hyungRect.anchoredPosition = originalPos;
-            }
+            failAnimator.Play("b_win");
         }
         
-        // 잠시 유지
-        yield return new WaitForSeconds(0.5f);
+        // 애니메이션 재생 시간 대기
+        yield return new WaitForSeconds(1.5f);
         
         onComplete?.Invoke();
     }

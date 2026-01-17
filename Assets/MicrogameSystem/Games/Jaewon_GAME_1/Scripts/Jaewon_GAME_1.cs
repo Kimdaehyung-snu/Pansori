@@ -40,6 +40,9 @@ namespace Pansori.Microgames.Games
         [SerializeField] private TMP_Text clickCountText; // 클릭 횟수 표시 UI
         [SerializeField] private TMP_Text timerText; // 남은 시간 표시 UI
         
+        [Header("톱질 사운드")]
+        [SerializeField] private AudioClip[] sawSounds; // 톱질 사운드 (2개, 번갈아 재생)
+        
         [Header("결과 연출 설정")]
         [SerializeField] private bool useCustomResultAnimation = true; // 커스텀 결과 연출 사용 여부
         [SerializeField] private float resultDisplayDelay = 0.5f; // 결과 표시 전 연출 시간
@@ -94,6 +97,9 @@ namespace Pansori.Microgames.Games
         private SpriteRenderer wifeRenderer;
         private float spriteAnimTimer = 0f;
         private int spriteFrameIndex = 0; // 0 또는 1 (프레임 전환용)
+        
+        // 톱질 사운드 인덱스 (번갈아 재생용)
+        private int sawSoundIndex = 0;
         
         /// <summary>
         /// 게임 결과 상태 (null: 진행중, true: 성공, false: 실패)
@@ -219,6 +225,9 @@ namespace Pansori.Microgames.Games
                 clickCount++;
                 lastDirection = currentDirection;
                 
+                // 톱질 사운드 재생 (번갈아가며)
+                PlaySawSound();
+                
                 // 톱 이동
                 MoveSaw(currentDirection);
                 
@@ -274,6 +283,23 @@ namespace Pansori.Microgames.Games
                 currentPos.y + gourdRisePerClick,
                 currentPos.z
             );
+        }
+        
+        /// <summary>
+        /// 톱질 사운드 재생 (번갈아가며)
+        /// </summary>
+        private void PlaySawSound()
+        {
+            if (sawSounds == null || sawSounds.Length == 0) return;
+            
+            AudioClip clip = sawSounds[sawSoundIndex];
+            if (clip != null && SoundManager.Instance != null)
+            {
+                SoundManager.Instance.SFXPlay($"Saw_{sawSoundIndex}", clip);
+            }
+            
+            // 다음 사운드 인덱스로 전환
+            sawSoundIndex = (sawSoundIndex + 1) % sawSounds.Length;
         }
         
         /// <summary>
@@ -701,6 +727,7 @@ namespace Pansori.Microgames.Games
             // 상태 리셋
             clickCount = 0;
             lastDirection = null;
+            sawSoundIndex = 0;
             UpdateClickCountUI();
             
             // 타이머 중지

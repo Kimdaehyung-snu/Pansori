@@ -22,8 +22,8 @@ MonoBehaviour:
   baseDifficulty: 1
   winsPerDifficultyIncrease: 0
   readyDuration: 2
-  commandDelay: 1
-  reactionDisplayDuration: 1.5
+  commandDelay: 2
+  reactionDisplayDuration: 2
   infoDisplayDuration: 2
   enableShuffle: 1
   shuffleHistorySize: 4

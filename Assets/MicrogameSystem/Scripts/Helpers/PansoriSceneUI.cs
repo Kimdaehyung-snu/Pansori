@@ -360,7 +360,7 @@ namespace Pansori.Microgames
             }
             
             // 약간의 추가 대기 후 콜백
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(1.5f);
             
             onComplete?.Invoke();
         }
