@@ -1166,6 +1166,9 @@ MonoBehaviour:
   failResultPanel: {fileID: 240057546685713060}
   rotateAreaRect: {fileID: 2463683007941845802}
   legGuideLineGameObject: {fileID: 2505968751965260112}
+  legWheelSound: {fileID: 8300000, guid: 5741e02a941f802489854c1065cd7f6c, type: 3}
+  successSound: {fileID: 8300000, guid: d0e4fbdd7810459418baa71ebb7dca0d, type: 3}
+  failSound: {fileID: 8300000, guid: f0d05b1ab8701db44b13f10090d1be2c, type: 3}
   successAngleCondition: 10
   useCustomResultAnimation: 1
   resultDisplayDelay: 0.5

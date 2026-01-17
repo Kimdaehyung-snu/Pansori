@@ -2665,7 +2665,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameManager
   settings: {fileID: 11400000, guid: 11ee6132bcb544b48b0466c52a77db25, type: 2}
   microgamePrefabs:
-  - {fileID: 5311364290549085117, guid: 2138479e50738cc45b8d0bc0a24be488, type: 3}
+  - {fileID: 5830159389541254652, guid: e05d367aff06de84d814c5e1dd8cd364, type: 3}
   maxLives: 4
   currentLives: 4
   currentStage: 1

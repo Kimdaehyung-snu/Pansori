@@ -15,9 +15,11 @@ namespace Pansori.Microgames.Games
         [SerializeField] RectTransform nammaeRect; // 남매
         [SerializeField] RectTransform successTarget; // (판정용 목표위치)
         [SerializeField] RectTransform gameOverTarget; // (게임오버 판정용 목표위치)
-
         [SerializeField] AudioClip climbingSoundClip;
-
+        [SerializeField] Animator nammaeAnimator;
+        [SerializeField] AnimationClip climbingAnimClip;
+        [SerializeField] AnimationClip idleAnimClip;
+        
         [Header("게임 설정")] 
         [SerializeField] float friction = 10f; // 마찰(값↑ = 덜 미끄러짐)
         [SerializeField] float nammaePushForce = 3f; // 스페이스 1회: 버티는 힘(속도 감소량)
@@ -25,22 +27,27 @@ namespace Pansori.Microgames.Games
 
         [SerializeField] float maxSpeed = 30f; // 속도 제한
 
-        private Vector2 startPos; // 시작 위치(리셋용)
-        private float velocity; // 현재 x축 속도
-
-        private bool isBlocking; // 실제 게임 진행 중 여부
-
+  
+        
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
-        public override string currentGameName => "올라가라!";
+        public override string currentGameName => "호랑이를 피해 올라가라!";
         public override string controlDescription => "스페이스로 올라가라!";
 
         [Header("헬퍼 컴포넌트")] 
         [SerializeField] private MicrogameTimer timer;
         [SerializeField] private MicrogameInputHandler inputHandler;
         [SerializeField] private MicrogameUILayer uiLayer;
+        private Vector2 startPos; // 시작 위치(리셋용)
+        private float velocity; // 현재 x축 속도
 
+        private bool isBlocking; // 실제 게임 진행 중 여부
+        private AnimatorOverrideController overrideController;
+
+        private bool isPressing = false;
+        private float checkAfterReleasingTimer = 0f;
+        private const float checkAfterReleasingTimerMax = 0.2f;
         protected override void Awake()
         {
             base.Awake();
@@ -64,7 +71,7 @@ namespace Pansori.Microgames.Games
             // 마찰 적용: 속도를 0으로 서서히 끌어당겨 미끄러짐(관성) 줄이기
             velocity = Mathf.MoveTowards(velocity, 0f, friction * Time.deltaTime);
 
-            // 중력 힘 적용: 매 프레임 오른쪽으로 가속(속도 누적)
+            // 중력 힘 적용: 매 프레임 가속(속도 누적)
             velocity -= gravityPushForce * Time.deltaTime;
             // 속도 제한: 너무 빨라지는 것 방지
             velocity = Mathf.Clamp(velocity, -maxSpeed, maxSpeed);
@@ -73,6 +80,17 @@ namespace Pansori.Microgames.Games
             Vector2 p = nammaeRect.position;
             p.y += velocity * Time.deltaTime;
             nammaeRect.position = p;
+            
+            //타이머체크
+            if (!isPressing)
+            {
+                checkAfterReleasingTimer+=Time.deltaTime;
+            }
+
+            if (checkAfterReleasingTimer >= checkAfterReleasingTimerMax)
+            {
+                SwapCurrentAnimation(idleAnimClip);
+            }
         }
 
         private void FixedUpdate()
@@ -104,9 +122,11 @@ namespace Pansori.Microgames.Games
             isBlocking = true; //  밀려나기 시작
 
             base.OnGameStart(difficulty, speed);
-
-            float speedMultiplier = Mathf.Max(0.1f, speed); // 최소 0.1배속
-
+            
+            overrideController = new AnimatorOverrideController(nammaeAnimator.runtimeAnimatorController);
+            nammaeAnimator.runtimeAnimatorController = overrideController;
+            
+            
             if (nammaeRect == null || successTarget == null)
             {
                 Debug.LogError("RectTransform 참조가 비었습니다.");
@@ -123,9 +143,34 @@ namespace Pansori.Microgames.Games
             if (inputHandler != null)
             {
                 inputHandler.OnKeyPressed += HandleKeyPress;
+                inputHandler.OnKeyReleased += HandleKeyReleased;
+
             }
         }
 
+        private void SwapCurrentAnimation(AnimationClip newClip)
+        {
+            // 현재 0번 레이어에서 재생 중인 클립 정보를 가져옵니다.
+            var currentClipInfo = nammaeAnimator.GetCurrentAnimatorClipInfo(0);
+
+            if (currentClipInfo.Length > 0)
+            {
+                // "지금 재생 중인 이 클립(Key)을... 새 클립(Value)으로 바꿔라!"
+                var currentClip = currentClipInfo[0].clip;
+                if (currentClip.name == newClip.name)
+                {
+                    return;
+                }
+                
+                overrideController[currentClip] = newClip;
+                Debug.Log($"교체 완료: {currentClip.name} -> {newClip.name}");
+            }
+        }
+
+        private void HandleKeyReleased(KeyCode key)
+        {
+            isPressing = false;
+        }
         private void HandleKeyPress(KeyCode key)
         {
             if (isGameEnded)
@@ -145,6 +190,10 @@ namespace Pansori.Microgames.Games
             {
                 SoundManager.Instance.SFXPlay(climbingSoundClip.ToString(), climbingSoundClip);
             }
+
+            isPressing = true;
+            checkAfterReleasingTimer = 0f;
+            SwapCurrentAnimation(climbingAnimClip);
         }
 
         private void OnTimeUp()
@@ -187,6 +236,7 @@ namespace Pansori.Microgames.Games
             if (inputHandler != null)
             {
                 inputHandler.OnKeyPressed -= HandleKeyPress;
+                inputHandler.OnKeyReleased -= HandleKeyReleased;
             }
         }
     }
