@@ -322,7 +322,7 @@ namespace Pansori.Microgames
             // 명령 텍스트 표시
             if (commandText != null)
             {
-                commandText.text = $"{gameName}해라!";
+                commandText.text = $"{gameName}";
                 commandText.gameObject.SetActive(true);
                 
                 // 간단한 페이드인 효과

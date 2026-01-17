@@ -56,7 +56,7 @@ namespace Pansori.Microgames.Games
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
-        public override string currentGameName => "톱질";
+        public override string currentGameName => "톱질 하라!";
         
         /// <summary>
         /// 현재 클릭 횟수
@@ -168,8 +168,8 @@ namespace Pansori.Microgames.Games
                 return;
             
             // 좌우 화살표만 처리
-            bool isRightArrow = (key == KeyCode.RightArrow);
-            bool isLeftArrow = (key == KeyCode.LeftArrow);
+            bool isRightArrow = (key == KeyCode.D);
+            bool isLeftArrow = (key == KeyCode.A);
             
             if (!isRightArrow && !isLeftArrow)
                 return;

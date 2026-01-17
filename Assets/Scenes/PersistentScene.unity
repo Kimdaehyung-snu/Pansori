@@ -2046,7 +2046,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC2DC\uC791"
+  m_text: "\uC5BC\uC464!"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2073,8 +2073,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2575,7 +2575,7 @@ MonoBehaviour:
   winsPerSpeedIncrease: 4
   baseSpeed: 1
   speedIncrement: 0.2
-  maxSpeed: 2.5
+  maxSpeed: 10
   readyDuration: 3
   pansoriCommandDelay: 0
   reactionDisplayDuration: 2
@@ -2663,7 +2663,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameManager
   settings: {fileID: 0}
   microgamePrefabs:
-  - {fileID: 8721404703643638978, guid: 7ea3a4cb90be32d469ac27ebaa3d75f9, type: 3}
+  - {fileID: 7353824501605857139, guid: 9cb30141729a5c54b9fafbb985529b40, type: 3}
   maxLives: 4
   currentLives: 4
   currentStage: 1
