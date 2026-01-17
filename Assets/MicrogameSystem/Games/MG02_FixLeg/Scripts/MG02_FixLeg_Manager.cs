@@ -20,7 +20,7 @@ namespace Pansori.Microgames.Games
 
         [Header("게임 설정")]
         // TODO: 게임 설정 변수를 추가하세요
-
+        [SerializeField] private float successAngleCondition = 10f;
         
         
         [Header("헬퍼 컴포넌트")]
@@ -65,6 +65,7 @@ namespace Pansori.Microgames.Games
             if (inputHandler != null)
             {
                 inputHandler.OnMouseDrag += HandleDrag;
+                inputHandler.OnMouseDragEnd += HandleDragEnd;
             }
         }
 
@@ -99,6 +100,15 @@ namespace Pansori.Microgames.Games
                 return;
             }
             RotateLegToMouse(currentPos);
+    
+        }
+
+        private void HandleDragEnd(Vector3 endPos)
+        {
+            if (gameCleared)
+            {
+                return;
+            }
             CheckHealed();
         }
 
@@ -108,11 +118,12 @@ namespace Pansori.Microgames.Games
         {
             //현재 각도 확인
             float currentZ = legTransform.eulerAngles.z;
+            Debug.Log($"currentZ : {currentZ}");
             
             // 0~360도를 -180~180도로 변환 (판정 편의성)
             
-            // 오차 범위 5도 이내면 성공
-            if (Mathf.Abs(currentZ) < 5f) 
+            // 오차 범위 n도 이내면 성공
+            if (Mathf.Abs(currentZ) < successAngleCondition) 
             {
                 Debug.Log("제비 다리 치료 완료! 🩹");
             
