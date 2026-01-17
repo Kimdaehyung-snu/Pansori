@@ -328,6 +328,25 @@ namespace Pansori.Microgames
             StopAllCoroutines();
             currentCoroutine = null;
             
+            // 텍스트 색상/투명도 초기화 (코루틴 강제 종료 시 복원)
+            ResetTextAlpha(commandText);
+            ResetTextAlpha(reactionText);
+            ResetTextAlpha(livesText);
+            ResetTextAlpha(stageText);
+            ResetTextAlpha(controlDescriptionText);
+            
+            // 배경색 초기화
+            if (backgroundImage != null)
+            {
+                backgroundImage.color = normalBackgroundColor;
+            }
+            
+            // 플래시 오버레이 초기화
+            if (screenFlashOverlay != null)
+            {
+                screenFlashOverlay.color = Color.clear;
+            }
+            
             if (pansoriPanel != null)
             {
                 pansoriPanel.SetActive(false);
@@ -1255,6 +1274,19 @@ namespace Pansori.Microgames
         }
         
         #endregion
+        
+        /// <summary>
+        /// 텍스트 알파값 초기화 (코루틴 강제 종료 시 복원용)
+        /// </summary>
+        private void ResetTextAlpha(TMP_Text text)
+        {
+            if (text != null)
+            {
+                Color c = text.color;
+                c.a = 1f;
+                text.color = c;
+            }
+        }
         
         /// <summary>
         /// 텍스트 페이드인 효과
