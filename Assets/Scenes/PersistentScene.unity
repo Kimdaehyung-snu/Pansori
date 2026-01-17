@@ -639,8 +639,8 @@ MonoBehaviour:
   - {fileID: 1346219771}
   - {fileID: 1506429102}
   - {fileID: 981002803}
-  audienceExitDuration: 0.5
-  audienceExitDistance: 1500
+  audienceExitDuration: 2
+  audienceExitDistance: 1000
   audienceSprite1Array:
   - {fileID: 21300000, guid: a2a79ac1509ff5b48b1c4fb2bd367398, type: 3}
   - {fileID: 21300000, guid: 91338a9282160f24397ae4c79a043c72, type: 3}
@@ -3547,7 +3547,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameManager
   settings: {fileID: 11400000, guid: 11ee6132bcb544b48b0466c52a77db25, type: 2}
   microgamePrefabs:
-  - {fileID: 7353824501605857139, guid: 9cb30141729a5c54b9fafbb985529b40, type: 3}
+  - {fileID: 8721404703643638978, guid: 7ea3a4cb90be32d469ac27ebaa3d75f9, type: 3}
   maxLives: 4
   currentLives: 4
   currentStage: 1
