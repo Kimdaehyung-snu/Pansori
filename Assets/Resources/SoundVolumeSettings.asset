@@ -72,7 +72,7 @@ MonoBehaviour:
   - clipGuid: 5741e02a941f802489854c1065cd7f6c
     clipName: fixLeg
     clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLeg.mp3
-    volume: 0.5
+    volume: 0.8
   - clipGuid: f0d05b1ab8701db44b13f10090d1be2c
     clipName: fixLegFailSound
     clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLegFailSound.mp3
@@ -80,7 +80,7 @@ MonoBehaviour:
   - clipGuid: d0e4fbdd7810459418baa71ebb7dca0d
     clipName: fixLegSuccessSound
     clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLegSuccessSound.mp3
-    volume: 0.5
+    volume: 0.25
   - clipGuid: 95c17c7bde558da49b7f4413912245c4
     clipName: climbing
     clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/climbing.mp3
@@ -100,11 +100,11 @@ MonoBehaviour:
   - clipGuid: e7001fbad39f2d14fa61c33b0d6b49ad
     clipName: generalSadagi
     clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/generalSadagi.mp3
-    volume: 0.5
+    volume: 1
   - clipGuid: b98c72767f59eda4fb1a037f030dbfb8
     clipName: missSadagi
     clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/missSadagi.mp3
-    volume: 0.5
+    volume: 1
   - clipGuid: 87512f201deba554fb4d094b2509c86a
     clipName: strongSadagi
     clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/strongSadagi.mp3
@@ -120,4 +120,32 @@ MonoBehaviour:
   - clipGuid: 4bd6a2d9468378b468d01019ee25d39f
     clipName: ToadMoveSound
     clipPath: Assets/MicrogameSystem/Games/MG_ToadSeal/Audios/ToadMoveSound.mp3
+    volume: 0.5
+  - clipGuid: fdb25141f91eecd4e89fb8ae36df7f26
+    clipName: Success_Rope
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Success_Rope.mp3
+    volume: 1
+  - clipGuid: 763f48e221eea914bb3d05d883ea00c9
+    clipName: Success_Tiger
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Success_Tiger.mp3
+    volume: 1
+  - clipGuid: 0032d8d19309a7245a4b5400ffda0f2e
+    clipName: MG_HaewaDal
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/MG_HaewaDal.wav
+    volume: 0.3
+  - clipGuid: 1b1f3ab5828c9744eac07deae665c37e
+    clipName: MG02_FixLeg
+    clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/MG02_FixLeg.mp3
+    volume: 0.5
+  - clipGuid: 0c9e8551d6af1cb40b7676a089370c65
+    clipName: Fail_Rope
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Fail_Rope.mp3
+    volume: 0.5
+  - clipGuid: 1aa6e4093fd421143afeaa57f50eff66
+    clipName: Fail_Tiger
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Fail_Tiger.mp3
+    volume: 0.5
+  - clipGuid: a3b8c3a0c17e40e43957a54df6d93606
+    clipName: MG_Saddagi
+    clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/MG_Saddagi.mp3
     volume: 0.5

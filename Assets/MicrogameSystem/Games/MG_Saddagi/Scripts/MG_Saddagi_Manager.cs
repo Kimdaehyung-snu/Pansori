@@ -84,8 +84,8 @@ namespace Pansori.Microgames.Games
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
-        public override string currentGameName => "콩쥐의 복수";
-        public override string controlDescription => "마우스로 후려라!";
+        public override string currentGameName => "때려라!";
+        public override string controlDescription => "팥쥐의 뺨을 향해 마우스를 드래그하세요!";
             
         protected override void Awake()
         {

@@ -41,7 +41,9 @@ namespace Pansori.Microgames.Games
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
-        public override string currentGameName => "제비다리를 고쳐라!";
+        public override string currentGameName => "고쳐라!";
+        public override string controlDescription => "제비 다리를 드래그해 기준선에 맞추세요!";
+        
         private bool isDragging = false;
         private bool gameCleared = false;
         private Quaternion initialRotation; // 초기 회전값 저장
@@ -149,7 +151,7 @@ namespace Pansori.Microgames.Games
             
             // 오차 범위 n도 이내면 성공
 
-            if (-15f <Mathf.Abs(currentZ)&& Mathf.Abs(currentZ)< 15f) 
+            if (-20f <Mathf.Abs(currentZ)&& Mathf.Abs(currentZ)< 20f) 
             {
                 Debug.Log("제비 다리 치료 완료! 🩹");
             
