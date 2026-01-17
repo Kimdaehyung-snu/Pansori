@@ -17,12 +17,17 @@ namespace Pansori.Microgames.Games
         [SerializeField] private RectTransform legTransform;
         [SerializeField] private RectTransform canvasTransform;
         [SerializeField] private TMP_Text timerText; // 남은 시간 표시 UI
-
+        [SerializeField] private GameObject successResultPanel;
+        [SerializeField] private GameObject failResultPanel;
+        
         [Header("게임 설정")]
         // TODO: 게임 설정 변수를 추가하세요
+        [SerializeField] private float successAngleCondition = 10f;
+        
+        [Header("결과 연출 설정")]
+        [SerializeField] private bool useCustomResultAnimation = true; // 커스텀 결과 연출 사용 여부
+        [SerializeField] private float resultDisplayDelay = 0.5f; // 결과 표시 전 연출 시간
 
-        
-        
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
         [SerializeField] private MicrogameInputHandler inputHandler;
@@ -65,6 +70,7 @@ namespace Pansori.Microgames.Games
             if (inputHandler != null)
             {
                 inputHandler.OnMouseDrag += HandleDrag;
+                inputHandler.OnMouseDragEnd += HandleDragEnd;
             }
         }
 
@@ -99,6 +105,15 @@ namespace Pansori.Microgames.Games
                 return;
             }
             RotateLegToMouse(currentPos);
+    
+        }
+
+        private void HandleDragEnd(Vector3 endPos)
+        {
+            if (gameCleared)
+            {
+                return;
+            }
             CheckHealed();
         }
 
@@ -108,11 +123,12 @@ namespace Pansori.Microgames.Games
         {
             //현재 각도 확인
             float currentZ = legTransform.eulerAngles.z;
+            Debug.Log($"currentZ : {currentZ}");
             
             // 0~360도를 -180~180도로 변환 (판정 편의성)
             
-            // 오차 범위 5도 이내면 성공
-            if (Mathf.Abs(currentZ) < 5f) 
+            // 오차 범위 n도 이내면 성공
+            if (Mathf.Abs(currentZ) < successAngleCondition) 
             {
                 Debug.Log("제비 다리 치료 완료! 🩹");
             
@@ -165,18 +181,34 @@ namespace Pansori.Microgames.Games
         
         private void OnSuccess()
         {
-            ReportResult(true);
+   
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(true);
+            }
+            else
+            {
+                ReportResult(true);
+            }
         }
         
         private void OnFailure()
         {
-            ReportResult(false);
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(false);
+            }
+            else
+            {
+                ReportResult(false);
+            }
         }
         
         protected override void ResetGameState()
         {
             // TODO: 모든 오브젝트를 초기 상태로 리셋하는 로직을 추가하세요
-  
+            successResultPanel.SetActive(false);
+            failResultPanel.SetActive(false);
             
             // 타이머 중지
             if (timer != null)
@@ -196,6 +228,51 @@ namespace Pansori.Microgames.Games
             {
                 inputHandler.OnMouseDrag += HandleDrag;
             }
+        }
+
+        /// <summary>
+        /// 결과 애니메이션을 오버라이드하여 게임별 커스텀 연출을 추가합니다.
+        /// </summary>
+        protected override void PlayResultAnimation(bool success, System.Action onComplete = null)
+        {
+            if (success)
+            {
+                // 성공 시: 성공 패널 열기
+                Debug.Log("[Jaewon_GAME_1] 성공 커스텀 연출 시작");
+                StartCoroutine(PlaySuccessResultAnimation(onComplete));
+            }
+            else
+            {
+                // 실패 시: 실패 패널 열기
+                Debug.Log("[Jaewon_GAME_1] 실패 커스텀 연출 시작");
+                StartCoroutine(PlayFailureResultAnimation(onComplete));
+            }
+        }
+
+        /// <summary>
+        /// 성공 결과 애니메이션
+        /// </summary>
+        private System.Collections.IEnumerator PlaySuccessResultAnimation(System.Action onComplete)
+        {
+            //패널열기
+            successResultPanel.SetActive(true);
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            // 완료 콜백
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// 실패 결과 애니메이션 
+        /// </summary>
+        private System.Collections.IEnumerator PlayFailureResultAnimation(System.Action onComplete)
+        {
+            //패널열기
+            failResultPanel.SetActive(true);
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            // 완료 콜백
+            onComplete?.Invoke();
         }
     }
 }
