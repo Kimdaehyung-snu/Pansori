@@ -19,7 +19,7 @@ namespace Pansori.Microgames.Games
         [SerializeField] Transform target;  // 깨진 장독대 부분 (판정용)
 
         [SerializeField] AudioClip toadClip;
-        [SerializeField] AudioClip waterClip;
+        [SerializeField] AudioClip toadSealClip;
 
         [Header("게임 설정")]
         [SerializeField] float friction = 10f;   // 마찰(값↑ = 덜 미끄러짐)
@@ -29,7 +29,7 @@ namespace Pansori.Microgames.Games
         [SerializeField] float currentWaterPushForce;
 
         [SerializeField] float maxSpeed = 30f;      // 속도 제한
-        [SerializeField] float maxPushbackDis;      // 밀려날 수 있는 최대 거리(이 이상이면 실패)
+        [SerializeField] float maxPushbackDis= 15f;      // 밀려날 수 있는 최대 거리(이 이상이면 실패)
 
         private Vector2 startPos;   // 시작 위치(리셋용)
         private float velocity;     // 현재 x축 속도
@@ -42,12 +42,18 @@ namespace Pansori.Microgames.Games
         private float backAnimHoldRemaining = 0f;
         private Coroutine animCorotine;
 
+        [Header("콩쥐 애니메이션 설정")]
+        [SerializeField] Animator simcheongAnimator;
+
+        [Header("물 오브젝트 설정")]
+        [SerializeField] GameObject water;
+
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
         public override string currentGameName => "막아라!";
 
-        public override string controlDescription => "스페이스바를 눌러 물을 막으세요!";
+        public override string controlDescription => "스페이스바를 눌러\n물을 막으세요!";
 
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
@@ -107,6 +113,9 @@ namespace Pansori.Microgames.Games
 
             if (toad.position.x <= target.position.x)   // 목표 지점 도달
             {
+                SoundManager.Instance.SFXPlay("ToadSeal", toadSealClip);
+                water.SetActive(false);
+
                 isBlocking = false;
                 velocity = 0f;
                 toad.position = target.position;
@@ -128,6 +137,7 @@ namespace Pansori.Microgames.Games
             isBlocking = true;  // 두꺼비 밀려나기 시작
             // 성공 단계에 따라 물이 미는 힘이 강해짐
             currentWaterPushForce = waterDefaultPushForce + (speed - 1) * difficulty;
+            SoundManager.Instance.PlayMicrogameBGM("MG_ToadSeal");
 
             base.OnGameStart(difficulty, speed);
 
@@ -205,6 +215,12 @@ namespace Pansori.Microgames.Games
             toadAnimator.SetBool("IsSuccess", false);
             toadAnimator.SetBool("IsFailure", false);
 
+            simcheongAnimator.gameObject.SetActive(false);
+            simcheongAnimator.SetBool("IsSuccess", false);
+            simcheongAnimator.SetBool("IsFailure", false);
+
+            water.SetActive(true);
+
             if (animCorotine != null)
             {
                 StopCoroutine(animCorotine);
@@ -232,14 +248,17 @@ namespace Pansori.Microgames.Games
         private IEnumerator ResultAnimationCoroutine(bool success, Action onComplete)
         {
             toadAnimator.SetBool("IsPushingBack", false);
+            simcheongAnimator.gameObject.SetActive(true);
 
             if (success)
             {
                 toadAnimator.SetBool("IsSuccess", true);
+                simcheongAnimator.SetBool("IsSuccess", true);
             }
             else
             {
                 toadAnimator.SetBool("IsFailure", true);
+                simcheongAnimator.SetBool("IsFailure", true);
             }
 
             yield return new WaitForSeconds(1.5f);
