@@ -689,7 +689,7 @@ MonoBehaviour:
   rightDoorImage: {fileID: 1228249057}
   doorSprite: {fileID: 0}
   doorColor: {r: 0, g: 0, b: 0, a: 1}
-  doorTransitionDuration: 0.5
+  doorTransitionDuration: 0.3
   useDoorTransition: 1
 --- !u!114 &387787668
 MonoBehaviour:
