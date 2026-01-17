@@ -6,7 +6,11 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+<<<<<<<< HEAD:Assets/MicrogameSystem/Games/MG_TrickDragon/Art/Anim/King_Idle.anim
   m_Name: King_Idle
+========
+  m_Name: BG_Sky_Idle
+>>>>>>>> Yujin:Assets/MicrogameSystem/Games/MG_IndangsuDive/Arts/Anim/BG_Sky_Idle.anim
   serializedVersion: 7
   m_Legacy: 0
   m_Compressed: 0
