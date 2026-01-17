@@ -67,7 +67,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
     /// </summary>
     public override string currentGameName => "속여라!";
 
-    public override string controlDescription => "순서에 맞게\n키를 입력하세요!";
+    public override string controlDescription => "A, W, D 키를 순서에\n맞춰 입력하세요!";
 
     protected override void Awake()
     {
