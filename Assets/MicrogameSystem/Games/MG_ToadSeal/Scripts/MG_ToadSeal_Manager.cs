@@ -38,6 +38,8 @@ namespace Pansori.Microgames.Games
         /// </summary>
         public override string currentGameName => "막아라!";
 
+        public override string controlDescription => "스페이스바를 눌러 물을 막으세요!";
+
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
         [SerializeField] private MicrogameInputHandler inputHandler;

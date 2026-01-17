@@ -52,6 +52,8 @@ namespace Pansori.Microgames.Games
         /// </summary>
         public override string currentGameName => "뛰어내려라!";
 
+        public override string controlDescription => "용궁 위치에 맞게 스페이스바를 누르세요!";
+
         protected override void Awake()
         {
             base.Awake();
