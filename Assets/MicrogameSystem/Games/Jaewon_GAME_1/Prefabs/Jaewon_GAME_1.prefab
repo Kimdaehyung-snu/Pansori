@@ -400,6 +400,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed89136d6d262bd42b159545c3590d31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.Games.Jaewon_GAME_1
+  thumbnailSprite: {fileID: -8201866540758033547, guid: e071b18579a8a7f47820c9e4953c1c8c, type: 3}
   resultAnimation: {fileID: 0}
   useResultAnimation: 1
   resultAnimationDelay: 0
@@ -637,7 +638,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4711832071185861373
 RectTransform:
   m_ObjectHideFlags: 0

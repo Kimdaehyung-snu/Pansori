@@ -33,6 +33,9 @@ public class SoundManager : PansoriSingleton<SoundManager>
     [SerializeField] private AudioClip pansoriSuccessClip;  // 판소리 씬 성공 반응 사운드
     [SerializeField] private AudioClip pansoriFailClip;     // 판소리 씬 실패 반응 사운드
     
+    [Header("Speed Up Sound (지화자!)")]
+    [SerializeField] private AudioClip speedUpClip;         // 속도/난이도 증가 시 재생되는 사운드
+    
     [Header("Fade Settings")]
     [SerializeField] private float fadeInDuration = 0.2f;
     [SerializeField] private float fadeOutDuration = 0.2f;
@@ -46,6 +49,27 @@ public class SoundManager : PansoriSingleton<SoundManager>
     // 코루틴 관리 변수 (중복 실행 방지)
     private Coroutine mainBGMFadeCoroutine;
     private Coroutine microgameBGMFadeCoroutine;
+    
+    // 볼륨 설정 참조
+    private SoundVolumeSettings volumeSettings;
+    
+    /// <summary>
+    /// AudioClip의 설정된 볼륨을 가져옵니다 (SoundVolumeSettings 사용)
+    /// </summary>
+    private float GetClipVolume(AudioClip clip)
+    {
+        if (volumeSettings == null)
+        {
+            volumeSettings = SoundVolumeSettings.Instance;
+        }
+        
+        if (volumeSettings != null)
+        {
+            return volumeSettings.GetVolume(clip);
+        }
+        
+        return defaultVolume;
+    }
     
  
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -73,7 +97,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
         AudioSource audioSource = go.AddComponent<AudioSource>();
         audioSource.outputAudioMixerGroup = mixer.FindMatchingGroups("SFX")[0];
         audioSource.clip = clip;
-        audioSource.volume = 0.3f;
+        audioSource.volume = GetClipVolume(clip);
         audioSource.Play();
 
         Destroy(go, clip.length);
@@ -113,7 +137,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
         bgSound.outputAudioMixerGroup = mixer.FindMatchingGroups("BGM")[0];
         bgSound.clip = clip;
         bgSound.loop = true;
-        bgSound.volume = 0.3f;
+        bgSound.volume = GetClipVolume(clip);
         bgSound.Play();     
     }
 
@@ -222,7 +246,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
             microgameBGMSource = microgameBGMObj.AddComponent<AudioSource>();
             microgameBGMSource.outputAudioMixerGroup = mixer.FindMatchingGroups("BGM")[0];
             microgameBGMSource.loop = true;
-            microgameBGMSource.volume = 0.3f;
+            microgameBGMSource.volume = defaultVolume;
             microgameBGMSource.playOnAwake = false;
         }
     }
@@ -257,8 +281,9 @@ public class SoundManager : PansoriSingleton<SoundManager>
                 // pitch 설정 (속도 반영, 0.5f ~ 3.0f 범위 제한)
                 microgameBGMSource.pitch = Mathf.Clamp(speed, 0.5f, 3.0f);
                 
-                // 자동 페이드인 적용
-                SafeStartCoroutine(ref microgameBGMFadeCoroutine, FadeInCoroutine(microgameBGMSource, defaultVolume, fadeInDuration));
+                // 자동 페이드인 적용 (클립별 볼륨 설정 사용)
+                float targetVolume = GetClipVolume(microgameBgClipList[i]);
+                SafeStartCoroutine(ref microgameBGMFadeCoroutine, FadeInCoroutine(microgameBGMSource, targetVolume, fadeInDuration));
                 
                 Debug.Log($"[SoundManager] 미니게임 BGM 재생: {microgameName} (속도: {speed})");
                 return;
@@ -393,6 +418,26 @@ public class SoundManager : PansoriSingleton<SoundManager>
     
     #endregion
     
+    #region Speed Up Sound
+    
+    /// <summary>
+    /// 속도/난이도 증가 시 사운드 재생 ("지화자!" 연출용)
+    /// </summary>
+    public void PlaySpeedUpSound()
+    {
+        if (speedUpClip != null)
+        {
+            SFXPlay("SpeedUp", speedUpClip);
+            Debug.Log("[SoundManager] 속도 증가 사운드 재생 (지화자!)");
+        }
+        else
+        {
+            Debug.LogWarning("[SoundManager] 속도 증가 사운드(speedUpClip)가 설정되지 않았습니다.");
+        }
+    }
+    
+    #endregion
+    
     #region Main BGM (자진모리)
     
     /// <summary>
@@ -407,7 +452,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
             mainBGMSource = mainBGMObj.AddComponent<AudioSource>();
             mainBGMSource.outputAudioMixerGroup = mixer.FindMatchingGroups("BGM")[0];
             mainBGMSource.loop = true;
-            mainBGMSource.volume = 0.3f;
+            mainBGMSource.volume = defaultVolume;
             mainBGMSource.playOnAwake = false;
         }
     }
@@ -436,8 +481,9 @@ public class SoundManager : PansoriSingleton<SoundManager>
         mainBGMSource.clip = mainBGMClip;
         mainBGMSource.pitch = Mathf.Clamp(speed, 0.5f, 3.0f);
         
-        // 자동 페이드인 적용
-        SafeStartCoroutine(ref mainBGMFadeCoroutine, FadeInCoroutine(mainBGMSource, defaultVolume, fadeInDuration));
+        // 자동 페이드인 적용 (클립별 볼륨 설정 사용)
+        float targetVolume = GetClipVolume(mainBGMClip);
+        SafeStartCoroutine(ref mainBGMFadeCoroutine, FadeInCoroutine(mainBGMSource, targetVolume, fadeInDuration));
         
         Debug.Log($"[SoundManager] 메인 BGM 재생: {mainBGMClip.name} (속도: {speed})");
     }

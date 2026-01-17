@@ -18,9 +18,13 @@ public class MG_TrickDragon_Manager : MicrogameBase
 {
     [Header("별주부전에서 토끼가 자신의 간 위치를 속이는 마이크로 게임 설정")]
     [SerializeField] private float gameDuration = 5f;   // 기본 제한시간(속도 적용 전)
-    [SerializeField] int seqLength;                     // 시퀀스 길이(인스펙터에서 설정)
+    [SerializeField] int[] targetSeqLength;
+    private int seqLength;                              // 시퀀스 길이
     [SerializeField] TMP_Text[] seqTexts;               // 시퀀스 UI 텍스트들 (길이는 seqLength와 동일해야 함)
+
     private KeyCode[] seqKeys;                          // 실제 정답 시퀀스 (A/W/D)
+
+    private GameFlowManager gameFlowManager;
 
     [Header("시퀀스 표시 색상")]
     [SerializeField] Color defaultSeqColor = Color.white;   // 초기/리셋 색
@@ -54,6 +58,13 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
     public override string controlDescription => "순서에 맞게 키를 입력하세요!";
 
+    protected override void Awake()
+    {
+        base.Awake();
+
+        gameFlowManager = FindAnyObjectByType<GameFlowManager>();
+    }
+
     /// <summary>
     /// 게임 시작 시 호출
     /// </summary>
@@ -67,6 +78,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
         expectedSeqIdx = 0;
 
         // 정답 시퀀스 생성 + UI 표시
+        seqLength = targetSeqLength[gameFlowManager.CurrentStage - 1];
         seqKeys = GenerateSequence(seqLength);
 
         Debug.Log($"[MG_TrickDragon] 게임 시작 - 난이도: {difficulty}, 속도: {speed}");
@@ -116,11 +128,6 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
         if (key != seqKeys[expectedSeqIdx])
         {
-            foreach (var seq in seqTexts)
-            {
-                seq.color = failedSeqColor;
-            }
-
             ReportResultWithAnimation(false);
         }
         else
@@ -131,6 +138,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
             if (expectedSeqIdx == seqLength)
             {
                 OnSuccess();
+
             }
         }
     }
@@ -175,6 +183,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
         foreach (var seq in seqTexts)
         {
             seq.color = defaultSeqColor;
+            seq.gameObject.SetActive(false);
         }
 
         // 입력 핸들러 이벤트 구독 해제
@@ -201,6 +210,14 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
     private IEnumerator ResultAnimationCoroutine(bool success, Action onComplete)
     {
+        if (success == false)
+        {
+            foreach (var seq in seqTexts)
+            {
+                seq.color = failedSeqColor;
+            }
+        }
+
         yield return new WaitForSeconds(0.2f);
 
         if (success)
@@ -228,11 +245,6 @@ public class MG_TrickDragon_Manager : MicrogameBase
             length = 1;
         }
 
-        if (seqTexts.Length != seqLength)
-        {
-            return null;
-        }
-
         // 시퀀스 생성
         var seq = new KeyCode[length];
 
@@ -244,7 +256,13 @@ public class MG_TrickDragon_Manager : MicrogameBase
         // UI 표시
         for (int i = 0; i < length; i++)
         {
+            seqTexts[i].gameObject.SetActive(true);
             seqTexts[i].text = $"{seq[i]}";
+        }
+
+        foreach (var seqText in seqTexts)
+        {
+            seqText.color = defaultSeqColor;
         }
 
         return seq;

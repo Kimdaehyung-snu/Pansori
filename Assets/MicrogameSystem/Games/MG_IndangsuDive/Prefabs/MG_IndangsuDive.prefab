@@ -375,9 +375,11 @@ MonoBehaviour:
   boat: {fileID: 1022823515386404714}
   simcheong: {fileID: 8095070527951537953}
   dragonPalace: {fileID: 3835630018206368367}
-  rightMarginViewport: 0.05
-  defaultVel: 4
-  extraWindow: 0
+  diveSplashClip: {fileID: 8300000, guid: 12f7d958e14133a4ba5ffddb0a46d7e2, type: 3}
+  rightMarginViewport: 0.1
+  defaultVel: 2
+  maxDis: 20
+  extraWindow: -0.2
   diveSpeed: 6
   diveStopEpsilon: 0.01
   timer: {fileID: 1947760645715232945}

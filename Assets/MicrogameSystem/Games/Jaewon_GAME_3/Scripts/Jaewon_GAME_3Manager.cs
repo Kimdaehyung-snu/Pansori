@@ -56,12 +56,22 @@ public class Jaewon_GAME_3Manager : MicrogameBase
     [SerializeField] private float scrollTearDistance = 300f;
     [SerializeField] private float scrollTearDuration = 0.5f;
     
+    [Header("붓글씨 사운드")]
+    [SerializeField] private AudioClip brushSoundClip; // 붓글씨.mp3
+    
+    // 붓글씨 사운드용 AudioSource
+    private AudioSource brushAudioSource;
+    
     // 게임 상태 변수
     private bool isTian = true; // true: 天, false: 地
     private bool hasSucceeded = false;
     
     // dragonImage 초기 위치 저장
     private Vector2 dragonImageInitialPosition;
+    
+    // scrollLeftPart, scrollRightPart 초기 위치 저장
+    private Vector2 scrollLeftPartInitialPosition;
+    private Vector2 scrollRightPartInitialPosition;
     
     /// <summary>
     /// 이 게임의 표시 이름
@@ -100,9 +110,26 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         {
             dragonImageInitialPosition = dragonImage.anchoredPosition;
         }
+        
+        // scrollLeftPart, scrollRightPart 초기 위치 저장
+        if (scrollLeftPart != null)
+        {
+            scrollLeftPartInitialPosition = scrollLeftPart.anchoredPosition;
+        }
+        if (scrollRightPart != null)
+        {
+            scrollRightPartInitialPosition = scrollRightPart.anchoredPosition;
+        }
 
         // 결과 애니메이션 요소 초기 숨김
         HideResultElements();
+        
+        // 붓글씨 사운드용 AudioSource 생성
+        brushAudioSource = gameObject.AddComponent<AudioSource>();
+        brushAudioSource.clip = brushSoundClip;
+        brushAudioSource.loop = true;
+        brushAudioSource.playOnAwake = false;
+        brushAudioSource.volume = 0.5f;
     }
     
     /// <summary>
@@ -137,6 +164,10 @@ public class Jaewon_GAME_3Manager : MicrogameBase
             
             // 채움률 변경 이벤트 구독
             drawingCanvas.OnFillPercentageChanged += OnFillPercentageChanged;
+            
+            // 드로잉 시작/종료 이벤트 구독 (붓글씨 사운드)
+            drawingCanvas.OnDrawStart += OnDrawingStart;
+            drawingCanvas.OnDrawEnd += OnDrawingEnd;
         }
         
         // 먹물 게이지 초기화
@@ -227,6 +258,28 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         if (fillGauge != null)
         {
             fillGauge.SetValue(fillPercentage);
+        }
+    }
+    
+    /// <summary>
+    /// 드로잉 시작 시 붓글씨 사운드 재생
+    /// </summary>
+    private void OnDrawingStart()
+    {
+        if (brushAudioSource != null && brushSoundClip != null && !brushAudioSource.isPlaying)
+        {
+            brushAudioSource.Play();
+        }
+    }
+    
+    /// <summary>
+    /// 드로잉 종료 시 붓글씨 사운드 정지
+    /// </summary>
+    private void OnDrawingEnd()
+    {
+        if (brushAudioSource != null && brushAudioSource.isPlaying)
+        {
+            brushAudioSource.Stop();
         }
     }
     
@@ -502,8 +555,16 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         {
             drawingCanvas.OnInkConsumed -= OnInkConsumed;
             drawingCanvas.OnFillPercentageChanged -= OnFillPercentageChanged;
+            drawingCanvas.OnDrawStart -= OnDrawingStart;
+            drawingCanvas.OnDrawEnd -= OnDrawingEnd;
             drawingCanvas.ResetCanvas();
             drawingCanvas.CanDraw = false;
+        }
+        
+        // 붓글씨 사운드 정지
+        if (brushAudioSource != null && brushAudioSource.isPlaying)
+        {
+            brushAudioSource.Stop();
         }
         
         // 먹물 게이지 리셋
@@ -534,6 +595,18 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         {
             dragonImage.anchoredPosition = dragonImageInitialPosition;
             dragonImage.localScale = Vector3.one;
+        }
+        
+        // 두루마리 조각 위치/회전 리셋
+        if (scrollLeftPart != null)
+        {
+            scrollLeftPart.anchoredPosition = scrollLeftPartInitialPosition;
+            scrollLeftPart.localRotation = Quaternion.identity;
+        }
+        if (scrollRightPart != null)
+        {
+            scrollRightPart.anchoredPosition = scrollRightPartInitialPosition;
+            scrollRightPart.localRotation = Quaternion.identity;
         }
     }
     

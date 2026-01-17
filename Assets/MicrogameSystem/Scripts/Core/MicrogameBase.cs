@@ -35,6 +35,14 @@ namespace Pansori.Microgames
         /// </summary>
         public virtual string controlDescription => "";
         
+        [Header("게임 정보")]
+        [SerializeField] protected Sprite thumbnailSprite;
+        
+        /// <summary>
+        /// 썸네일 이미지 (연습 모드 선택 화면에서 표시)
+        /// </summary>
+        public virtual Sprite ThumbnailSprite => thumbnailSprite;
+        
         /// <summary>
         /// 현재 배속 (1.0f 이상)
         /// </summary>
@@ -220,6 +228,9 @@ namespace Pansori.Microgames
         /// </summary>
         private void OnDisable()
         {
+            // 모든 코루틴 먼저 정지 (가장 중요!)
+            StopAllCoroutines();
+            
             // 결과 애니메이션 중지
             if (resultAnimation != null)
             {

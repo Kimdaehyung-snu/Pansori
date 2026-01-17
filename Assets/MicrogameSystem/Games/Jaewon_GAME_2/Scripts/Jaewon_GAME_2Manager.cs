@@ -58,9 +58,17 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     [SerializeField] private Sprite[] winSprites; // brothers_player_win_0, brothers_player_win_1
     [SerializeField] private float spriteSwapInterval = 0.5f;
     
-    [Header("실패 애니메이션 설정")]
-    [SerializeField] private Image failAnimationImage; // 전체 화면 Image
-    [SerializeField] private Animator failAnimator; // b_win 애니메이션 재생용
+    [Header("실패 애니메이션 스프라이트")]
+    [SerializeField] private Sprite[] loseSprites; // brothers_bro_win_0 ~ 3
+    [SerializeField] private float loseSpriteSwapInterval = 0.4f;
+    
+    [Header("형 던지기 애니메이션 스프라이트")]
+    [SerializeField] private Sprite[] hyungThrowSprites; // brothers_bro_throw_0 ~ 2
+    [SerializeField] private float hyungThrowSpriteInterval = 0.15f;
+    
+    [Header("형 던지기 입체 효과")]
+    [SerializeField] private float hyungThrowScalePunch = 1.2f; // 던질 때 스케일 최대값
+    [SerializeField] private float hyungThrowForwardMove = 50f; // 던질 때 전진 거리 (Y 방향)
     
     [Header("헬퍼 컴포넌트")]
     [SerializeField] private MicrogameTimer timer;
@@ -79,6 +87,9 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     // 양팔 Image 컴포넌트 캐싱
     private Image leftArmImage;
     private Image rightArmImage;
+    
+    // 형 캐릭터 Image 컴포넌트 캐싱
+    private Image hyungCharacterImage;
     
     /// <summary>
     /// 이 게임의 표시 이름
@@ -101,6 +112,10 @@ public class Jaewon_GAME_2Manager : MicrogameBase
             leftArmImage = successLeftArm.GetComponent<Image>();
         if (successRightArm != null)
             rightArmImage = successRightArm.GetComponent<Image>();
+        
+        // 형 캐릭터 Image 컴포넌트 캐싱
+        if (hyungCharacter != null)
+            hyungCharacterImage = hyungCharacter.GetComponent<Image>();
     }
     
     /// <summary>
@@ -220,7 +235,6 @@ public class Jaewon_GAME_2Manager : MicrogameBase
         if (successRightArm != null) successRightArm.SetActive(false);
         if (failHyungCelebration != null) failHyungCelebration.SetActive(false);
         if (failText != null) failText.gameObject.SetActive(false);
-        if (failAnimationImage != null) failAnimationImage.gameObject.SetActive(false);
     }
     
     private void Update()
@@ -265,12 +279,54 @@ public class Jaewon_GAME_2Manager : MicrogameBase
         
         Debug.Log($"[Jaewon_GAME_2] 형이 쌀가마니를 던짐! 플레이어: {playerRiceBags}, 형: {hyungRiceBags}");
         
-        // 날아오는 애니메이션 (UI 좌표계)
+        // 형 던지기 스프라이트 + 입체 효과 애니메이션
+        Vector2 hyungOriginalPos = hyungCharacter != null ? hyungCharacter.anchoredPosition : Vector2.zero;
+        Vector3 hyungOriginalScale = hyungCharacter != null ? hyungCharacter.localScale : Vector3.one;
+        
+        if (hyungThrowSprites != null && hyungThrowSprites.Length > 0 && hyungCharacterImage != null)
+        {
+            float totalDuration = hyungThrowSprites.Length * hyungThrowSpriteInterval;
+            float elapsed = 0f;
+            int currentSpriteIndex = 0;
+            float nextSpriteTime = 0f;
+            
+            while (elapsed < totalDuration)
+            {
+                // 스프라이트 교체
+                if (elapsed >= nextSpriteTime && currentSpriteIndex < hyungThrowSprites.Length)
+                {
+                    hyungCharacterImage.sprite = hyungThrowSprites[currentSpriteIndex];
+                    currentSpriteIndex++;
+                    nextSpriteTime += hyungThrowSpriteInterval;
+                }
+                
+                // 진행률 계산
+                float t = elapsed / totalDuration;
+                
+                // 스케일 펀치 (커졌다가 원래대로)
+                float scaleMultiplier = 1f + Mathf.Sin(t * Mathf.PI) * (hyungThrowScalePunch - 1f);
+                hyungCharacter.localScale = hyungOriginalScale * scaleMultiplier;
+                
+                // 전진 이동 (앞으로 갔다가 원래대로)
+                float forwardOffset = Mathf.Sin(t * Mathf.PI) * hyungThrowForwardMove;
+                hyungCharacter.anchoredPosition = hyungOriginalPos + new Vector2(0, forwardOffset);
+                
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            
+            // 원래 상태 복원
+            hyungCharacter.localScale = hyungOriginalScale;
+            hyungCharacter.anchoredPosition = hyungOriginalPos;
+        }
+        
+        // 날아오는 애니메이션 (UI 좌표계) - 시작 위치를 hyungCharacter 중심으로 설정
         if (flyingRiceBag != null && hyungCharacter != null && playerRiceBagStack != null)
         {
             flyingRiceBag.gameObject.SetActive(true);
             flyingRiceBag.localScale = Vector3.one;
             
+            // hyungCharacter의 실제 위치에서 시작
             Vector2 startPos = hyungCharacter.anchoredPosition;
             Vector2 endPos = playerRiceBagStack.anchoredPosition;
             
@@ -571,26 +627,38 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     }
     
     /// <summary>
-    /// 실패 애니메이션: 전체 화면에 good_brothers b_win 애니메이션 재생
+    /// 실패 애니메이션: hyungCharacter에 스프라이트 순환 표시
     /// </summary>
     private IEnumerator PlayFailureAnimation(Action onComplete)
     {
         Debug.Log("[Jaewon_GAME_2] 실패 애니메이션 시작");
         
-        // 전체 화면 애니메이션 Image 활성화
-        if (failAnimationImage != null)
-        {
-            failAnimationImage.gameObject.SetActive(true);
-        }
+        // hyungCharacter 활성화
+        if (hyungCharacter != null) hyungCharacter.gameObject.SetActive(true);
         
-        // b_win 애니메이션 재생
-        if (failAnimator != null)
-        {
-            failAnimator.Play("b_win");
-        }
+        // failHyungCelebration 활성화
+        if (failHyungCelebration != null) failHyungCelebration.SetActive(true);
         
-        // 애니메이션 재생 시간 대기
-        yield return new WaitForSeconds(1.5f);
+        // 스프라이트 교체 애니메이션 (전체 4개 스프라이트 순환)
+        if (loseSprites != null && loseSprites.Length > 0 && hyungCharacterImage != null)
+        {
+            float totalDuration = 1.6f; // 약 4회 순환
+            float elapsed = 0f;
+            int currentIndex = 0;
+            float nextSwapTime = 0f;
+            
+            while (elapsed < totalDuration)
+            {
+                if (elapsed >= nextSwapTime)
+                {
+                    hyungCharacterImage.sprite = loseSprites[currentIndex % loseSprites.Length];
+                    currentIndex++;
+                    nextSwapTime += loseSpriteSwapInterval;
+                }
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
         
         onComplete?.Invoke();
     }
