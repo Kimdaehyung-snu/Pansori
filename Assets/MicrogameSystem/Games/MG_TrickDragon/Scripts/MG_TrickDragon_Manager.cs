@@ -33,6 +33,11 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
     private int expectedSeqIdx; // 현재 기대하는 입력 인덱스(0부터 시작)
 
+    [Header("애니메이션 관련")]
+    [SerializeField] Animator rabbitAnimator;
+    [SerializeField] Animator turtleAnimator;
+    [SerializeField] Animator kingAnimator;
+
     // 게임 고유 변수들
     private float timer;
     private bool hasSucceeded = false;
@@ -47,6 +52,12 @@ public class MG_TrickDragon_Manager : MicrogameBase
         KeyCode.D
     };
 
+    [Header("사운드 관련")]
+    [SerializeField] AudioClip[] KeyPressClips;
+
+    [SerializeField] AudioClip successDragonClip;
+    [SerializeField] AudioClip failureDragonClip;
+
     [Header("헬퍼 컴포넌트")]
     [SerializeField] private MicrogameInputHandler inputHandler;
     [SerializeField] private MicrogameUILayer uiLayer;
@@ -56,7 +67,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
     /// </summary>
     public override string currentGameName => "속여라!";
 
-    public override string controlDescription => "순서에 맞게 키를 입력하세요!";
+    public override string controlDescription => "순서에 맞게\n키를 입력하세요!";
 
     protected override void Awake()
     {
@@ -78,7 +89,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
         expectedSeqIdx = 0;
 
         // 정답 시퀀스 생성 + UI 표시
-        seqLength = targetSeqLength[gameFlowManager.CurrentStage - 1];
+        seqLength = targetSeqLength[gameFlowManager.WinCount / 4];
         seqKeys = GenerateSequence(seqLength);
 
         Debug.Log($"[MG_TrickDragon] 게임 시작 - 난이도: {difficulty}, 속도: {speed}");
@@ -128,17 +139,33 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
         if (key != seqKeys[expectedSeqIdx])
         {
+            SoundManager.Instance.SFXPlay("FailureDragon", failureDragonClip);
+
             ReportResultWithAnimation(false);
         }
         else
         {
+            switch (seqKeys[expectedSeqIdx])
+            {
+                case KeyCode.A:
+                    SoundManager.Instance.SFXPlay("RabbitAKey", KeyPressClips[0]);
+                    break;
+                case KeyCode.W:
+                    SoundManager.Instance.SFXPlay("RabbitWKey", KeyPressClips[1]);
+                    break;
+                case KeyCode.D:
+                    SoundManager.Instance.SFXPlay("RabbitDKey", KeyPressClips[2]);
+                    break;
+            }
+
             seqTexts[expectedSeqIdx].color = successSeqColor;
             expectedSeqIdx++;
 
             if (expectedSeqIdx == seqLength)
             {
-                OnSuccess();
+                SoundManager.Instance.SFXPlay("SuccessDragon", successDragonClip);
 
+                OnSuccess();
             }
         }
     }
@@ -222,14 +249,16 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
         if (success)
         {
-            // TODO... 토끼의 망했다 애니메이션 + 용왕의 저놈 잡아 같은 느낌
+            kingAnimator.SetTrigger("IsSuccess");
         }
         else
         {
-            // TODO... 토끼의 그렇다니까요~ 라는 표정 + 용왕의 한숨(실망)
+            rabbitAnimator.SetTrigger("IsFailure");
+            turtleAnimator.SetTrigger("IsFailure");
+            kingAnimator.SetTrigger("IsFailure");
         }
 
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(1f);
 
         onComplete?.Invoke();
     }

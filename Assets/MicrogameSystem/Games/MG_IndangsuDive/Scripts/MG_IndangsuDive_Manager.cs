@@ -19,11 +19,14 @@ namespace Pansori.Microgames.Games
     {
         [Header("게임 오브젝트")]
         [SerializeField] SpriteRenderer boat;    // 배
-        [SerializeField] Transform simcheong;  // 심청이
+        [SerializeField] SpriteRenderer simcheongSprite;
+        [SerializeField] Animator simcheong;  // 심청이
         [SerializeField] SpriteRenderer dragonPalace;  // 용궁
 
-        [Header("사운드 클립")]
+        [Header("사운드 관련")]
         [SerializeField] AudioClip diveSplashClip;
+        [SerializeField] AudioClip seaWaveClip;
+        private AudioSource seaAudioSource;
 
         [Header("용궁 스폰 설정")]
         [SerializeField, Range(0f, 0.95f)] float rightMarginViewport = 0.05f;   // 화면 오른쪽 여백(뷰포트 기준)
@@ -42,9 +45,13 @@ namespace Pansori.Microgames.Games
         // 판정 윈도우를 넓히거나(+) 좁히기(-) 위한 가산치
         [SerializeField] float extraWindow = 0.0f;
 
-        [Header("판정 설정")]
+        [Header("낙하 설정")]
         [SerializeField] float diveSpeed = 6f;  // 낙하 속도
         [SerializeField] float diveStopEpsilon = 0.01f; // 도착 판정 오차
+
+        [Header("배경 애니메이션 설정")]
+        [SerializeField] Animator BGAnimator;
+        [SerializeField] GameObject rainbow;
 
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
@@ -63,7 +70,7 @@ namespace Pansori.Microgames.Games
             base.Awake();
 
             startBoatPos = boat.transform.position;
-            startSimcheongPos = simcheong.position;
+            startSimcheongPos = simcheong.transform.position;
             isMoving = false;
             cam = Camera.main;
         }
@@ -101,7 +108,7 @@ namespace Pansori.Microgames.Games
             isMoving = true;
             currentVel = defaultVel * Mathf.Pow(4, speed) * difficulty;
 
-            SoundManager.Instance.PlayMicrogameBGM("MG_IndangsuDive");  // 배경음 재생
+            seaAudioSource = SoundManager.Instance.SFXLoopPlay("WaterPush", seaWaveClip);
 
             base.OnGameStart(difficulty, speed);
             
@@ -173,29 +180,36 @@ namespace Pansori.Microgames.Games
         /// <returns></returns>
         private IEnumerator ResultAnimationCoroutine(bool success, Action onComplete)
         {
-            // 연출 시작 전 텀
+            simcheong.SetBool("IsDiving", true);
+
+            // 수영(낙하) 애니메이션 시작 전 텀
             yield return new WaitForSeconds(0.2f);
+
+            simcheong.SetBool("IsDiving", false);
+            simcheong.SetBool("IsSwimming", true);
+
+            // 애니메이션 전환 전 낙하하는 것을 막기 위한 텀
+            yield return new WaitForSeconds(0.1f);
 
             // 심청이 낙하 애니메이션 실행
             while (isGameEnded == true && simcheong != null)
             {
-                Vector3 p = simcheong.position;
+                Vector3 p = simcheong.transform.position;
                 float newY = Mathf.MoveTowards(p.y, dragonPalace.transform.position.y, diveSpeed * Time.deltaTime);
-                simcheong.position = new Vector3(p.x, newY, p.z);
+                simcheong.transform.position = new Vector3(p.x, newY, p.z);
 
-                if (Mathf.Abs(simcheong.position.y - dragonPalace.transform.position.y) <= diveStopEpsilon)
+                if (Mathf.Abs(simcheong.transform.position.y - dragonPalace.transform.position.y) <= diveStopEpsilon)
+                {
                     break;
+                }
 
                 yield return null;
             }
 
             if (success)
             {
-                // TODO... 성공 애니메이션 실행
-            }
-            else
-            {
-                // TODO... 실패 애니메이션 실행
+                BGAnimator.SetTrigger("IsSuccess");
+                rainbow.SetActive(true);
             }
 
             yield return new WaitForSeconds(0.8f);
@@ -206,9 +220,16 @@ namespace Pansori.Microgames.Games
         protected override void ResetGameState()
         {
             boat.transform.position = startBoatPos;
-            simcheong.position = startSimcheongPos;
+            simcheong.transform.position = startSimcheongPos;
             currentVel = defaultVel;
             isMoving = false;
+
+            simcheong.SetBool("IsDiving", false);
+            simcheong.SetBool("IsSwimming", false);
+
+            rainbow.SetActive(false);
+
+            Destroy(seaAudioSource);
 
             // 타이머 중지
             if (timer != null)
@@ -261,12 +282,12 @@ namespace Pansori.Microgames.Games
         /// <returns></returns>
         private bool IsOverlapping()
         {
-            if (boat == null || dragonPalace == null)
+            if (simcheongSprite == null || dragonPalace == null)
             {
                 return false;
             }
 
-            Bounds a = boat.bounds;
+            Bounds a = simcheongSprite.bounds;
             Bounds b = dragonPalace.bounds;
 
             float aMin = a.min.x - extraWindow;
@@ -277,17 +298,6 @@ namespace Pansori.Microgames.Games
 
             // 1D 구간 겹침
             return aMin <= bMax && bMin <= aMax;
-        }
-
-        private bool IsOutOfScreenX(Transform t)
-        {
-            if (t == null || cam == null)
-            { 
-                return false;
-            }
-
-            Vector3 v = cam.WorldToViewportPoint(t.position);
-            return v.x < 0f || v.x > 1f;
         }
     }
 }

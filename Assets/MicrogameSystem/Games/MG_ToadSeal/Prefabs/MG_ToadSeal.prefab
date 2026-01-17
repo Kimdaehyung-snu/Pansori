@@ -51,23 +51,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be29d4c732a9c1c49a3edbc3f6d20676, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.Games.MG_ToadSeal_Manager
+  thumbnailSprite: {fileID: 2847718448216160014, guid: 772a8ca154f417d4191f415f3048da62, type: 3}
   resultAnimation: {fileID: 0}
   useResultAnimation: 1
   resultAnimationDelay: 0
   toad: {fileID: 1444110746909313985}
   target: {fileID: 7952816064206573188}
   toadClip: {fileID: 8300000, guid: 4bd6a2d9468378b468d01019ee25d39f, type: 3}
+  waterClip: {fileID: 8300000, guid: 18dd12619b20f5b4c980e4d265ec28da, type: 3}
   toadSealClip: {fileID: 8300000, guid: db8d574d7702c0344a3778e80b62213a, type: 3}
   friction: 10
-  toadPushForce: 5
-  waterDefaultPushForce: 15.5
+  toadPushForce: 3.3
+  waterDefaultPushForce: 11.5
   currentWaterPushForce: 0
   maxSpeed: 30
-  maxPushbackDis: 15
+  maxPushBackDis: 15
   toadAnimator: {fileID: 6517381840513350734}
   backAnimHoldTime: 2.2
   simcheongAnimator: {fileID: 6417454157181093516}
   water: {fileID: 8657791158170897707}
+  waterAudioSource: {fileID: 0}
   timer: {fileID: 2899366196035620307}
   inputHandler: {fileID: 2349826645222259944}
   uiLayer: {fileID: 6382874846748425475}
@@ -129,7 +132,7 @@ Transform:
   m_GameObject: {fileID: 541274296744961635}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2, y: -2.67, z: 0}
+  m_LocalPosition: {x: 4.75, y: -2.67, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -753,7 +756,7 @@ Animator:
   m_GameObject: {fileID: 8657791158170897707}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 5df56428bcb62354094f051b79e1da0e, type: 2}
+  m_Controller: {fileID: 9100000, guid: b2ef14797dd0b0b47b4567d8cb75234b, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

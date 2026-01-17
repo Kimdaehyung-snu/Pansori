@@ -19,6 +19,7 @@ namespace Pansori.Microgames.Games
         [SerializeField] Transform target;  // 깨진 장독대 부분 (판정용)
 
         [SerializeField] AudioClip toadClip;
+        [SerializeField] AudioClip waterClip;
         [SerializeField] AudioClip toadSealClip;
 
         [Header("게임 설정")]
@@ -47,13 +48,14 @@ namespace Pansori.Microgames.Games
 
         [Header("물 오브젝트 설정")]
         [SerializeField] GameObject water;
+        [SerializeField] AudioSource waterAudioSource;
 
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
         public override string currentGameName => "막아라!";
 
-        public override string controlDescription => "스페이스바를 눌러\n물을 막으세요!";
+        public override string controlDescription => "스페이스바를 연타해\n물을 막으세요!";
 
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
@@ -136,8 +138,8 @@ namespace Pansori.Microgames.Games
         {
             isBlocking = true;  // 두꺼비 밀려나기 시작
             // 성공 단계에 따라 물이 미는 힘이 강해짐
-            currentWaterPushForce = waterDefaultPushForce + (speed - 1) * difficulty;
-            SoundManager.Instance.PlayMicrogameBGM("MG_ToadSeal");
+            currentWaterPushForce = waterDefaultPushForce + speed * 1.5f * difficulty;
+            waterAudioSource = SoundManager.Instance.SFXLoopPlay("WaterPush", waterClip);
 
             base.OnGameStart(difficulty, speed);
 
@@ -220,6 +222,8 @@ namespace Pansori.Microgames.Games
             simcheongAnimator.SetBool("IsFailure", false);
 
             water.SetActive(true);
+
+            Destroy(waterAudioSource);  // 물 루프 SFX 오브젝트 삭제
 
             if (animCorotine != null)
             {

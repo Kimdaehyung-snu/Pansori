@@ -3656,7 +3656,9 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 1b1f3ab5828c9744eac07deae665c37e, type: 3}
   - {fileID: 8300000, guid: 0032d8d19309a7245a4b5400ffda0f2e, type: 3}
   - {fileID: 8300000, guid: a3b8c3a0c17e40e43957a54df6d93606, type: 3}
-  - {fileID: 8300000, guid: 18dd12619b20f5b4c980e4d265ec28da, type: 3}
+  - {fileID: 8300000, guid: 5ecf34075375a854ca2f6e7e91d8f364, type: 3}
+  - {fileID: 8300000, guid: ec6c729f2d21c51478bd7b749f0f8534, type: 3}
+  - {fileID: 8300000, guid: fc362d7775629114c8df745205f144dc, type: 3}
   microgameSuccessClips:
   - {fileID: 8300000, guid: 1ed06dc6d9e706a4cac8bb0a9ba87259, type: 3}
   - {fileID: 8300000, guid: 1730c060db6ecea4bb4153b89fc7a950, type: 3}
