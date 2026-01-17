@@ -47,6 +47,12 @@ public class MG_TrickDragon_Manager : MicrogameBase
         KeyCode.D
     };
 
+    [Header("사운드 관련")]
+    [SerializeField] AudioClip[] KeyPressClips;
+
+    [SerializeField] AudioClip successDragonClip;
+    [SerializeField] AudioClip failureDragonClip;
+
     [Header("헬퍼 컴포넌트")]
     [SerializeField] private MicrogameInputHandler inputHandler;
     [SerializeField] private MicrogameUILayer uiLayer;
@@ -128,17 +134,33 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
         if (key != seqKeys[expectedSeqIdx])
         {
+            SoundManager.Instance.SFXPlay("FailureDragon", failureDragonClip);
+
             ReportResultWithAnimation(false);
         }
         else
         {
+            switch (seqKeys[expectedSeqIdx])
+            {
+                case KeyCode.A:
+                    SoundManager.Instance.SFXPlay("RabbitAKey", KeyPressClips[0]);
+                    break;
+                case KeyCode.W:
+                    SoundManager.Instance.SFXPlay("RabbitWKey", KeyPressClips[1]);
+                    break;
+                case KeyCode.D:
+                    SoundManager.Instance.SFXPlay("RabbitDKey", KeyPressClips[2]);
+                    break;
+            }
+
             seqTexts[expectedSeqIdx].color = successSeqColor;
             expectedSeqIdx++;
 
             if (expectedSeqIdx == seqLength)
             {
-                OnSuccess();
+                SoundManager.Instance.SFXPlay("SuccessDragon", successDragonClip);
 
+                OnSuccess();
             }
         }
     }
@@ -220,16 +242,16 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
         yield return new WaitForSeconds(0.2f);
 
-        if (success)
+        /*if (success)
         {
-            // TODO... 토끼의 망했다 애니메이션 + 용왕의 저놈 잡아 같은 느낌
+            SoundManager.Instance.SFXPlay("SuccessDragon", successDragonClip);
         }
         else
         {
-            // TODO... 토끼의 그렇다니까요~ 라는 표정 + 용왕의 한숨(실망)
-        }
+            SoundManager.Instance.SFXPlay("FailureDragon", failureDragonClip);
+        }*/
 
-        yield return new WaitForSeconds(0.8f);
+        yield return new WaitForSeconds(1f);
 
         onComplete?.Invoke();
     }

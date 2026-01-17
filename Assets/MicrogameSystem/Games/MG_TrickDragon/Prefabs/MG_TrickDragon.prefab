@@ -501,6 +501,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 241986f21921089458f23094a402c0bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MG_TrickDragonManager
+  thumbnailSprite: {fileID: 0}
   resultAnimation: {fileID: 0}
   useResultAnimation: 1
   resultAnimationDelay: 0
@@ -515,6 +516,12 @@ MonoBehaviour:
   defaultSeqColor: {r: 1, g: 1, b: 1, a: 1}
   successSeqColor: {r: 1, g: 0.561509, b: 0.33018857, a: 1}
   failedSeqColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  KeyPressClips:
+  - {fileID: 8300000, guid: 02c8ef1d85556084789f5fdcb426207f, type: 3}
+  - {fileID: 8300000, guid: 3a2af9ecbbdf90c48b042623291d73ff, type: 3}
+  - {fileID: 8300000, guid: 0cebc71921a8e914193a0b56cd6bf2cc, type: 3}
+  successDragonClip: {fileID: 8300000, guid: 0ad35a34700c776448a0f7e67cf8bb4f, type: 3}
+  failureDragonClip: {fileID: 8300000, guid: b5adf30864ad18643a00cb1af00c2afc, type: 3}
   inputHandler: {fileID: 6729569645176222144}
   uiLayer: {fileID: 0}
 --- !u!114 &4935519352321866855
