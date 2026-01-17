@@ -482,17 +482,32 @@ namespace Pansori.Microgames
                 SoundManager.Instance.PlayPansoriReactionSound(lastMicrogameSuccess);
             }
 
-            // 마이크로게임 결과에 따른 반응 표시 (목숨 정보 포함)
+            // Victory/GameOver 조건 미리 확인
+            bool isVictory = settings != null ? settings.IsVictory(winCount) : winCount >= WinCountForVictory;
+            bool isGameOver = settings != null ? settings.IsGameOver(loseCount) : loseCount >= LoseCountForGameOver;
+
+            // 마이크로게임 결과에 따른 반응 표시
             if (pansoriSceneUI != null)
             {
-                int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
-                int consumedLives = microgameManager != null ? (microgameManager.MaxLives - microgameManager.CurrentLives) : loseCount;
-
-                pansoriSceneUI.ShowReactionWithInfo(lastMicrogameSuccess, totalLives, consumedLives, CurrentStage, ReactionDuration, () =>
+                // Victory/GameOver 시에는 스테이지 정보 없이 반응만 표시
+                if (isVictory || isGameOver)
                 {
-                    // 승리/패배 조건 확인
-                    CheckGameEndCondition();
-                });
+                    pansoriSceneUI.ShowReaction(lastMicrogameSuccess, ReactionDuration, () =>
+                    {
+                        CheckGameEndCondition();
+                    });
+                }
+                else
+                {
+                    // 일반 진행 시에는 목숨/스테이지 정보 포함
+                    int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
+                    int consumedLives = microgameManager != null ? (microgameManager.MaxLives - microgameManager.CurrentLives) : loseCount;
+
+                    pansoriSceneUI.ShowReactionWithInfo(lastMicrogameSuccess, totalLives, consumedLives, CurrentStage, ReactionDuration, () =>
+                    {
+                        CheckGameEndCondition();
+                    });
+                }
             }
             else
             {
