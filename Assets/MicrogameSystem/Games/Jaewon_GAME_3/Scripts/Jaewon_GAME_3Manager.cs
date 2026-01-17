@@ -69,6 +69,10 @@ public class Jaewon_GAME_3Manager : MicrogameBase
     // dragonImage 초기 위치 저장
     private Vector2 dragonImageInitialPosition;
     
+    // scrollLeftPart, scrollRightPart 초기 위치 저장
+    private Vector2 scrollLeftPartInitialPosition;
+    private Vector2 scrollRightPartInitialPosition;
+    
     /// <summary>
     /// 이 게임의 표시 이름
     /// </summary>
@@ -105,6 +109,16 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         if (dragonImage != null)
         {
             dragonImageInitialPosition = dragonImage.anchoredPosition;
+        }
+        
+        // scrollLeftPart, scrollRightPart 초기 위치 저장
+        if (scrollLeftPart != null)
+        {
+            scrollLeftPartInitialPosition = scrollLeftPart.anchoredPosition;
+        }
+        if (scrollRightPart != null)
+        {
+            scrollRightPartInitialPosition = scrollRightPart.anchoredPosition;
         }
 
         // 결과 애니메이션 요소 초기 숨김
@@ -581,6 +595,18 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         {
             dragonImage.anchoredPosition = dragonImageInitialPosition;
             dragonImage.localScale = Vector3.one;
+        }
+        
+        // 두루마리 조각 위치/회전 리셋
+        if (scrollLeftPart != null)
+        {
+            scrollLeftPart.anchoredPosition = scrollLeftPartInitialPosition;
+            scrollLeftPart.localRotation = Quaternion.identity;
+        }
+        if (scrollRightPart != null)
+        {
+            scrollRightPart.anchoredPosition = scrollRightPartInitialPosition;
+            scrollRightPart.localRotation = Quaternion.identity;
         }
     }
     
