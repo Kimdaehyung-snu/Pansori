@@ -300,8 +300,8 @@ namespace Pansori.Microgames
             
             ClearLifeSprites();
             
-            // 관객 스프라이트 위치 초기화
-            ResetAudiencePositions();
+            // 관객 스프라이트는 게임 완전 리셋 시에만 위치 초기화
+            // ResetAudiencePositions()는 외부에서 명시적으로 호출해야 함
         }
         
         /// <summary>

@@ -782,6 +782,12 @@ namespace Pansori.Microgames
                 microgameManager.ResetStatistics();
             }
             
+            // 관객 스프라이트 위치 초기화
+            if (pansoriSceneUI != null)
+            {
+                pansoriSceneUI.ResetAudiencePositions();
+            }
+            
             // 연습 모드 힌트 숨기기
             if (gameScreens != null)
             {
