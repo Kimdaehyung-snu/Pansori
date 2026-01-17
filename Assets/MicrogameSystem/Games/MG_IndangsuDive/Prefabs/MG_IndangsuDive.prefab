@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.MicrogameInputHandler
   enableKeyboardInput: 1
-  enableMouseInput: 1
+  enableMouseInput: 0
 --- !u!1 &2497205199087769672
 GameObject:
   m_ObjectHideFlags: 0
@@ -376,8 +376,10 @@ MonoBehaviour:
   simcheong: {fileID: 8095070527951537953}
   dragonPalace: {fileID: 3835630018206368367}
   rightMarginViewport: 0.05
-  boundsShrink: {x: 0.2, y: 0.2}
   defaultVel: 4
+  extraWindow: 0
+  diveSpeed: 6
+  diveStopEpsilon: 0.01
   timer: {fileID: 1947760645715232945}
   inputHandler: {fileID: 393753165637979714}
   uiLayer: {fileID: 3105657605232573544}
