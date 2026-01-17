@@ -93,6 +93,7 @@ namespace Pansori.Microgames
         [SerializeField] private GameObject pansoriSpriteAnimatorObject; // 애니메이터 오브젝트 (활성화/비활성화용)
         
         [Header("속도 증가 알림 설정 (지화자!)")]
+        [SerializeField] private GameObject speedUpActiveObject; // 지화자 연출 중 활성화할 오브젝트
         [SerializeField] private string speedUpNotificationText = "지화자!"; // 속도 증가 알림 텍스트
         [SerializeField] private Color speedUpTextColor = new Color(1f, 0.8f, 0f); // 속도 증가 텍스트 색상 (금색)
         [SerializeField] private Color speedUpBackgroundColor = new Color(1f, 0.95f, 0.7f); // 속도 증가 배경색
@@ -554,6 +555,12 @@ namespace Pansori.Microgames
         /// </summary>
         private IEnumerator ShowSpeedUpNotificationCoroutine(float duration, Action onComplete)
         {
+            // 지화자 연출용 오브젝트 활성화
+            if (speedUpActiveObject != null)
+            {
+                speedUpActiveObject.SetActive(true);
+            }
+            
             // 명령 텍스트 숨기기
             if (commandText != null)
             {
@@ -615,6 +622,12 @@ namespace Pansori.Microgames
             
             // 캐릭터 Idle로 복귀
             PlayCharacterAnimation(idleAnimTrigger);
+            
+            // 지화자 연출용 오브젝트 비활성화
+            if (speedUpActiveObject != null)
+            {
+                speedUpActiveObject.SetActive(false);
+            }
             
             Debug.Log("[PansoriSceneUI] 속도 증가 알림 완료 (지화자!)");
             
