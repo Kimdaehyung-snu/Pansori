@@ -427,7 +427,7 @@ MonoBehaviour:
   gourdWhole: {fileID: 8211869570653439351}
   gourdBroken: {fileID: 9715073828871658}
   targetClicks: 20
-  sawMoveDistance: 0.5
+  sawMoveDistance: 0.4
   gourdRisePerClick: 0
   sawMoveSpeed: 10
   clickCountText: {fileID: 0}
