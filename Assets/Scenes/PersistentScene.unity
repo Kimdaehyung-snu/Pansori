@@ -2928,7 +2928,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameManager
   settings: {fileID: 11400000, guid: 11ee6132bcb544b48b0466c52a77db25, type: 2}
   microgamePrefabs:
-  - {fileID: 3430769056563358546, guid: 86394cd144bb72e459440b5045515466, type: 3}
+  - {fileID: 5830159389541254652, guid: e05d367aff06de84d814c5e1dd8cd364, type: 3}
+  - {fileID: 1456649174063736275, guid: 8cd49829f6600994cb41186fbedbc70b, type: 3}
+  - {fileID: 5311364290549085117, guid: 2138479e50738cc45b8d0bc0a24be488, type: 3}
   maxLives: 4
   currentLives: 4
   currentStage: 1
@@ -2964,7 +2966,7 @@ MonoBehaviour:
   mixer: {fileID: 24100000, guid: d7704af070e910c4cbe092151688f4b3, type: 2}
   bgList: []
   microgameBgClipList:
-  - {fileID: 8300000, guid: 495ac9df5d4f0754082466adaf863e5a, type: 3}
+  - {fileID: 8300000, guid: 0032d8d19309a7245a4b5400ffda0f2e, type: 3}
   - {fileID: 8300000, guid: a3b8c3a0c17e40e43957a54df6d93606, type: 3}
   - {fileID: 8300000, guid: 1b1f3ab5828c9744eac07deae665c37e, type: 3}
   microgameSuccessClips: []

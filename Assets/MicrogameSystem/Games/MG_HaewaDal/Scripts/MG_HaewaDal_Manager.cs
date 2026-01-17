@@ -18,20 +18,32 @@ namespace Pansori.Microgames.Games
 
         [SerializeField] private Button rottenRope;
         [SerializeField] private Button goodRope;
+        [SerializeField] private GameObject successResult;
+        [SerializeField] private GameObject failResult;
+
+        [SerializeField] private AudioClip successTiger;
+        [SerializeField] private AudioClip successRope;
+        [SerializeField] private AudioClip failTiger;
+        [SerializeField] private AudioClip failRope;
         
         [Header("게임 설정")] 
+        
+        
+        [Header("결과 연출 설정")]
+        [SerializeField] private bool useCustomResultAnimation = true; // 커스텀 결과 연출 사용 여부
+        [SerializeField] private float resultDisplayDelay = 0.5f; // 결과 표시 전 연출 시간
+        
 
-        /// <summary>
-        /// 현재 게임 이름
-        /// </summary>
-        public override string currentGameName => "올바른 동앗줄을 골라라!";
 
         [Header("헬퍼 컴포넌트")] 
         [SerializeField] private MicrogameTimer timer;
         [SerializeField] private MicrogameInputHandler inputHandler;
         [SerializeField] private MicrogameUILayer uiLayer;
         
-        
+        /// <summary>
+        /// 현재 게임 이름
+        /// </summary>
+        public override string currentGameName => "올바른 동앗줄을 골라라!";
         protected override void Awake()
         {
             base.Awake();
@@ -94,16 +106,33 @@ namespace Pansori.Microgames.Games
 
         private void OnSuccess()
         {
-            ReportResult(true);
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(true);
+            }
+            else
+            {
+                ReportResult(true);
+            }
         }
 
         private void OnFailure()
         {
-            ReportResult(false);
+            if (useCustomResultAnimation && useResultAnimation)
+            {
+                ReportResultWithAnimation(false);
+            }
+            else
+            {
+                ReportResult(false);
+            }
         }
 
         protected override void ResetGameState()
         {
+            //초기화
+            successResult.SetActive(false);
+            failResult.SetActive(false);
             // 타이머 중지
             if (timer != null)
             {
@@ -119,6 +148,57 @@ namespace Pansori.Microgames.Games
             rottenRope.onClick.RemoveListener(OnRottenRopeClicked);
             goodRope.onClick.RemoveListener(OnGoodRopeClicked);
 
+        }
+        
+        /// <summary>
+        /// 결과 애니메이션을 오버라이드하여 게임별 커스텀 연출을 추가합니다.
+        /// </summary>
+        protected override void PlayResultAnimation(bool success, System.Action onComplete = null)
+        {
+            if (success)
+            {
+                // 성공 시: 성공 패널 열기
+                Debug.Log("[Jaewon_GAME_1] 성공 커스텀 연출 시작");
+                StartCoroutine(PlaySuccessResultAnimation(onComplete));
+            }
+            else
+            {
+                // 실패 시: 실패 패널 열기
+                Debug.Log("[Jaewon_GAME_1] 실패 커스텀 연출 시작");
+                StartCoroutine(PlayFailureResultAnimation(onComplete));
+            }
+        }
+
+        /// <summary>
+        /// 성공 결과 애니메이션
+        /// </summary>
+        private System.Collections.IEnumerator PlaySuccessResultAnimation(System.Action onComplete)
+        {
+            //패널열기
+            successResult.SetActive(true);
+            //사운드
+            SoundManager.Instance.SFXPlay(successRope.name,successRope);
+            SoundManager.Instance.SFXPlay(successTiger.name,successTiger);
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            // 완료 콜백
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
+        /// 실패 결과 애니메이션 
+        /// </summary>
+        private System.Collections.IEnumerator PlayFailureResultAnimation(System.Action onComplete)
+        {
+            //패널열기
+            failResult.SetActive(true);
+            //사운드
+            SoundManager.Instance.SFXPlay(failRope.name,failRope);
+            SoundManager.Instance.SFXPlay(failTiger.name,failTiger);
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            // 완료 콜백
+            onComplete?.Invoke();
         }
     }
 }
