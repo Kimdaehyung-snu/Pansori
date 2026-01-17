@@ -1,4 +1,6 @@
 using Pansori.Microgames;
+using System;
+using System.Collections;
 using UnityEngine;
 
 namespace Pansori.Microgames.Games
@@ -33,6 +35,12 @@ namespace Pansori.Microgames.Games
 
         private bool isBlocking;    // 실제 게임 진행 중 여부
 
+        [Header("두꺼비 애니메이션 설정")]
+        [SerializeField] Animator toadAnimator;
+        [SerializeField] float backAnimHoldTime;
+        private float backAnimHoldRemaining = 0f;
+        private Coroutine animCorotine;
+
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
@@ -44,13 +52,14 @@ namespace Pansori.Microgames.Games
         [SerializeField] private MicrogameTimer timer;
         [SerializeField] private MicrogameInputHandler inputHandler;
         [SerializeField] private MicrogameUILayer uiLayer;
-        
+
         protected override void Awake()
         {
             base.Awake();
 
             velocity = 0f;
             isBlocking = false;
+            backAnimHoldRemaining = 0f;
 
             if (toad != null)
             {
@@ -77,6 +86,14 @@ namespace Pansori.Microgames.Games
             Vector2 p = toad.position;
             p.x += velocity * Time.deltaTime;
             toad.position = p;
+
+            if (backAnimHoldRemaining > 0f)
+            {
+                backAnimHoldRemaining -= Time.deltaTime;
+            }
+
+            bool isPushingBack = backAnimHoldRemaining > 0f;
+            toadAnimator.SetBool("IsPushingBack", isPushingBack);
         }
 
         private void FixedUpdate()
@@ -91,6 +108,9 @@ namespace Pansori.Microgames.Games
                 isBlocking = false;
                 velocity = 0f;
                 toad.position = target.position;
+
+                toadAnimator.SetBool("IsPushingBack", false);
+
                 OnSuccess();
             }
             else if (toad.position.x - target.position.x >= maxPushbackDis)    // 밀려날 수 있는 최대 거리 벗어남
@@ -121,16 +141,16 @@ namespace Pansori.Microgames.Games
                 timer.StartTimer(5f, speed);
                 timer.OnTimerEnd += OnTimeUp;
             }
-            
+
             if (inputHandler != null)
             {
                 inputHandler.OnKeyPressed += HandleKeyPress;
             }
         }
-        
+
         private void HandleKeyPress(KeyCode key)
         {
-            if (isGameEnded)
+            if (isGameEnded || isBlocking == false)
             {
                 return;
             }
@@ -141,38 +161,49 @@ namespace Pansori.Microgames.Games
             }
 
             velocity -= toadPushForce;
+            backAnimHoldRemaining = backAnimHoldTime;
 
             SoundManager.Instance.SFXPlay("ToadMove", toadClip);
         }
-        
+
         private void OnTimeUp()
         {
             if (toad.position.x < target.position.x)
             {
                 isBlocking = false;
                 velocity = 0f;
-                ReportResult(true);
+
+                ReportResultWithAnimation(true);
                 return;
             }
 
-            ReportResult(false); // 또는 true
+            ReportResultWithAnimation(false); // 또는 true
         }
-        
+
         private void OnSuccess()
         {
-            ReportResult(true);
+            ReportResultWithAnimation(true);
         }
-        
+
         private void OnFailure()
         {
-            ReportResult(false);
+            ReportResultWithAnimation(false);
         }
-        
+
         protected override void ResetGameState()
         {
             isBlocking = false;
             velocity = 0f;
+            backAnimHoldRemaining = 0f;
             toad.position = startPos;
+
+            toadAnimator.SetBool("IsSuccess", false);
+            toadAnimator.SetBool("IsFailure", false);
+
+            if (animCorotine != null)
+            {
+                StopCoroutine(animCorotine);
+            }
 
             // 타이머 중지
             if (timer != null)
@@ -180,12 +211,35 @@ namespace Pansori.Microgames.Games
                 timer.Stop();
                 timer.OnTimerEnd -= OnTimeUp;
             }
-            
+
             // 입력 핸들러 이벤트 구독 해제
             if (inputHandler != null)
             {
                 inputHandler.OnKeyPressed -= HandleKeyPress;
             }
+        }
+
+        protected override void PlayResultAnimation(bool success, Action onComplete = null)
+        {
+            animCorotine = StartCoroutine(ResultAnimationCoroutine(success, onComplete));
+        }
+
+        private IEnumerator ResultAnimationCoroutine(bool success, Action onComplete)
+        {
+            toadAnimator.SetBool("IsPushingBack", false);
+
+            if (success)
+            {
+                toadAnimator.SetBool("IsSuccess", true);
+            }
+            else
+            {
+                toadAnimator.SetBool("IsFailure", true);
+            }
+
+            yield return new WaitForSeconds(1.5f);
+
+            onComplete?.Invoke();
         }
     }
 }
