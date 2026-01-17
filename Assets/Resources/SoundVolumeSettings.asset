@@ -1,0 +1,151 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a611ea272da7714c8013cd7c1dc31c1, type: 3}
+  m_Name: SoundVolumeSettings
+  m_EditorClassIdentifier: Assembly-CSharp::SoundVolumeSettings
+  volumeEntries:
+  - clipGuid: 4baa26f6994ba864eaf7f926c3d50c0f
+    clipName: "\uB09C\uC774\uB3C4 \uC99D\uAC00"
+    clipPath: "Assets/General/Sound/\uB09C\uC774\uB3C4 \uC99D\uAC00.mp3"
+    volume: 0.5
+  - clipGuid: 1ed06dc6d9e706a4cac8bb0a9ba87259
+    clipName: "\uC131\uACF51"
+    clipPath: "Assets/General/Sound/\uC131\uACF51.mp3"
+    volume: 0.5
+  - clipGuid: 1730c060db6ecea4bb4153b89fc7a950
+    clipName: "\uC131\uACF52"
+    clipPath: "Assets/General/Sound/\uC131\uACF52.mp3"
+    volume: 0.5
+  - clipGuid: f22034b54dc717f4c8e3a8efaa08aa6a
+    clipName: "\uC2E4\uD328\uC0AC\uC6B4\uB4DC_1"
+    clipPath: "Assets/General/Sound/\uC2E4\uD328\uC0AC\uC6B4\uB4DC_1.mp3"
+    volume: 0.5
+  - clipGuid: 31ec6106187564c4f927f83cf6999422
+    clipName: "\uC57C\uC720"
+    clipPath: "Assets/General/Sound/\uC57C\uC720.mp3"
+    volume: 0.5
+  - clipGuid: 870fcda03bf83af4ca9257a0da61280f
+    clipName: "\uC790\uC9C4\uBAA8\uB9AC \uBE0C\uAE08"
+    clipPath: "Assets/General/Sound/\uC790\uC9C4\uBAA8\uB9AC \uBE0C\uAE08.mp3"
+    volume: 0.5
+  - clipGuid: 24b177fc3c3f9974fb06c64743526271
+    clipName: "\uC804\uCCB4 \uBE0C\uAE08"
+    clipPath: "Assets/General/Sound/\uC804\uCCB4 \uBE0C\uAE08.mp3"
+    volume: 0.5
+  - clipGuid: df7cd591030527c4aa1390952abf0add
+    clipName: "\uD658\uD638\uC131"
+    clipPath: "Assets/General/Sound/\uD658\uD638\uC131.mp3"
+    volume: 0.5
+  - clipGuid: 4ef0786ebba837541b1e8cb2f5f25fe4
+    clipName: Jaewon_GAME_1
+    clipPath: Assets/MicrogameSystem/Games/Jaewon_GAME_1/Audios/Jaewon_GAME_1.mp3
+    volume: 0.5
+  - clipGuid: 3b19c8b674281874fac3289c609b4b42
+    clipName: "\uD1B1\uC9C8a"
+    clipPath: "Assets/MicrogameSystem/Games/Jaewon_GAME_1/Audios/\uD1B1\uC9C8a.mp3"
+    volume: 0.5
+  - clipGuid: 1f0014c2cbc03af4f95121f796dc2ff5
+    clipName: "\uD1B1\uC9C8b"
+    clipPath: "Assets/MicrogameSystem/Games/Jaewon_GAME_1/Audios/\uD1B1\uC9C8b.mp3"
+    volume: 0.5
+  - clipGuid: 7f4d906f5dc06304b8326c909bdcda38
+    clipName: Jaewon_GAME_2
+    clipPath: Assets/MicrogameSystem/Games/Jaewon_GAME_2/Audio/Jaewon_GAME_2.mp3
+    volume: 0.5
+  - clipGuid: 3ff6f7633e10da044a5b90e5e7d36257
+    clipName: Jaewon_GAME_3
+    clipPath: Assets/MicrogameSystem/Games/Jaewon_GAME_3/Audio/Jaewon_GAME_3.mp3
+    volume: 0.5
+  - clipGuid: 5815effbc8e4f79459b3884a138e36fd
+    clipName: "\uBD93\uAE00\uC528"
+    clipPath: "Assets/MicrogameSystem/Games/Jaewon_GAME_3/Audio/\uBD93\uAE00\uC528.mp3"
+    volume: 0.5
+  - clipGuid: 5741e02a941f802489854c1065cd7f6c
+    clipName: fixLeg
+    clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLeg.mp3
+    volume: 0.8
+  - clipGuid: f0d05b1ab8701db44b13f10090d1be2c
+    clipName: fixLegFailSound
+    clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLegFailSound.mp3
+    volume: 0.5
+  - clipGuid: d0e4fbdd7810459418baa71ebb7dca0d
+    clipName: fixLegSuccessSound
+    clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLegSuccessSound.mp3
+    volume: 0.25
+  - clipGuid: 95c17c7bde558da49b7f4413912245c4
+    clipName: climbing
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/climbing.mp3
+    volume: 0.5
+  - clipGuid: 495ac9df5d4f0754082466adaf863e5a
+    clipName: MG_HaewaDal
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/MG_HaewaDal.mp3
+    volume: 0.5
+  - clipGuid: 12f7d958e14133a4ba5ffddb0a46d7e2
+    clipName: diveSplashSound
+    clipPath: Assets/MicrogameSystem/Games/MG_IndangsuDive/Audios/diveSplashSound.mp3
+    volume: 0.5
+  - clipGuid: 889b6637f83b6934c89bbb3388c68085
+    clipName: MG_IndangsuDive
+    clipPath: Assets/MicrogameSystem/Games/MG_IndangsuDive/Audios/MG_IndangsuDive.mp3
+    volume: 0.5
+  - clipGuid: e7001fbad39f2d14fa61c33b0d6b49ad
+    clipName: generalSadagi
+    clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/generalSadagi.mp3
+    volume: 1
+  - clipGuid: b98c72767f59eda4fb1a037f030dbfb8
+    clipName: missSadagi
+    clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/missSadagi.mp3
+    volume: 1
+  - clipGuid: 87512f201deba554fb4d094b2509c86a
+    clipName: strongSadagi
+    clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/strongSadagi.mp3
+    volume: 0.5
+  - clipGuid: db8d574d7702c0344a3778e80b62213a
+    clipName: Bubbles
+    clipPath: Assets/MicrogameSystem/Games/MG_ToadSeal/Audios/Bubbles.mp3
+    volume: 0.5
+  - clipGuid: 18dd12619b20f5b4c980e4d265ec28da
+    clipName: MG_ToadSeal
+    clipPath: Assets/MicrogameSystem/Games/MG_ToadSeal/Audios/MG_ToadSeal.mp3
+    volume: 0.5
+  - clipGuid: 4bd6a2d9468378b468d01019ee25d39f
+    clipName: ToadMoveSound
+    clipPath: Assets/MicrogameSystem/Games/MG_ToadSeal/Audios/ToadMoveSound.mp3
+    volume: 0.5
+  - clipGuid: fdb25141f91eecd4e89fb8ae36df7f26
+    clipName: Success_Rope
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Success_Rope.mp3
+    volume: 1
+  - clipGuid: 763f48e221eea914bb3d05d883ea00c9
+    clipName: Success_Tiger
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Success_Tiger.mp3
+    volume: 1
+  - clipGuid: 0032d8d19309a7245a4b5400ffda0f2e
+    clipName: MG_HaewaDal
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/MG_HaewaDal.wav
+    volume: 0.3
+  - clipGuid: 1b1f3ab5828c9744eac07deae665c37e
+    clipName: MG02_FixLeg
+    clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/MG02_FixLeg.mp3
+    volume: 0.5
+  - clipGuid: 0c9e8551d6af1cb40b7676a089370c65
+    clipName: Fail_Rope
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Fail_Rope.mp3
+    volume: 0.5
+  - clipGuid: 1aa6e4093fd421143afeaa57f50eff66
+    clipName: Fail_Tiger
+    clipPath: Assets/MicrogameSystem/Games/MG_HaewaDal/Audios/Fail_Tiger.mp3
+    volume: 0.5
+  - clipGuid: a3b8c3a0c17e40e43957a54df6d93606
+    clipName: MG_Saddagi
+    clipPath: Assets/MicrogameSystem/Games/MG_Saddagi/Audios/MG_Saddagi.mp3
+    volume: 0.5

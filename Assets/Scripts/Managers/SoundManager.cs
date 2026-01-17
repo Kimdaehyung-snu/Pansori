@@ -50,6 +50,27 @@ public class SoundManager : PansoriSingleton<SoundManager>
     private Coroutine mainBGMFadeCoroutine;
     private Coroutine microgameBGMFadeCoroutine;
     
+    // 볼륨 설정 참조
+    private SoundVolumeSettings volumeSettings;
+    
+    /// <summary>
+    /// AudioClip의 설정된 볼륨을 가져옵니다 (SoundVolumeSettings 사용)
+    /// </summary>
+    private float GetClipVolume(AudioClip clip)
+    {
+        if (volumeSettings == null)
+        {
+            volumeSettings = SoundVolumeSettings.Instance;
+        }
+        
+        if (volumeSettings != null)
+        {
+            return volumeSettings.GetVolume(clip);
+        }
+        
+        return defaultVolume;
+    }
+    
  
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
@@ -76,7 +97,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
         AudioSource audioSource = go.AddComponent<AudioSource>();
         audioSource.outputAudioMixerGroup = mixer.FindMatchingGroups("SFX")[0];
         audioSource.clip = clip;
-        audioSource.volume = 0.3f;
+        audioSource.volume = GetClipVolume(clip);
         audioSource.Play();
 
         Destroy(go, clip.length);
@@ -116,7 +137,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
         bgSound.outputAudioMixerGroup = mixer.FindMatchingGroups("BGM")[0];
         bgSound.clip = clip;
         bgSound.loop = true;
-        bgSound.volume = 0.3f;
+        bgSound.volume = GetClipVolume(clip);
         bgSound.Play();     
     }
 
@@ -225,7 +246,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
             microgameBGMSource = microgameBGMObj.AddComponent<AudioSource>();
             microgameBGMSource.outputAudioMixerGroup = mixer.FindMatchingGroups("BGM")[0];
             microgameBGMSource.loop = true;
-            microgameBGMSource.volume = 0.3f;
+            microgameBGMSource.volume = defaultVolume;
             microgameBGMSource.playOnAwake = false;
         }
     }
@@ -260,8 +281,9 @@ public class SoundManager : PansoriSingleton<SoundManager>
                 // pitch 설정 (속도 반영, 0.5f ~ 3.0f 범위 제한)
                 microgameBGMSource.pitch = Mathf.Clamp(speed, 0.5f, 3.0f);
                 
-                // 자동 페이드인 적용
-                SafeStartCoroutine(ref microgameBGMFadeCoroutine, FadeInCoroutine(microgameBGMSource, defaultVolume, fadeInDuration));
+                // 자동 페이드인 적용 (클립별 볼륨 설정 사용)
+                float targetVolume = GetClipVolume(microgameBgClipList[i]);
+                SafeStartCoroutine(ref microgameBGMFadeCoroutine, FadeInCoroutine(microgameBGMSource, targetVolume, fadeInDuration));
                 
                 Debug.Log($"[SoundManager] 미니게임 BGM 재생: {microgameName} (속도: {speed})");
                 return;
@@ -430,7 +452,7 @@ public class SoundManager : PansoriSingleton<SoundManager>
             mainBGMSource = mainBGMObj.AddComponent<AudioSource>();
             mainBGMSource.outputAudioMixerGroup = mixer.FindMatchingGroups("BGM")[0];
             mainBGMSource.loop = true;
-            mainBGMSource.volume = 0.3f;
+            mainBGMSource.volume = defaultVolume;
             mainBGMSource.playOnAwake = false;
         }
     }
@@ -459,8 +481,9 @@ public class SoundManager : PansoriSingleton<SoundManager>
         mainBGMSource.clip = mainBGMClip;
         mainBGMSource.pitch = Mathf.Clamp(speed, 0.5f, 3.0f);
         
-        // 자동 페이드인 적용
-        SafeStartCoroutine(ref mainBGMFadeCoroutine, FadeInCoroutine(mainBGMSource, defaultVolume, fadeInDuration));
+        // 자동 페이드인 적용 (클립별 볼륨 설정 사용)
+        float targetVolume = GetClipVolume(mainBGMClip);
+        SafeStartCoroutine(ref mainBGMFadeCoroutine, FadeInCoroutine(mainBGMSource, targetVolume, fadeInDuration));
         
         Debug.Log($"[SoundManager] 메인 BGM 재생: {mainBGMClip.name} (속도: {speed})");
     }

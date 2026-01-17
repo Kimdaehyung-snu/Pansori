@@ -6,6 +6,12 @@ using UnityEngine.UI;
 
 namespace Pansori.Microgames.Games
 {
+    enum ERottenRope
+    {
+        Idle,
+        Cut,
+    }
+
     /// <summary>
     /// 새 미니게임
     /// 
@@ -13,10 +19,12 @@ namespace Pansori.Microgames.Games
     /// </summary>
     public class MG_HaewaDal_Manager : MicrogameBase
     {
+       
         [Header("게임 오브젝트")] 
         [SerializeField] private TextMeshProUGUI timerText;
 
         [SerializeField] private Button rottenRope;
+        [SerializeField] private Image rottenRopeImage;
         [SerializeField] private Button goodRope;
         [SerializeField] private GameObject successResult;
         [SerializeField] private GameObject failResult;
@@ -133,6 +141,8 @@ namespace Pansori.Microgames.Games
             //초기화
             successResult.SetActive(false);
             failResult.SetActive(false);
+            rottenRopeImage.sprite = GetSpriteByEnum(ERottenRope.Idle);
+            
             // 타이머 중지
             if (timer != null)
             {
@@ -192,6 +202,8 @@ namespace Pansori.Microgames.Games
         {
             //패널열기
             failResult.SetActive(true);
+            //밧줄 모양 바꾸기
+            rottenRopeImage.sprite = GetSpriteByEnum(ERottenRope.Cut);
             //사운드
             SoundManager.Instance.SFXPlay(failRope.name,failRope);
             SoundManager.Instance.SFXPlay(failTiger.name,failTiger);
@@ -199,6 +211,22 @@ namespace Pansori.Microgames.Games
             yield return new WaitForSeconds(resultDisplayDelay);
             // 완료 콜백
             onComplete?.Invoke();
+        }
+
+        private Sprite GetSpriteByEnum(Enum e)
+        {
+            Sprite sprite = null;
+            switch (e)
+            {
+                case ERottenRope.Idle:
+                    sprite = Resources.Load<Sprite>("HaewaDal/RottenRopeIdle");
+                    break;
+                case ERottenRope.Cut:
+                    sprite = Resources.Load<Sprite>("HaewaDal/RottenRopeCut");
+                    break;
+            }
+
+            return sprite;
         }
     }
 }

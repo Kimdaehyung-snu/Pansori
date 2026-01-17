@@ -406,15 +406,18 @@ namespace Pansori.Microgames
 
             if (fromMicrogame)
             {
-                // 성공 + 속도 증가 시 "지화자!" 연출 먼저 표시 (연습 모드에서는 속도 증가 없음)
-                if (lastMicrogameSuccess && didSpeedIncrease && !isPracticeMode)
+                // 문 열림 트랜지션 후 반응 표시
+                if (pansoriSceneUI != null)
                 {
-                    ShowSpeedUpThenReaction();
+                    pansoriSceneUI.PlayDoorOpenTransition(() =>
+                    {
+                        // 트랜지션 완료 후 반응 표시 진행
+                        ContinueAfterDoorOpen();
+                    });
                 }
                 else
                 {
-                    // 기존 흐름: 반응 표시 후 다음 게임 준비
-                    ShowReactionAndContinue();
+                    ContinueAfterDoorOpen();
                 }
             }
             else
@@ -424,6 +427,23 @@ namespace Pansori.Microgames
             }
 
             Debug.Log($"[GameFlowManager] 판소리 씬 진입 (마이크로게임에서: {fromMicrogame}, 연습모드: {isPracticeMode})");
+        }
+        
+        /// <summary>
+        /// 문 열림 트랜지션 후 계속 진행
+        /// </summary>
+        private void ContinueAfterDoorOpen()
+        {
+            // 성공 + 속도 증가 시 "지화자!" 연출 먼저 표시 (연습 모드에서는 속도 증가 없음)
+            if (lastMicrogameSuccess && didSpeedIncrease && !isPracticeMode)
+            {
+                ShowSpeedUpThenReaction();
+            }
+            else
+            {
+                // 기존 흐름: 반응 표시 후 다음 게임 준비
+                ShowReactionAndContinue();
+            }
         }
 
         /// <summary>
@@ -582,6 +602,27 @@ namespace Pansori.Microgames
             // 메인 BGM 정지 (미니게임 BGM이 대신 재생됨)
             StopMainBGM();
 
+            // 문 닫힘 트랜지션 후 마이크로게임 시작
+            if (pansoriSceneUI != null)
+            {
+                pansoriSceneUI.PlayDoorCloseTransition(() =>
+                {
+                    StartMicrogameAfterDoorClose();
+                });
+            }
+            else
+            {
+                StartMicrogameAfterDoorClose();
+            }
+
+            Debug.Log($"[GameFlowManager] 마이크로게임 진입 대기 (인덱스: {nextMicrogameIndex}, 난이도: {currentDifficulty}, 속도: {currentSpeed})");
+        }
+        
+        /// <summary>
+        /// 문 닫힘 트랜지션 후 마이크로게임 시작
+        /// </summary>
+        private void StartMicrogameAfterDoorClose()
+        {
             // 마이크로게임 시작 (미리 결정한 인덱스 사용)
             if (microgameManager != null)
             {
@@ -780,6 +821,12 @@ namespace Pansori.Microgames
             {
                 microgameManager.ResetLives();
                 microgameManager.ResetStatistics();
+            }
+            
+            // 관객 스프라이트 위치 초기화
+            if (pansoriSceneUI != null)
+            {
+                pansoriSceneUI.ResetAudiencePositions();
             }
             
             // 연습 모드 힌트 숨기기
