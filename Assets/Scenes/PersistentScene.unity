@@ -2568,7 +2568,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b69997a78872d14b9df4cda460088d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.GameFlowManager
-  settings: {fileID: 0}
+  settings: {fileID: 11400000, guid: 11ee6132bcb544b48b0466c52a77db25, type: 2}
   microgameManager: {fileID: 1780083645}
   pansoriSceneUI: {fileID: 387787667}
   gameScreens: {fileID: 1899503807}
