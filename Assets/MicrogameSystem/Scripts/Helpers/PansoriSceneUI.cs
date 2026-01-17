@@ -38,6 +38,13 @@ namespace Pansori.Microgames
         [SerializeField] private float audienceExitDuration = 0.5f; // 퇴장 애니메이션 시간
         [SerializeField] private float audienceExitDistance = 500f; // 퇴장 거리 (화면 밖)
         
+        [Header("관객 스프라이트 애니메이션")]
+        [Tooltip("각 관객의 첫 번째 스프라이트 (4개)")]
+        [SerializeField] private Sprite[] audienceSprite1Array; // 각 관객의 첫 번째 스프라이트
+        [Tooltip("각 관객의 두 번째 스프라이트 (4개)")]
+        [SerializeField] private Sprite[] audienceSprite2Array; // 각 관객의 두 번째 스프라이트
+        [SerializeField] private float audienceSpriteAnimationInterval = 0.3f; // 애니메이션 간격 (초)
+        
         [Header("캐릭터 (플레이스홀더)")]
         [SerializeField] private GameObject performerObject; // 소리꾼 오브젝트
         [SerializeField] private GameObject audienceObject; // 관객 오브젝트
@@ -91,6 +98,14 @@ namespace Pansori.Microgames
         [SerializeField] private Color speedUpBackgroundColor = new Color(1f, 0.95f, 0.7f); // 속도 증가 배경색
         [SerializeField] private float speedUpScalePunchAmount = 1.5f; // 속도 증가 스케일 펀치 크기
         
+        [Header("문 트랜지션 설정")]
+        [SerializeField] private Image leftDoorImage; // 좌측 문 이미지
+        [SerializeField] private Image rightDoorImage; // 우측 문 이미지
+        [SerializeField] private Sprite doorSprite; // 문 스프라이트 (없으면 단색 사용)
+        [SerializeField] private Color doorColor = Color.black; // 문 색상 (스프라이트 없을 시)
+        [SerializeField] private float doorTransitionDuration = 0.5f; // 문 트랜지션 시간
+        [SerializeField] private bool useDoorTransition = true; // 문 트랜지션 사용 여부
+        
         private Coroutine currentCoroutine;
         private Canvas canvas;
         private RectTransform canvasRectTransform;
@@ -116,11 +131,22 @@ namespace Pansori.Microgames
         /// </summary>
         private int previousConsumedLives = 0;
         
+        /// <summary>
+        /// 관객 스프라이트 애니메이션 코루틴
+        /// </summary>
+        private Coroutine audienceSpriteAnimationCoroutine;
+        
+        /// <summary>
+        /// 각 관객의 현재 프레임 인덱스 (true=sprite1, false=sprite2)
+        /// </summary>
+        private bool[] audienceSpriteFrameIndex;
+        
         private void Awake()
         {
             SetupCanvas();
             SetupLivesContainer();
             SetupScreenFlashOverlay();
+            SetupDoorTransitionUI();
             InitializeAudienceSprites();
             HideAll();
         }
@@ -207,6 +233,64 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
+        /// 문 트랜지션 UI를 설정합니다.
+        /// </summary>
+        private void SetupDoorTransitionUI()
+        {
+            if (!useDoorTransition) return;
+            
+            // 좌측 문 이미지가 없으면 동적 생성
+            if (leftDoorImage == null)
+            {
+                GameObject leftDoorObj = new GameObject("LeftDoor");
+                leftDoorObj.transform.SetParent(transform, false);
+                
+                RectTransform leftRect = leftDoorObj.AddComponent<RectTransform>();
+                leftRect.anchorMin = new Vector2(0f, 0f);
+                leftRect.anchorMax = new Vector2(0.5f, 1f);
+                leftRect.pivot = new Vector2(1f, 0.5f); // 오른쪽 중앙 피벗 (열릴 때 왼쪽으로)
+                leftRect.sizeDelta = Vector2.zero;
+                leftRect.anchoredPosition = Vector2.zero;
+                
+                leftDoorImage = leftDoorObj.AddComponent<Image>();
+                if (doorSprite != null)
+                {
+                    leftDoorImage.sprite = doorSprite;
+                }
+                leftDoorImage.color = doorColor;
+                leftDoorImage.raycastTarget = false;
+                
+                leftDoorObj.SetActive(false);
+            }
+            
+            // 우측 문 이미지가 없으면 동적 생성
+            if (rightDoorImage == null)
+            {
+                GameObject rightDoorObj = new GameObject("RightDoor");
+                rightDoorObj.transform.SetParent(transform, false);
+                
+                RectTransform rightRect = rightDoorObj.AddComponent<RectTransform>();
+                rightRect.anchorMin = new Vector2(0.5f, 0f);
+                rightRect.anchorMax = new Vector2(1f, 1f);
+                rightRect.pivot = new Vector2(0f, 0.5f); // 왼쪽 중앙 피벗 (열릴 때 오른쪽으로)
+                rightRect.sizeDelta = Vector2.zero;
+                rightRect.anchoredPosition = Vector2.zero;
+                
+                rightDoorImage = rightDoorObj.AddComponent<Image>();
+                if (doorSprite != null)
+                {
+                    rightDoorImage.sprite = doorSprite;
+                }
+                rightDoorImage.color = doorColor;
+                rightDoorImage.raycastTarget = false;
+                
+                rightDoorObj.SetActive(false);
+            }
+            
+            Debug.Log("[PansoriSceneUI] 문 트랜지션 UI 설정 완료");
+        }
+        
+        /// <summary>
         /// 관객 스프라이트 초기화 - 원래 위치 저장
         /// </summary>
         private void InitializeAudienceSprites()
@@ -262,6 +346,9 @@ namespace Pansori.Microgames
             
             // 판소리 스프라이트 애니메이션 중지
             StopPansoriSpriteAnimation();
+            
+            // 관객 스프라이트 애니메이션 중지
+            StopAudienceSpriteAnimation();
             
             // 캔버스 위치 복원
             if (canvasRectTransform != null)
@@ -327,6 +414,9 @@ namespace Pansori.Microgames
             
             // 판소리 스프라이트 애니메이션 시작
             StartPansoriSpriteAnimation();
+            
+            // 관객 스프라이트 애니메이션 시작
+            StartAudienceSpriteAnimation();
             
             // 캐릭터 Idle 애니메이션
             PlayCharacterAnimation(idleAnimTrigger);
@@ -1035,6 +1125,120 @@ namespace Pansori.Microgames
             Debug.Log("[PansoriSceneUI] 관객 스프라이트 위치 초기화");
         }
         
+        #region 관객 스프라이트 애니메이션
+        
+        /// <summary>
+        /// 관객 스프라이트 애니메이션을 시작합니다.
+        /// </summary>
+        public void StartAudienceSpriteAnimation()
+        {
+            // 스프라이트 배열이 없거나 비어있으면 무시
+            if (audienceSprites == null || audienceSprites.Length == 0 ||
+                audienceSprite1Array == null || audienceSprite1Array.Length == 0 ||
+                audienceSprite2Array == null || audienceSprite2Array.Length == 0)
+            {
+                return;
+            }
+            
+            // 이미 실행 중이면 중지
+            StopAudienceSpriteAnimation();
+            
+            // 프레임 인덱스 초기화
+            audienceSpriteFrameIndex = new bool[audienceSprites.Length];
+            for (int i = 0; i < audienceSpriteFrameIndex.Length; i++)
+            {
+                audienceSpriteFrameIndex[i] = true; // 첫 번째 스프라이트로 시작
+            }
+            
+            // 초기 스프라이트 적용
+            ApplyAudienceSprites();
+            
+            // 코루틴 시작
+            audienceSpriteAnimationCoroutine = StartCoroutine(AudienceSpriteAnimationCoroutine());
+            
+            Debug.Log("[PansoriSceneUI] 관객 스프라이트 애니메이션 시작");
+        }
+        
+        /// <summary>
+        /// 관객 스프라이트 애니메이션을 중지합니다.
+        /// </summary>
+        public void StopAudienceSpriteAnimation()
+        {
+            if (audienceSpriteAnimationCoroutine != null)
+            {
+                StopCoroutine(audienceSpriteAnimationCoroutine);
+                audienceSpriteAnimationCoroutine = null;
+            }
+        }
+        
+        /// <summary>
+        /// 관객 스프라이트 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator AudienceSpriteAnimationCoroutine()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(audienceSpriteAnimationInterval);
+                ToggleAudienceSprites();
+            }
+        }
+        
+        /// <summary>
+        /// 모든 관객 스프라이트를 토글합니다.
+        /// </summary>
+        private void ToggleAudienceSprites()
+        {
+            if (audienceSprites == null || audienceSpriteFrameIndex == null)
+            {
+                return;
+            }
+            
+            for (int i = 0; i < audienceSprites.Length; i++)
+            {
+                if (i < audienceSpriteFrameIndex.Length)
+                {
+                    audienceSpriteFrameIndex[i] = !audienceSpriteFrameIndex[i];
+                }
+            }
+            
+            ApplyAudienceSprites();
+        }
+        
+        /// <summary>
+        /// 현재 프레임 인덱스에 따라 관객 스프라이트를 적용합니다.
+        /// </summary>
+        private void ApplyAudienceSprites()
+        {
+            if (audienceSprites == null || audienceSpriteFrameIndex == null)
+            {
+                return;
+            }
+            
+            for (int i = 0; i < audienceSprites.Length; i++)
+            {
+                if (audienceSprites[i] == null)
+                {
+                    continue;
+                }
+                
+                if (i < audienceSpriteFrameIndex.Length &&
+                    i < audienceSprite1Array.Length &&
+                    i < audienceSprite2Array.Length)
+                {
+                    Sprite targetSprite = audienceSpriteFrameIndex[i] 
+                        ? audienceSprite1Array[i] 
+                        : audienceSprite2Array[i];
+                    
+                    if (targetSprite != null)
+                    {
+                        audienceSprites[i].sprite = targetSprite;
+                    }
+                }
+            }
+        }
+        
+        #endregion
+        
         /// <summary>
         /// 텍스트 페이드인 효과
         /// </summary>
@@ -1155,5 +1359,166 @@ namespace Pansori.Microgames
                 pansoriSpriteAnimatorObject.SetActive(false);
             }
         }
+        
+        #region Door Transition
+        
+        /// <summary>
+        /// 문이 열리는 트랜지션을 재생합니다.
+        /// 좌측 문은 왼쪽으로, 우측 문은 오른쪽으로 열립니다.
+        /// </summary>
+        /// <param name="onComplete">완료 콜백</param>
+        public void PlayDoorOpenTransition(Action onComplete)
+        {
+            if (!useDoorTransition || (leftDoorImage == null && rightDoorImage == null))
+            {
+                onComplete?.Invoke();
+                return;
+            }
+            
+            StartCoroutine(DoorOpenCoroutine(onComplete));
+        }
+        
+        /// <summary>
+        /// 문이 닫히는 트랜지션을 재생합니다.
+        /// 좌측 문은 오른쪽으로, 우측 문은 왼쪽으로 닫힙니다.
+        /// </summary>
+        /// <param name="onComplete">완료 콜백</param>
+        public void PlayDoorCloseTransition(Action onComplete)
+        {
+            if (!useDoorTransition || (leftDoorImage == null && rightDoorImage == null))
+            {
+                onComplete?.Invoke();
+                return;
+            }
+            
+            StartCoroutine(DoorCloseCoroutine(onComplete));
+        }
+        
+        /// <summary>
+        /// 문 열림 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator DoorOpenCoroutine(Action onComplete)
+        {
+            // 문 활성화 및 초기 위치 설정 (닫힌 상태)
+            SetDoorsActive(true);
+            SetDoorPositions(0f); // 0 = 닫힌 상태
+            
+            float elapsed = 0f;
+            
+            while (elapsed < doorTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / doorTransitionDuration);
+                
+                // EaseOutQuad 이징 적용 (자연스러운 감속)
+                float easedT = 1f - (1f - t) * (1f - t);
+                
+                SetDoorPositions(easedT); // 1 = 완전히 열린 상태
+                yield return null;
+            }
+            
+            SetDoorPositions(1f);
+            SetDoorsActive(false); // 열린 후 비활성화
+            
+            Debug.Log("[PansoriSceneUI] 문 열림 트랜지션 완료");
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 문 닫힘 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator DoorCloseCoroutine(Action onComplete)
+        {
+            // 문 활성화 및 초기 위치 설정 (열린 상태)
+            SetDoorsActive(true);
+            SetDoorPositions(1f); // 1 = 열린 상태
+            
+            float elapsed = 0f;
+            
+            while (elapsed < doorTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / doorTransitionDuration);
+                
+                // EaseInQuad 이징 적용 (자연스러운 가속)
+                float easedT = t * t;
+                
+                SetDoorPositions(1f - easedT); // 0 = 완전히 닫힌 상태
+                yield return null;
+            }
+            
+            SetDoorPositions(0f);
+            // 닫힌 후에도 활성 상태 유지 (화면 가림 유지)
+            
+            Debug.Log("[PansoriSceneUI] 문 닫힘 트랜지션 완료");
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 문 활성화/비활성화
+        /// </summary>
+        private void SetDoorsActive(bool active)
+        {
+            if (leftDoorImage != null)
+            {
+                leftDoorImage.gameObject.SetActive(active);
+            }
+            
+            if (rightDoorImage != null)
+            {
+                rightDoorImage.gameObject.SetActive(active);
+            }
+        }
+        
+        /// <summary>
+        /// 문 위치 설정 (0 = 닫힘, 1 = 열림)
+        /// </summary>
+        /// <param name="openAmount">열린 정도 (0~1)</param>
+        private void SetDoorPositions(float openAmount)
+        {
+            // 화면 절반 너비 계산 (Canvas 기준)
+            float screenHalfWidth = 960f; // 기준 해상도 1920의 절반
+            if (canvasRectTransform != null)
+            {
+                screenHalfWidth = canvasRectTransform.rect.width * 0.5f;
+            }
+            
+            // 좌측 문: 열릴 때 왼쪽으로 이동
+            if (leftDoorImage != null)
+            {
+                RectTransform leftRect = leftDoorImage.rectTransform;
+                float leftTargetX = -screenHalfWidth * openAmount;
+                leftRect.anchoredPosition = new Vector2(leftTargetX, 0f);
+            }
+            
+            // 우측 문: 열릴 때 오른쪽으로 이동
+            if (rightDoorImage != null)
+            {
+                RectTransform rightRect = rightDoorImage.rectTransform;
+                float rightTargetX = screenHalfWidth * openAmount;
+                rightRect.anchoredPosition = new Vector2(rightTargetX, 0f);
+            }
+        }
+        
+        /// <summary>
+        /// 문을 즉시 닫힌 상태로 설정합니다.
+        /// </summary>
+        public void SetDoorsClosed()
+        {
+            if (!useDoorTransition) return;
+            
+            SetDoorsActive(true);
+            SetDoorPositions(0f);
+        }
+        
+        /// <summary>
+        /// 문을 즉시 숨깁니다.
+        /// </summary>
+        public void HideDoors()
+        {
+            SetDoorsActive(false);
+        }
+        
+        #endregion
     }
 }
