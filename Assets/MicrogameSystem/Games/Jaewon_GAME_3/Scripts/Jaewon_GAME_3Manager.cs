@@ -259,6 +259,12 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         {
             fillGauge.SetValue(fillPercentage);
         }
+        
+        // 목표 채움률 달성 시 즉시 성공 처리
+        if (!isGameEnded && fillPercentage >= requiredFillPercentage)
+        {
+            OnSuccess();
+        }
     }
     
     /// <summary>
