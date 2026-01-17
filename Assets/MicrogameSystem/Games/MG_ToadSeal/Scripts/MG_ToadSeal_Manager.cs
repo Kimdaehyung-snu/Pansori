@@ -55,7 +55,7 @@ namespace Pansori.Microgames.Games
         /// </summary>
         public override string currentGameName => "막아라!";
 
-        public override string controlDescription => "스페이스바를 눌러\n물을 막으세요!";
+        public override string controlDescription => "스페이스바를 연타해\n물을 막으세요!";
 
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
@@ -138,7 +138,7 @@ namespace Pansori.Microgames.Games
         {
             isBlocking = true;  // 두꺼비 밀려나기 시작
             // 성공 단계에 따라 물이 미는 힘이 강해짐
-            currentWaterPushForce = waterDefaultPushForce + (speed - 1) * difficulty;
+            currentWaterPushForce = waterDefaultPushForce + speed * 1.5f * difficulty;
             waterAudioSource = SoundManager.Instance.SFXLoopPlay("WaterPush", waterClip);
 
             base.OnGameStart(difficulty, speed);

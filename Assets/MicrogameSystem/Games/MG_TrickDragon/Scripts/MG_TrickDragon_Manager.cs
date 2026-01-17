@@ -56,7 +56,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
     /// </summary>
     public override string currentGameName => "속여라!";
 
-    public override string controlDescription => "순서에 맞게 키를 입력하세요!";
+    public override string controlDescription => "순서에 맞게\n키를 입력하세요!";
 
     protected override void Awake()
     {
@@ -78,7 +78,7 @@ public class MG_TrickDragon_Manager : MicrogameBase
         expectedSeqIdx = 0;
 
         // 정답 시퀀스 생성 + UI 표시
-        seqLength = targetSeqLength[gameFlowManager.CurrentStage - 1];
+        seqLength = targetSeqLength[gameFlowManager.WinCount / 4];
         seqKeys = GenerateSequence(seqLength);
 
         Debug.Log($"[MG_TrickDragon] 게임 시작 - 난이도: {difficulty}, 속도: {speed}");
