@@ -1554,6 +1554,7 @@ MonoBehaviour:
   dragonRiseDuration: 1
   scrollTearDistance: 300
   scrollTearDuration: 0.5
+  brushSoundClip: {fileID: 8300000, guid: 5815effbc8e4f79459b3884a138e36fd, type: 3}
 --- !u!1 &7544594456137903775
 GameObject:
   m_ObjectHideFlags: 0

@@ -1579,7 +1579,6 @@ GameObject:
   - component: {fileID: 6608297497425149331}
   - component: {fileID: 2523319945485331479}
   - component: {fileID: 9049454769492834670}
-  - component: {fileID: 3785241924938026218}
   m_Layer: 0
   m_Name: FailAnimationDisplay
   m_TagString: Untagged
@@ -1634,7 +1633,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2535578641232579418, guid: 203df3af5aee30445bc0ef5709482665, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 6988bbfa4b52b3743809a37342b8261e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1644,28 +1643,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!95 &3785241924938026218
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6325166046262941447}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 5216553020277180291, guid: 203df3af5aee30445bc0ef5709482665, type: 3}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &6472295905113638302
 GameObject:
   m_ObjectHideFlags: 0
@@ -1833,7 +1810,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 7888987572278502801, guid: 7cbf209cb9451094080446ca5c61809e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2361,7 +2338,7 @@ MonoBehaviour:
   hyungCountText: {fileID: 2090429353692665645}
   successLeftArm: {fileID: 8303572991183065527}
   successRightArm: {fileID: 5351890910278498484}
-  failHyungCelebration: {fileID: 0}
+  failHyungCelebration: {fileID: 6325166046262941447}
   failText: {fileID: 0}
   armRaiseHeight: 150
   hyungBounceHeight: 50
@@ -2370,8 +2347,19 @@ MonoBehaviour:
   - {fileID: 3909301933324527257, guid: 6b1878ad7ff66ca49afda69985cc9e29, type: 3}
   - {fileID: 5575767502012173425, guid: 6b1878ad7ff66ca49afda69985cc9e29, type: 3}
   spriteSwapInterval: 0.5
-  failAnimationImage: {fileID: 9049454769492834670}
-  failAnimator: {fileID: 3785241924938026218}
+  loseSprites:
+  - {fileID: 7888987572278502801, guid: 7cbf209cb9451094080446ca5c61809e, type: 3}
+  - {fileID: -4614694117272992378, guid: 7cbf209cb9451094080446ca5c61809e, type: 3}
+  - {fileID: -3990763890651210607, guid: 7cbf209cb9451094080446ca5c61809e, type: 3}
+  - {fileID: 1988138548477045928, guid: 7cbf209cb9451094080446ca5c61809e, type: 3}
+  loseSpriteSwapInterval: 0.4
+  hyungThrowSprites:
+  - {fileID: -821050980926721098, guid: 4bae7b11f361c2f43b3dafd454d54df2, type: 3}
+  - {fileID: 281774910436802478, guid: 4bae7b11f361c2f43b3dafd454d54df2, type: 3}
+  - {fileID: -185480266261788738, guid: 4bae7b11f361c2f43b3dafd454d54df2, type: 3}
+  hyungThrowSpriteInterval: 0.15
+  hyungThrowScalePunch: 1.2
+  hyungThrowForwardMove: 50
   timer: {fileID: 5835841879945079316}
 --- !u!1 &8842626507802582678
 GameObject:
