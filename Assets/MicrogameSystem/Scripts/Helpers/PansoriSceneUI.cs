@@ -19,6 +19,7 @@ namespace Pansori.Microgames
         [SerializeField] private Image backgroundImage; // 배경 이미지
         [SerializeField] private TMP_Text commandText; // "XX해라!" 명령 텍스트
         [SerializeField] private TMP_Text reactionText; // 환호/야유 반응 텍스트
+        [SerializeField] private TMP_Text controlDescriptionText; // 조작법 설명 텍스트
         
         [Header("게임 정보 UI")]
         [SerializeField] private TMP_Text livesText; // 목숨 텍스트
@@ -242,6 +243,11 @@ namespace Pansori.Microgames
                 stageText.gameObject.SetActive(false);
             }
             
+            if (controlDescriptionText != null)
+            {
+                controlDescriptionText.gameObject.SetActive(false);
+            }
+            
             ClearLifeSprites();
         }
         
@@ -294,7 +300,8 @@ namespace Pansori.Microgames
         /// <param name="stage">현재 스테이지</param>
         /// <param name="delay">표시 전 대기 시간</param>
         /// <param name="onComplete">완료 콜백</param>
-        public void ShowCommandWithInfo(string gameName, int totalLives, int consumedLives, int stage, float delay, Action onComplete)
+        /// <param name="controlDescription">조작법 설명 (선택)</param>
+        public void ShowCommandWithInfo(string gameName, int totalLives, int consumedLives, int stage, float delay, Action onComplete, string controlDescription = "")
         {
             Show();
             
@@ -302,7 +309,30 @@ namespace Pansori.Microgames
             UpdateLivesDisplay(totalLives, consumedLives);
             UpdateStageDisplay(stage);
             
+            // 조작법 설명 표시
+            UpdateControlDescription(controlDescription);
+            
             currentCoroutine = StartCoroutine(ShowCommandCoroutine(gameName, delay, onComplete));
+        }
+        
+        /// <summary>
+        /// 조작법 설명 업데이트
+        /// </summary>
+        /// <param name="controlDescription">조작법 설명</param>
+        public void UpdateControlDescription(string controlDescription)
+        {
+            if (controlDescriptionText != null)
+            {
+                if (!string.IsNullOrEmpty(controlDescription))
+                {
+                    controlDescriptionText.text = controlDescription;
+                    controlDescriptionText.gameObject.SetActive(true);
+                }
+                else
+                {
+                    controlDescriptionText.gameObject.SetActive(false);
+                }
+            }
         }
         
         /// <summary>

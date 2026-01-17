@@ -15,7 +15,8 @@ namespace Pansori.Microgames.Games
         [SerializeField] RectTransform nammaeRect; // 남매
         [SerializeField] RectTransform successTarget; // (판정용 목표위치)
         [SerializeField] RectTransform gameOverTarget; // (게임오버 판정용 목표위치)
-        [SerializeField] AudioClip moveSoundClip;
+
+        [SerializeField] AudioClip climbingSoundClip;
 
         [Header("게임 설정")] 
         [SerializeField] float friction = 10f; // 마찰(값↑ = 덜 미끄러짐)
@@ -138,7 +139,11 @@ namespace Pansori.Microgames.Games
 
             velocity += nammaePushForce;
 
-            SoundManager.Instance.SFXPlay("NammaeMove", moveSoundClip);
+
+            if (climbingSoundClip != null)
+            {
+                SoundManager.Instance.SFXPlay(climbingSoundClip.ToString(), climbingSoundClip);
+            }
         }
 
         private void OnTimeUp()

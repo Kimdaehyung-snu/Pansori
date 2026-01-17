@@ -20,6 +20,11 @@ namespace Pansori.Microgames.Games
         [SerializeField] private GameObject heungbuWife; // 흥부 아내
         [SerializeField] private GameObject nolbu; // 놀부 (실패 시 표시)
         
+        [Header("흥부 스프라이트 애니메이션")]
+        [SerializeField] private Sprite[] heungbuSprites; // 흥부 스프라이트 배열 (0~6)
+        [SerializeField] private Sprite[] wifeSprites; // 아내 스프라이트 배열 (0~6)
+        [SerializeField] private float spriteAnimationInterval = 0.15f; // 스프라이트 전환 간격
+        
         [Header("톱질 오브젝트")]
         [SerializeField] private Transform saw; // 톱
         [SerializeField] private GameObject gourdWhole; // 온전한 박
@@ -57,7 +62,8 @@ namespace Pansori.Microgames.Games
         /// 현재 게임 이름
         /// </summary>
         public override string currentGameName => "톱질 하라!";
-        
+        // Jaewon_GAME_1.cs에서
+        public override string controlDescription => "A, D를 번갈아 눌러 톱질하세요!";
         /// <summary>
         /// 현재 클릭 횟수
         /// </summary>
@@ -83,6 +89,17 @@ namespace Pansori.Microgames.Games
         /// </summary>
         private Vector3 gourdStartPosition;
         
+        // 스프라이트 애니메이션 관련 변수
+        private SpriteRenderer heungbuRenderer;
+        private SpriteRenderer wifeRenderer;
+        private float spriteAnimTimer = 0f;
+        private int spriteFrameIndex = 0; // 0 또는 1 (프레임 전환용)
+        
+        /// <summary>
+        /// 게임 결과 상태 (null: 진행중, true: 성공, false: 실패)
+        /// </summary>
+        private bool? gameResultState = null;
+        
         [Header("헬퍼 컴포넌트")]
         [SerializeField] private MicrogameTimer timer;
         [SerializeField] private MicrogameInputHandler inputHandler;
@@ -102,6 +119,16 @@ namespace Pansori.Microgames.Games
             if (gourdWhole != null)
             {
                 gourdStartPosition = gourdWhole.transform.localPosition;
+            }
+            
+            // SpriteRenderer 캐시
+            if (heungbu != null)
+            {
+                heungbuRenderer = heungbu.GetComponent<SpriteRenderer>();
+            }
+            if (heungbuWife != null)
+            {
+                wifeRenderer = heungbuWife.GetComponent<SpriteRenderer>();
             }
         }
         
@@ -159,6 +186,15 @@ namespace Pansori.Microgames.Games
             {
                 gourdWhole.transform.localPosition = gourdStartPosition;
             }
+            
+            // 스프라이트 애니메이션 상태 초기화
+            gameResultState = null;
+            spriteFrameIndex = 0;
+            spriteAnimTimer = 0f;
+            
+            // 초기 스프라이트 설정 (흥부: 0, 아내: 2)
+            SetHeungbuSprite(0);
+            SetWifeSprite(2);
         }
         
         private void HandleKeyPress(KeyCode key)
@@ -188,6 +224,10 @@ namespace Pansori.Microgames.Games
                 
                 // 박 상승
                 MoveGourdUp();
+                
+                // 스프라이트 프레임 전환 (입력 시마다 한 루프)
+                spriteFrameIndex = (spriteFrameIndex + 1) % 2;
+                ApplyCurrentSpriteFrame();
                 
                 UpdateClickCountUI();
                 
@@ -262,6 +302,9 @@ namespace Pansori.Microgames.Games
         
         private void Update()
         {
+            // 스프라이트 애니메이션 업데이트 (게임 종료 후에도 계속 재생)
+            UpdateSpriteAnimation();
+            
             // 게임이 진행 중일 때만 업데이트
             if (!isGameEnded)
             {
@@ -271,15 +314,105 @@ namespace Pansori.Microgames.Games
                     UpdateTimerUI();
                 }
                 
-                // 톱 부드러운 이동
+                // 톱 즉시 이동
                 if (saw != null)
                 {
-                    saw.localPosition = Vector3.Lerp(
-                        saw.localPosition,
-                        sawTargetPosition,
-                        Time.deltaTime * sawMoveSpeed
-                    );
+                    saw.localPosition = sawTargetPosition;
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 스프라이트 프레임 애니메이션 업데이트 (성공/실패 후 자동 애니메이션용)
+        /// </summary>
+        private void UpdateSpriteAnimation()
+        {
+            // 스프라이트 배열이 없으면 무시
+            if (heungbuSprites == null || heungbuSprites.Length == 0 ||
+                wifeSprites == null || wifeSprites.Length == 0)
+                return;
+            
+            // 게임 진행 중에는 입력 기반 애니메이션 사용 (타이머 애니메이션 비활성화)
+            if (gameResultState == null)
+                return;
+            
+            // 성공/실패 후에만 타이머 기반 자동 애니메이션
+            spriteAnimTimer += Time.deltaTime;
+            
+            if (spriteAnimTimer >= spriteAnimationInterval)
+            {
+                spriteAnimTimer = 0f;
+                spriteFrameIndex = (spriteFrameIndex + 1) % 2; // 0과 1 사이 토글
+                
+                // 현재 상태에 따른 스프라이트 설정
+                ApplyCurrentSpriteFrame();
+            }
+        }
+        
+        /// <summary>
+        /// 현재 게임 상태에 따른 스프라이트 프레임 적용
+        /// </summary>
+        private void ApplyCurrentSpriteFrame()
+        {
+            if (gameResultState == true)
+            {
+                // 성공 상태: 흥부 3→4, 아내 3→4
+                int heungbuFrame = spriteFrameIndex == 0 ? 3 : 4;
+                int wifeFrame = spriteFrameIndex == 0 ? 3 : 4;
+                SetHeungbuSprite(heungbuFrame);
+                SetWifeSprite(wifeFrame);
+            }
+            else if (gameResultState == false)
+            {
+                // 실패 상태: 흥부 5 고정, 아내 6 고정
+                SetHeungbuSprite(5);
+                SetWifeSprite(6);
+            }
+            else
+            {
+                // 게임 진행 중
+                bool isOverHalf = clickCount > targetClicks / 2;
+                
+                if (isOverHalf)
+                {
+                    // 클릭수 > 절반: 흥부 0→2, 아내 2→0
+                    int heungbuFrame = spriteFrameIndex == 0 ? 0 : 2;
+                    int wifeFrame = spriteFrameIndex == 0 ? 0 : 2;
+                    SetHeungbuSprite(heungbuFrame);
+                    SetWifeSprite(wifeFrame);
+                }
+                else
+                {
+                    // 클릭수 <= 절반: 흥부 0→1, 아내 2→1
+                    int heungbuFrame = spriteFrameIndex == 0 ? 0 : 1;
+                    int wifeFrame = spriteFrameIndex == 0 ? 1 : 2;
+                    SetHeungbuSprite(heungbuFrame);
+                    SetWifeSprite(wifeFrame);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 흥부 스프라이트 설정
+        /// </summary>
+        private void SetHeungbuSprite(int index)
+        {
+            if (heungbuRenderer != null && heungbuSprites != null && 
+                index >= 0 && index < heungbuSprites.Length)
+            {
+                heungbuRenderer.sprite = heungbuSprites[index];
+            }
+        }
+        
+        /// <summary>
+        /// 아내 스프라이트 설정
+        /// </summary>
+        private void SetWifeSprite(int index)
+        {
+            if (wifeRenderer != null && wifeSprites != null && 
+                index >= 0 && index < wifeSprites.Length)
+            {
+                wifeRenderer.sprite = wifeSprites[index];
             }
         }
         
@@ -298,6 +431,11 @@ namespace Pansori.Microgames.Games
         private void OnSuccess()
         {
             Debug.Log("[Jaewon_GAME_1] 성공!");
+            
+            // 스프라이트 애니메이션 상태를 성공으로 변경
+            gameResultState = true;
+            spriteFrameIndex = 0; // 애니메이션 프레임 리셋
+            ApplyCurrentSpriteFrame(); // 즉시 스프라이트 적용
             
             // 박이 깨지는 연출
             if (gourdWhole != null) gourdWhole.SetActive(false);
@@ -332,6 +470,10 @@ namespace Pansori.Microgames.Games
         private void OnFailure()
         {
             Debug.Log("[Jaewon_GAME_1] 실패!");
+            
+            // 스프라이트 애니메이션 상태를 실패로 변경
+            gameResultState = false;
+            ApplyCurrentSpriteFrame(); // 즉시 스프라이트 적용 (고정 프레임)
             
             // 흥부 부부 유지 (놀부가 놀리는 연출을 위해)
             // 놀부만 추가로 표시
