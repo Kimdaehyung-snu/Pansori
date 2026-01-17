@@ -72,7 +72,8 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     /// 이 게임의 표시 이름
     /// </summary>
     public override string currentGameName => "던져라!";
-    
+    // Jaewon_GAME_1.cs에서
+    public override string controlDescription => "쌀가마니를 드래그하여 형에게 던지세요!";
     protected override void Awake()
     {
         base.Awake();

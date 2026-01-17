@@ -367,6 +367,26 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
+        /// 인덱스로 미니게임 조작법 설명 가져오기
+        /// </summary>
+        public string GetMicrogameControlDescription(int index)
+        {
+            GameObject prefab = GetMicrogamePrefab(index);
+            if (prefab == null) return string.Empty;
+            
+            if (microgameInstances != null && microgameInstances.TryGetValue(prefab, out GameObject instance))
+            {
+                IMicrogame microgame = instance.GetComponent<IMicrogame>();
+                if (microgame is MicrogameBase microgameBase)
+                {
+                    return microgameBase.controlDescription;
+                }
+            }
+            
+            return string.Empty;
+        }
+        
+        /// <summary>
         /// 랜덤 미니게임 인덱스 가져오기 (셔플 시스템 적용)
         /// </summary>
         public int GetRandomMicrogameIndex()

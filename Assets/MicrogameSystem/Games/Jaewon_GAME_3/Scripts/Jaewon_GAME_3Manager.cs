@@ -67,38 +67,40 @@ public class Jaewon_GAME_3Manager : MicrogameBase
     /// 이 게임의 표시 이름
     /// </summary>
     public override string currentGameName => "그려라!";
-    
+    // Jaewon_GAME_1.cs에서
+    public override string controlDescription => "마우스로 글자를 그리세요!!";
+
     protected override void Awake()
     {
         base.Awake();
-        
+
         // 컴포넌트 자동 탐색
         if (drawingCanvas == null)
         {
             drawingCanvas = GetComponentInChildren<DrawingCanvas>();
         }
-        
+
         if (inkGauge == null)
         {
             inkGauge = GetComponentInChildren<InkGaugeUI>();
         }
-        
+
         if (fillGauge == null)
         {
             fillGauge = GetComponentInChildren<FillGaugeUI>();
         }
-        
+
         if (timer == null)
         {
             timer = GetComponent<MicrogameTimer>();
         }
-        
+
         // dragonImage 초기 위치 저장
         if (dragonImage != null)
         {
             dragonImageInitialPosition = dragonImage.anchoredPosition;
         }
-        
+
         // 결과 애니메이션 요소 초기 숨김
         HideResultElements();
     }

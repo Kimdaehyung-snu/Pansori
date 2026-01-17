@@ -20,6 +20,7 @@ namespace Pansori.Microgames
         [Header("준비 화면")]
         [SerializeField] private GameObject readyPanel;
         [SerializeField] private TMP_Text readyText;
+        [SerializeField] private TMP_Text controlDescriptionText; // 조작법 설명 텍스트
         [SerializeField] private string readyMessage = "준비!";
         [SerializeField] private string startMessage = "시작!";
         
@@ -190,7 +191,8 @@ namespace Pansori.Microgames
         /// </summary>
         /// <param name="duration">표시 시간</param>
         /// <param name="onComplete">완료 콜백</param>
-        public void ShowReadyScreen(float duration, Action onComplete)
+        /// <param name="controlDescription">조작법 설명 (선택)</param>
+        public void ShowReadyScreen(float duration, Action onComplete, string controlDescription = "")
         {
             HideAllScreens();
             
@@ -199,9 +201,23 @@ namespace Pansori.Microgames
                 readyPanel.SetActive(true);
             }
             
+            // 조작법 설명 표시
+            if (controlDescriptionText != null)
+            {
+                if (!string.IsNullOrEmpty(controlDescription))
+                {
+                    controlDescriptionText.text = controlDescription;
+                    controlDescriptionText.gameObject.SetActive(true);
+                }
+                else
+                {
+                    controlDescriptionText.gameObject.SetActive(false);
+                }
+            }
+            
             currentCoroutine = StartCoroutine(ReadySequenceCoroutine(duration, onComplete));
             
-            Debug.Log("[GameScreens] 준비 화면 표시");
+            Debug.Log($"[GameScreens] 준비 화면 표시 - 조작법: {controlDescription}");
         }
         
         /// <summary>
@@ -238,6 +254,12 @@ namespace Pansori.Microgames
             if (readyPanel != null)
             {
                 readyPanel.SetActive(false);
+            }
+            
+            // 조작법 텍스트도 숨기기
+            if (controlDescriptionText != null)
+            {
+                controlDescriptionText.gameObject.SetActive(false);
             }
             
             onComplete?.Invoke();
