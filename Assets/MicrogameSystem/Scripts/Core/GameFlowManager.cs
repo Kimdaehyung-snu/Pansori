@@ -261,7 +261,7 @@ namespace Pansori.Microgames
         public void SetSettings(MicrogameSystemSettings newSettings)
         {
             settings = newSettings;
-            
+
             // 현재 속도와 난이도 재계산
             UpdateSpeedAndDifficulty();
         }
@@ -322,7 +322,7 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowMainMenu();
             }
-            
+
             // 메인 BGM 재생 (자진모리)
             PlayMainBGMWithCurrentSpeed();
 
@@ -338,7 +338,7 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowPracticeSelectScreen();
             }
-            
+
             Debug.Log("[GameFlowManager] 연습 모드 선택 화면 진입");
         }
 
@@ -353,10 +353,10 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowPracticeHint(true);
             }
-            
+
             // 판소리 씬으로 리다이렉트 (본 게임과 동일한 흐름 사용)
             ChangeState(GameState.PansoriScene);
-            
+
             Debug.Log($"[GameFlowManager] 연습 모드 - 판소리 씬으로 리다이렉트");
         }
 
@@ -390,14 +390,14 @@ namespace Pansori.Microgames
             if (gameScreens != null)
             {
                 gameScreens.HideAllScreens();
-                
+
                 // 연습 모드일 때 힌트 표시
                 if (isPracticeMode)
                 {
                     gameScreens.ShowPracticeHint(true);
                 }
             }
-            
+
             // 메인 BGM 재생 (자진모리) - 마이크로게임에서 돌아왔으면 재생 시작
             if (fromMicrogame)
             {
@@ -406,14 +406,13 @@ namespace Pansori.Microgames
 
             if (fromMicrogame)
             {
-                // 문 열림 트랜지션 후 반응 표시
+                // 문 닫힘 -> 대기 -> 문 열림 트랜지션 후 반응 표시
                 if (pansoriSceneUI != null)
                 {
-                    pansoriSceneUI.PlayDoorOpenTransition(() =>
-                    {
-                        // 트랜지션 완료 후 반응 표시 진행
-                        ContinueAfterDoorOpen();
-                    });
+                    pansoriSceneUI.PlayDoorCloseOpenTransition(0.25f,
+                        null,  // 문 닫힌 후 추가 작업 없음
+                        () => ContinueAfterDoorOpen()  // 문 열린 후 판소리 계속
+                    );
                 }
                 else
                 {
@@ -428,7 +427,7 @@ namespace Pansori.Microgames
 
             Debug.Log($"[GameFlowManager] 판소리 씬 진입 (마이크로게임에서: {fromMicrogame}, 연습모드: {isPracticeMode})");
         }
-        
+
         /// <summary>
         /// 문 열림 트랜지션 후 계속 진행
         /// </summary>
@@ -453,7 +452,7 @@ namespace Pansori.Microgames
         {
             // 플래그 초기화
             didSpeedIncrease = false;
-            
+
             if (pansoriSceneUI != null)
             {
                 // "지화자!" 연출 표시
@@ -468,7 +467,7 @@ namespace Pansori.Microgames
                 // UI가 없으면 바로 다음 단계로
                 StartCoroutine(DelayedShowReaction(ReactionDuration));
             }
-            
+
             Debug.Log("[GameFlowManager] 속도 증가 연출 시작 (지화자!)");
         }
 
@@ -482,13 +481,13 @@ namespace Pansori.Microgames
             {
                 SoundManager.Instance.PlayPansoriReactionSound(lastMicrogameSuccess);
             }
-            
+
             // 마이크로게임 결과에 따른 반응 표시 (목숨 정보 포함)
             if (pansoriSceneUI != null)
             {
                 int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
                 int consumedLives = microgameManager != null ? (microgameManager.MaxLives - microgameManager.CurrentLives) : loseCount;
-                
+
                 pansoriSceneUI.ShowReactionWithInfo(lastMicrogameSuccess, totalLives, consumedLives, CurrentStage, ReactionDuration, () =>
                 {
                     // 승리/패배 조건 확인
@@ -520,7 +519,7 @@ namespace Pansori.Microgames
 
             // 다음 게임 이름 가져오기
             string nextGameName = GetNextGameName();
-            
+
             // 다음 게임 조작법 가져오기
             string controlDescription = GetNextGameControlDescription();
 
@@ -553,7 +552,7 @@ namespace Pansori.Microgames
             {
                 return practiceMicrogameIndex;
             }
-            
+
             if (microgameManager != null)
             {
                 return microgameManager.GetRandomMicrogameIndex();
@@ -598,17 +597,17 @@ namespace Pansori.Microgames
             {
                 pansoriSceneUI.HideAll();
             }
-            
+
             // 메인 BGM 정지 (미니게임 BGM이 대신 재생됨)
             StopMainBGM();
 
-            // 문 닫힘 트랜지션 후 마이크로게임 시작
+            // 문 닫힘 -> 대기 -> 문 열림 트랜지션 후 마이크로게임 시작
             if (pansoriSceneUI != null)
             {
-                pansoriSceneUI.PlayDoorCloseTransition(() =>
-                {
-                    StartMicrogameAfterDoorClose();
-                });
+                pansoriSceneUI.PlayDoorCloseOpenTransition(0.1f,
+                    () => StartMicrogameAfterDoorClose(),  // 문 닫힌 후 미니게임 시작
+                    null  // 문 열린 후 추가 작업 없음
+                );
             }
             else
             {
@@ -617,7 +616,7 @@ namespace Pansori.Microgames
 
             Debug.Log($"[GameFlowManager] 마이크로게임 진입 대기 (인덱스: {nextMicrogameIndex}, 난이도: {currentDifficulty}, 속도: {currentSpeed})");
         }
-        
+
         /// <summary>
         /// 문 닫힘 트랜지션 후 마이크로게임 시작
         /// </summary>
@@ -653,10 +652,10 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowVictoryScreen(winCount);
             }
-            
+
             // 메인 BGM 재생
             PlayMainBGMWithCurrentSpeed();
-            
+
             // 게임 완료 이벤트 발생
             OnGameComplete?.Invoke(true, winCount, loseCount);
 
@@ -677,10 +676,10 @@ namespace Pansori.Microgames
             {
                 gameScreens.ShowGameOverScreen(winCount, loseCount);
             }
-            
+
             // 메인 BGM 재생
             PlayMainBGMWithCurrentSpeed();
-            
+
             // 게임 완료 이벤트 발생
             OnGameComplete?.Invoke(false, winCount, loseCount);
 
@@ -702,7 +701,7 @@ namespace Pansori.Microgames
                     winCount++;
                     OnWin?.Invoke(winCount);
                     OnStageChanged?.Invoke(CurrentStage);
-                    
+
                     Debug.Log($"[GameFlowManager] 승리! 현재 승리 횟수: {winCount}");
 
                     // 속도/난이도 업데이트
@@ -712,7 +711,7 @@ namespace Pansori.Microgames
                 {
                     loseCount++;
                     OnLose?.Invoke(loseCount);
-                    
+
                     Debug.Log($"[GameFlowManager] 패배! 현재 패배 횟수: {loseCount}");
                 }
             }
@@ -754,13 +753,13 @@ namespace Pansori.Microgames
             if (didSpeedIncrease)
             {
                 OnSpeedChanged?.Invoke(currentSpeed);
-                
+
                 // 메인 BGM 속도도 업데이트
                 if (SoundManager.Instance != null)
                 {
                     SoundManager.Instance.SetMainBGMSpeed(currentSpeed);
                 }
-                
+
                 Debug.Log($"[GameFlowManager] 속도 변경: {previousSpeed:F2} → {currentSpeed:F2} (지화자! 연출 예정)");
             }
 
@@ -782,7 +781,7 @@ namespace Pansori.Microgames
                 PrepareNextMicrogame();
                 return;
             }
-            
+
             bool isVictory = settings != null ? settings.IsVictory(winCount) : winCount >= WinCountForVictory;
             bool isGameOver = settings != null ? settings.IsGameOver(loseCount) : loseCount >= LoseCountForGameOver;
 
@@ -822,13 +821,13 @@ namespace Pansori.Microgames
                 microgameManager.ResetLives();
                 microgameManager.ResetStatistics();
             }
-            
+
             // 관객 스프라이트 위치 초기화
             if (pansoriSceneUI != null)
             {
                 pansoriSceneUI.ResetAudiencePositions();
             }
-            
+
             // 연습 모드 힌트 숨기기
             if (gameScreens != null)
             {
@@ -878,21 +877,21 @@ namespace Pansori.Microgames
         public void StartPracticeMode(int microgameIndex)
         {
             if (currentState != GameState.PracticeSelect) return;
-            
+
             isPracticeMode = true;
             practiceMicrogameIndex = microgameIndex;
             currentSpeed = BaseSpeed;
             currentDifficulty = BaseDifficulty;
-            
+
             // 연습 모드 힌트 표시
             if (gameScreens != null)
             {
                 gameScreens.ShowPracticeHint(true);
             }
-            
+
             // 판소리 씬으로 전환 (본 게임과 동일한 흐름)
             ChangeState(GameState.PansoriScene);
-            
+
             Debug.Log($"[GameFlowManager] 연습 모드 시작 - 미니게임 인덱스: {microgameIndex}");
         }
 
@@ -902,29 +901,29 @@ namespace Pansori.Microgames
         public void ExitPracticeMode()
         {
             if (!isPracticeMode) return;
-            
+
             // 현재 실행 중인 미니게임 종료
             if (microgameManager != null && microgameManager.IsMicrogameRunning)
             {
                 microgameManager.EndCurrentMicrogame();
             }
-            
+
             // PansoriSceneUI도 정리 (코루틴 정지 및 UI 숨김)
             if (pansoriSceneUI != null)
             {
                 pansoriSceneUI.HideAll();
             }
-            
+
             isPracticeMode = false;
             practiceMicrogameIndex = -1;
-            
+
             if (gameScreens != null)
             {
                 gameScreens.ShowPracticeHint(false);
             }
-            
+
             ChangeState(GameState.MainMenu);
-            
+
             Debug.Log("[GameFlowManager] 연습 모드 종료");
         }
 
@@ -945,9 +944,9 @@ namespace Pansori.Microgames
             yield return new WaitForSeconds(delay);
             CheckGameEndCondition();
         }
-        
+
         #region Main BGM Control
-        
+
         /// <summary>
         /// 현재 속도로 메인 BGM 재생
         /// </summary>
@@ -958,7 +957,7 @@ namespace Pansori.Microgames
                 SoundManager.Instance.PlayMainBGM(currentSpeed);
             }
         }
-        
+
         /// <summary>
         /// 메인 BGM 정지
         /// </summary>
@@ -969,7 +968,7 @@ namespace Pansori.Microgames
                 SoundManager.Instance.StopMainBGM();
             }
         }
-        
+
         #endregion
 
         #region Debug Methods

@@ -1395,6 +1395,80 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
+        /// 문이 닫혔다가 열리는 전체 트랜지션을 재생합니다.
+        /// </summary>
+        /// <param name="waitTime">문이 닫힌 후 대기 시간</param>
+        /// <param name="onMiddle">문이 완전히 닫힌 후 호출되는 콜백 (씬 전환 등 처리용)</param>
+        /// <param name="onComplete">문이 완전히 열린 후 호출되는 콜백</param>
+        public void PlayDoorCloseOpenTransition(float waitTime, Action onMiddle, Action onComplete)
+        {
+            if (!useDoorTransition || (leftDoorImage == null && rightDoorImage == null))
+            {
+                onMiddle?.Invoke();
+                onComplete?.Invoke();
+                return;
+            }
+            
+            StartCoroutine(DoorCloseOpenCoroutine(waitTime, onMiddle, onComplete));
+        }
+        
+        /// <summary>
+        /// 문 닫힘 -> 대기 -> 문 열림 전체 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator DoorCloseOpenCoroutine(float waitTime, Action onMiddle, Action onComplete)
+        {
+            // 1. 문 닫힘 애니메이션
+            SetDoorsActive(true);
+            SetDoorPositions(1f); // 1 = 열린 상태에서 시작
+            
+            float elapsed = 0f;
+            
+            while (elapsed < doorTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / doorTransitionDuration);
+                
+                // EaseInQuad 이징 적용 (자연스러운 가속)
+                float easedT = t * t;
+                
+                SetDoorPositions(1f - easedT); // 0 = 완전히 닫힌 상태
+                yield return null;
+            }
+            
+            SetDoorPositions(0f);
+            Debug.Log("[PansoriSceneUI] 문 닫힘 완료, 대기 중...");
+            
+            // 2. 대기 시간
+            yield return new WaitForSeconds(waitTime);
+            
+            // 3. 중간 콜백 호출 (씬 전환 등)
+            onMiddle?.Invoke();
+            
+            // 4. 문 열림 애니메이션
+            elapsed = 0f;
+            
+            while (elapsed < doorTransitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / doorTransitionDuration);
+                
+                // EaseOutQuad 이징 적용 (자연스러운 감속)
+                float easedT = 1f - (1f - t) * (1f - t);
+                
+                SetDoorPositions(easedT); // 1 = 완전히 열린 상태
+                yield return null;
+            }
+            
+            SetDoorPositions(1f);
+            SetDoorsActive(false); // 열린 후 비활성화
+            
+            Debug.Log("[PansoriSceneUI] 문 닫힘->열림 트랜지션 완료");
+            
+            // 5. 완료 콜백 호출
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
         /// 문 열림 애니메이션 코루틴
         /// </summary>
         private IEnumerator DoorOpenCoroutine(Action onComplete)
