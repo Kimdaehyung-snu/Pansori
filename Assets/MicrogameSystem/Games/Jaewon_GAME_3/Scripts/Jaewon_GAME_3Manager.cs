@@ -59,6 +59,10 @@ public class Jaewon_GAME_3Manager : MicrogameBase
     [Header("붓글씨 사운드")]
     [SerializeField] private AudioClip brushSoundClip; // 붓글씨.mp3
     
+    [Header("커스텀 커서")]
+    [SerializeField] private Texture2D cursorTexture; // 커서 스프라이트 (Texture2D)
+    [SerializeField] private Vector2 cursorHotspot = Vector2.zero; // 커서 클릭 지점 (좌상단 기준)
+    
     // 붓글씨 사운드용 AudioSource
     private AudioSource brushAudioSource;
     
@@ -191,6 +195,12 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         {
             timer.StartTimer(gameDuration, speed);
             timer.OnTimerEnd += OnTimeOut;
+        }
+        
+        // 커스텀 커서 적용
+        if (cursorTexture != null)
+        {
+            Cursor.SetCursor(cursorTexture, cursorHotspot, CursorMode.Auto);
         }
         
         Debug.Log($"[Jaewon_GAME_3] 게임 시작 - 한자: {(isTian ? "天" : "地")}, 목표: {requiredFillPercentage * 100f}%, 먹물: {maxInkAmount}");
@@ -549,6 +559,12 @@ public class Jaewon_GAME_3Manager : MicrogameBase
     {
         hasSucceeded = false;
         
+        // 커스텀 커서가 설정된 경우에만 기본 커서로 복원
+        if (cursorTexture != null)
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        }
+        
         // 타이머 중지 및 이벤트 해제
         if (timer != null)
         {
@@ -627,6 +643,12 @@ public class Jaewon_GAME_3Manager : MicrogameBase
         if (drawingCanvas != null)
         {
             drawingCanvas.CanDraw = false;
+        }
+        
+        // 커스텀 커서가 설정된 경우에만 기본 커서로 복원
+        if (cursorTexture != null)
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
     }
 }
