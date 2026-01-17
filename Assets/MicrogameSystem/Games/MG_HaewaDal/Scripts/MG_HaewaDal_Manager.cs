@@ -3,6 +3,7 @@ using UnityEngine;
 using Pansori.Microgames;
 using TMPro;
 using UnityEngine.UI;
+using Random = System.Random;
 
 namespace Pansori.Microgames.Games
 {
@@ -28,7 +29,8 @@ namespace Pansori.Microgames.Games
         [SerializeField] private Button goodRope;
         [SerializeField] private GameObject successResult;
         [SerializeField] private GameObject failResult;
-
+        [SerializeField] private GameObject cutRottenRope;
+        
         [SerializeField] private AudioClip successTiger;
         [SerializeField] private AudioClip successRope;
         [SerializeField] private AudioClip failTiger;
@@ -54,10 +56,19 @@ namespace Pansori.Microgames.Games
         public override string currentGameName => "골라라!";
         public override string controlDescription => "튼튼한 동아줄을 클릭하세요!";
         
+        // 위치캐싱
+        private Vector3 posA;
+        private Vector3 posB;
+        
+        //랜덤값
+        private int rand = 0;
+        
         protected override void Awake()
         {
             base.Awake();
 
+            posA = rottenRope.transform.position;
+            posB = goodRope.transform.position;
             
         }
 
@@ -88,7 +99,21 @@ namespace Pansori.Microgames.Games
            
             base.OnGameStart(difficulty, speed);
             
-
+            //밧줄위치 초기화
+            rand = UnityEngine.Random.Range(0, 2);
+            Debug.Log($"rand: {rand}");
+            if (rand == 0)
+            {
+                rottenRope.transform.position = posA;
+                goodRope.transform.position = posB;
+            }
+            else
+            {
+                rottenRope.transform.position = posB;
+                goodRope.transform.position = posA;
+            }
+            cutRottenRope.transform.position =  new Vector3(rottenRope.transform.position.x,rottenRope.transform.position.y+207f,0f);
+            
             if (timer != null)
             {
                 timer.StartTimer(5f, speed);

@@ -646,6 +646,7 @@ MonoBehaviour:
   goodRope: {fileID: 7062714443795225814}
   successResult: {fileID: 5210078991789528785}
   failResult: {fileID: 1570923443865048907}
+  cutRottenRope: {fileID: 5909202528754421398}
   successTiger: {fileID: 8300000, guid: 763f48e221eea914bb3d05d883ea00c9, type: 3}
   successRope: {fileID: 8300000, guid: fdb25141f91eecd4e89fb8ae36df7f26, type: 3}
   failTiger: {fileID: 8300000, guid: 1aa6e4093fd421143afeaa57f50eff66, type: 3}
