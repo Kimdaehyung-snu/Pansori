@@ -143,7 +143,7 @@ namespace Pansori.Microgames.Games
             //초기화
             successResult.SetActive(false);
             failResult.SetActive(false);
-            rottenRopeImage.sprite = GetSpriteByEnum(ERottenRope.Idle);
+            rottenRopeImage.gameObject.SetActive(true);
             
             // 타이머 중지
             if (timer != null)
@@ -204,8 +204,7 @@ namespace Pansori.Microgames.Games
         {
             //패널열기
             failResult.SetActive(true);
-            //밧줄 모양 바꾸기
-            rottenRopeImage.sprite = GetSpriteByEnum(ERottenRope.Cut);
+            rottenRopeImage.gameObject.SetActive(false);
             //사운드
             SoundManager.Instance.SFXPlay(failRope.name,failRope);
             SoundManager.Instance.SFXPlay(failTiger.name,failTiger);
@@ -215,20 +214,6 @@ namespace Pansori.Microgames.Games
             onComplete?.Invoke();
         }
 
-        private Sprite GetSpriteByEnum(Enum e)
-        {
-            Sprite sprite = null;
-            switch (e)
-            {
-                case ERottenRope.Idle:
-                    sprite = Resources.Load<Sprite>("HaewaDal/RottenRopeIdle");
-                    break;
-                case ERottenRope.Cut:
-                    sprite = Resources.Load<Sprite>("HaewaDal/RottenRopeCut");
-                    break;
-            }
 
-            return sprite;
-        }
     }
 }

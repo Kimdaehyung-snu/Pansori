@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: b314563949ed8f742aafff6d9f992b3b
+guid: 688dae01a3758154d964d86163b2540d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7659213179016664859
-    second: RottenRopeCut_0
+      213: -5997440297579748310
+    second: sun_tiger_jumpscare_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: RottenRopeCut_0
+      name: sun_tiger_jumpscare_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 5
         y: 0
-        width: 270
-        height: 372
+        width: 1915
+        height: 1075
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 5e8a8b5a13205b590800000000000000
-      internalID: -7659213179016664859
+      spriteID: a24652d33dfc4cca0800000000000000
+      internalID: -5997440297579748310
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      RottenRopeCut_0: -7659213179016664859
+      sun_tiger_jumpscare_0: -5997440297579748310
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
