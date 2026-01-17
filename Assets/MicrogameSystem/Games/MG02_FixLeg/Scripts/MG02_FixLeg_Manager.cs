@@ -21,6 +21,9 @@ namespace Pansori.Microgames.Games
         [SerializeField] private GameObject failResultPanel;
         [SerializeField] private RectTransform rotateAreaRect;
         [SerializeField] private GameObject legGuideLineGameObject;
+        [SerializeField] private AudioClip legWheelSound;
+        [SerializeField] private AudioClip successSound;
+        [SerializeField] private AudioClip failSound;
         
         [Header("게임 설정")]
         // TODO: 게임 설정 변수를 추가하세요
@@ -107,6 +110,7 @@ namespace Pansori.Microgames.Games
             {
                 legGuideLineGameObject.SetActive(false);    
             }
+            SoundManager.Instance.SFXPlay(legWheelSound.name,legWheelSound); 
         }
         
         // 2. 드래그 중: 회전 로직 실행
@@ -145,7 +149,7 @@ namespace Pansori.Microgames.Games
             
             // 오차 범위 n도 이내면 성공
 
-            if (-5f <Mathf.Abs(currentZ)&& Mathf.Abs(currentZ)< 5f) 
+            if (-15f <Mathf.Abs(currentZ)&& Mathf.Abs(currentZ)< 15f) 
             {
                 Debug.Log("제비 다리 치료 완료! 🩹");
             
@@ -254,6 +258,8 @@ namespace Pansori.Microgames.Games
         {
             //패널열기
             successResultPanel.SetActive(true);
+            //사운드재생
+            SoundManager.Instance.SFXPlay(successSound.name, successSound);
             // 결과 표시 유지
             yield return new WaitForSeconds(resultDisplayDelay);
             // 완료 콜백
@@ -267,6 +273,8 @@ namespace Pansori.Microgames.Games
         {
             //패널열기
             failResultPanel.SetActive(true);
+            //사운드재생
+            SoundManager.Instance.SFXPlay(failSound.name, failSound);
             // 결과 표시 유지
             yield return new WaitForSeconds(resultDisplayDelay);
             // 완료 콜백
