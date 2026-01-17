@@ -91,6 +91,13 @@ namespace Pansori.Microgames
             }
             
             isGameEnded = true;
+            
+            // 결과 판정 직후 즉시 사운드 재생 (판소리 씬 전환 전)
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayMicrogameResultSound(success);
+            }
+            
             OnGameEnd();
             OnResultReported?.Invoke(success);
             
@@ -112,6 +119,13 @@ namespace Pansori.Microgames
 
             isGameEnded = true;
             isPlayingResultAnimation = true;
+            
+            // 결과 판정 직후 즉시 사운드 재생 (판소리 씬 전환 전)
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayMicrogameResultSound(success);
+            }
+            
             OnGameEnd();
 
             // 결과 애니메이션 재생

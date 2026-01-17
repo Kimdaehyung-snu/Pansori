@@ -23,11 +23,15 @@ public class SoundManager : PansoriSingleton<SoundManager>
     [SerializeField] private AudioClip[] microgameBgClipList;
     
     [Header("Microgame Result Sounds")]
-    [SerializeField] private AudioClip microgameSuccessClip;  // 성공 효과음
-    [SerializeField] private AudioClip microgameFailClip;     // 실패 효과음
+    [SerializeField] private AudioClip[] microgameSuccessClips;  // 성공 효과음 (동시 재생)
+    [SerializeField] private AudioClip microgameFailClip;        // 실패 효과음
     
     [Header("Main BGM (자진모리)")]
     [SerializeField] private AudioClip mainBGMClip; // 자진모리 브금
+    
+    [Header("Pansori Reaction Sounds")]
+    [SerializeField] private AudioClip pansoriSuccessClip;  // 판소리 씬 성공 반응 사운드
+    [SerializeField] private AudioClip pansoriFailClip;     // 판소리 씬 실패 반응 사운드
     
     [Header("Fade Settings")]
     [SerializeField] private float fadeInDuration = 0.2f;
@@ -326,19 +330,64 @@ public class SoundManager : PansoriSingleton<SoundManager>
     
     /// <summary>
     /// 미니게임 결과 사운드 재생 (성공/실패)
+    /// 성공 시 모든 성공 클립을 동시에 재생
     /// </summary>
     /// <param name="success">성공 여부</param>
     public void PlayMicrogameResultSound(bool success)
     {
-        AudioClip clip = success ? microgameSuccessClip : microgameFailClip;
-        if (clip != null)
+        if (success)
         {
-            SFXPlay(success ? "MicrogameSuccess" : "MicrogameFail", clip);
-            Debug.Log($"[SoundManager] 미니게임 결과 사운드 재생: {(success ? "성공" : "실패")}");
+            // 성공: 모든 성공 클립 동시 재생
+            if (microgameSuccessClips != null && microgameSuccessClips.Length > 0)
+            {
+                for (int i = 0; i < microgameSuccessClips.Length; i++)
+                {
+                    if (microgameSuccessClips[i] != null)
+                    {
+                        SFXPlay($"MicrogameSuccess_{i}", microgameSuccessClips[i]);
+                    }
+                }
+                Debug.Log($"[SoundManager] 미니게임 성공 사운드 재생: {microgameSuccessClips.Length}개 클립 동시 재생");
+            }
+            else
+            {
+                Debug.LogWarning("[SoundManager] 미니게임 성공 사운드가 설정되지 않았습니다.");
+            }
         }
         else
         {
-            Debug.LogWarning($"[SoundManager] 미니게임 {(success ? "성공" : "실패")} 사운드가 설정되지 않았습니다.");
+            // 실패: 단일 클립 재생
+            if (microgameFailClip != null)
+            {
+                SFXPlay("MicrogameFail", microgameFailClip);
+                Debug.Log("[SoundManager] 미니게임 실패 사운드 재생");
+            }
+            else
+            {
+                Debug.LogWarning("[SoundManager] 미니게임 실패 사운드가 설정되지 않았습니다.");
+            }
+        }
+    }
+    
+    #endregion
+    
+    #region Pansori Reaction Sounds
+    
+    /// <summary>
+    /// 판소리 씬 전환 후 반응 사운드 재생 (성공/실패)
+    /// </summary>
+    /// <param name="success">직전 미니게임 성공 여부</param>
+    public void PlayPansoriReactionSound(bool success)
+    {
+        AudioClip clip = success ? pansoriSuccessClip : pansoriFailClip;
+        if (clip != null)
+        {
+            SFXPlay(success ? "PansoriSuccess" : "PansoriFail", clip);
+            Debug.Log($"[SoundManager] 판소리 반응 사운드 재생: {(success ? "성공" : "실패")}");
+        }
+        else
+        {
+            Debug.LogWarning($"[SoundManager] 판소리 {(success ? "성공" : "실패")} 반응 사운드가 설정되지 않았습니다.");
         }
     }
     
