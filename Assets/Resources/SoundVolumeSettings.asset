@@ -16,7 +16,7 @@ MonoBehaviour:
   - clipGuid: 4baa26f6994ba864eaf7f926c3d50c0f
     clipName: "\uB09C\uC774\uB3C4 \uC99D\uAC00"
     clipPath: "Assets/General/Sound/\uB09C\uC774\uB3C4 \uC99D\uAC00.mp3"
-    volume: 0.5
+    volume: 0
   - clipGuid: 1ed06dc6d9e706a4cac8bb0a9ba87259
     clipName: "\uC131\uACF51"
     clipPath: "Assets/General/Sound/\uC131\uACF51.mp3"
