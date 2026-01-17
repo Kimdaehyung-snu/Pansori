@@ -220,13 +220,28 @@ namespace Pansori.Microgames
         
         /// <summary>
         /// 게임 상태를 초기값으로 리셋합니다. (추상 메서드 - 반드시 구현 필요)
+        /// 주의: 이 메서드는 OnGameStart()에서 호출되거나 서브 클래스에서 필요 시 호출합니다.
+        /// OnDisable()에서는 호출하지 않습니다 (부모 비활성화 시 자식 SetActive가 동작하지 않는 문제 방지).
         /// </summary>
         protected abstract void ResetGameState();
         
         /// <summary>
-        /// 오브젝트가 비활성화될 때 자동으로 상태를 리셋합니다.
+        /// 오브젝트가 활성화될 때 호출됩니다.
+        /// 기본 상태 플래그만 초기화하고, 전체 게임 상태 초기화는 OnGameStart()에서 수행합니다.
         /// </summary>
-        private void OnDisable()
+        protected virtual void OnEnable()
+        {
+            // 기본 플래그 초기화 (자식 오브젝트 조작은 하지 않음)
+            isGameEnded = false;
+            isPlayingResultAnimation = false;
+        }
+        
+        /// <summary>
+        /// 오브젝트가 비활성화될 때 호출됩니다.
+        /// 결과 애니메이션만 중지하고, ResetGameState()는 호출하지 않습니다.
+        /// (부모가 비활성화된 상태에서 자식 SetActive가 제대로 동작하지 않는 문제 방지)
+        /// </summary>
+        protected virtual void OnDisable()
         {
             // 결과 애니메이션 중지
             if (resultAnimation != null)
@@ -235,7 +250,10 @@ namespace Pansori.Microgames
             }
             
             isPlayingResultAnimation = false;
-            ResetGameState();
+            
+            // 주의: ResetGameState()는 여기서 호출하지 않습니다.
+            // 자식 오브젝트의 SetActive()가 부모 비활성화 상태에서 제대로 동작하지 않기 때문입니다.
+            // 대신 OnGameStart()에서 완전한 초기화를 수행합니다.
         }
     }
 }
