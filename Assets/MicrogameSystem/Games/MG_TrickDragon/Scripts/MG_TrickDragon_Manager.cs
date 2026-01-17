@@ -33,6 +33,11 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
     private int expectedSeqIdx; // 현재 기대하는 입력 인덱스(0부터 시작)
 
+    [Header("애니메이션 관련")]
+    [SerializeField] Animator rabbitAnimator;
+    [SerializeField] Animator turtleAnimator;
+    [SerializeField] Animator kingAnimator;
+
     // 게임 고유 변수들
     private float timer;
     private bool hasSucceeded = false;
@@ -242,14 +247,16 @@ public class MG_TrickDragon_Manager : MicrogameBase
 
         yield return new WaitForSeconds(0.2f);
 
-        /*if (success)
+        if (success)
         {
-            SoundManager.Instance.SFXPlay("SuccessDragon", successDragonClip);
+            kingAnimator.SetTrigger("IsSuccess");
         }
         else
         {
-            SoundManager.Instance.SFXPlay("FailureDragon", failureDragonClip);
-        }*/
+            rabbitAnimator.SetTrigger("IsFailure");
+            turtleAnimator.SetTrigger("IsFailure");
+            kingAnimator.SetTrigger("IsFailure");
+        }
 
         yield return new WaitForSeconds(1f);
 
