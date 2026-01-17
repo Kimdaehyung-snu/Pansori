@@ -898,19 +898,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 209a9618210914947b850cc0f218059a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pansori.Microgames.Games.MG_IndangsuDive_Manager
-  thumbnailSprite: {fileID: 0}
+  thumbnailSprite: {fileID: 2847718448216160014, guid: 17da05a276a3ca24fbe226e95686fb6b, type: 3}
   resultAnimation: {fileID: 0}
   useResultAnimation: 1
   resultAnimationDelay: 0
   boat: {fileID: 1022823515386404714}
+  simcheongSprite: {fileID: 4521742332482019925}
   simcheong: {fileID: 4201315459121494298}
   dragonPalace: {fileID: 3835630018206368367}
   diveSplashClip: {fileID: 8300000, guid: 12f7d958e14133a4ba5ffddb0a46d7e2, type: 3}
   seaWaveClip: {fileID: 8300000, guid: 889b6637f83b6934c89bbb3388c68085, type: 3}
-  rightMarginViewport: 0.1
+  rightMarginViewport: 0.16
   defaultVel: 2
   maxDis: 20
-  extraWindow: -0.2
+  extraWindow: -0.46
   diveSpeed: 8
   diveStopEpsilon: 0.01
   BGAnimator: {fileID: 8326402424778012461}

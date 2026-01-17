@@ -526,7 +526,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 241986f21921089458f23094a402c0bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MG_TrickDragonManager
-  thumbnailSprite: {fileID: 0}
+  thumbnailSprite: {fileID: 2847718448216160014, guid: 2c3d6242e8af46940afc752ec9237ff6, type: 3}
   resultAnimation: {fileID: 0}
   useResultAnimation: 1
   resultAnimationDelay: 0

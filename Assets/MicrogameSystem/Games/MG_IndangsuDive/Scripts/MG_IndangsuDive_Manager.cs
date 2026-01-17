@@ -19,6 +19,7 @@ namespace Pansori.Microgames.Games
     {
         [Header("게임 오브젝트")]
         [SerializeField] SpriteRenderer boat;    // 배
+        [SerializeField] SpriteRenderer simcheongSprite;
         [SerializeField] Animator simcheong;  // 심청이
         [SerializeField] SpriteRenderer dragonPalace;  // 용궁
 
@@ -281,12 +282,12 @@ namespace Pansori.Microgames.Games
         /// <returns></returns>
         private bool IsOverlapping()
         {
-            if (boat == null || dragonPalace == null)
+            if (simcheongSprite == null || dragonPalace == null)
             {
                 return false;
             }
 
-            Bounds a = boat.bounds;
+            Bounds a = simcheongSprite.bounds;
             Bounds b = dragonPalace.bounds;
 
             float aMin = a.min.x - extraWindow;
