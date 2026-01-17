@@ -343,31 +343,21 @@ namespace Pansori.Microgames
         }
 
         /// <summary>
-        /// 연습 모드 진입 (미니게임 시작)
+        /// 연습 모드 진입 (판소리 씬으로 리다이렉트)
+        /// 현재는 PansoriScene 흐름을 사용하므로 이 상태는 직접 사용되지 않습니다.
         /// </summary>
         private void OnEnterPracticeMode()
         {
-            if (pansoriSceneUI != null)
-            {
-                pansoriSceneUI.HideAll();
-            }
-            
+            // 연습 모드 힌트 표시
             if (gameScreens != null)
             {
-                gameScreens.HideAllScreens();
                 gameScreens.ShowPracticeHint(true);
             }
             
-            // 메인 BGM 정지
-            StopMainBGM();
+            // 판소리 씬으로 리다이렉트 (본 게임과 동일한 흐름 사용)
+            ChangeState(GameState.PansoriScene);
             
-            // 미니게임 시작
-            if (microgameManager != null && practiceMicrogameIndex >= 0)
-            {
-                microgameManager.StartMicrogame(practiceMicrogameIndex, currentDifficulty, currentSpeed);
-            }
-            
-            Debug.Log($"[GameFlowManager] 연습 모드 시작 - 미니게임 인덱스: {practiceMicrogameIndex}");
+            Debug.Log($"[GameFlowManager] 연습 모드 - 판소리 씬으로 리다이렉트");
         }
 
         /// <summary>
@@ -400,6 +390,12 @@ namespace Pansori.Microgames
             if (gameScreens != null)
             {
                 gameScreens.HideAllScreens();
+                
+                // 연습 모드일 때 힌트 표시
+                if (isPracticeMode)
+                {
+                    gameScreens.ShowPracticeHint(true);
+                }
             }
             
             // 메인 BGM 재생 (자진모리) - 마이크로게임에서 돌아왔으면 재생 시작
@@ -410,8 +406,8 @@ namespace Pansori.Microgames
 
             if (fromMicrogame)
             {
-                // 성공 + 속도 증가 시 "지화자!" 연출 먼저 표시
-                if (lastMicrogameSuccess && didSpeedIncrease)
+                // 성공 + 속도 증가 시 "지화자!" 연출 먼저 표시 (연습 모드에서는 속도 증가 없음)
+                if (lastMicrogameSuccess && didSpeedIncrease && !isPracticeMode)
                 {
                     ShowSpeedUpThenReaction();
                 }
@@ -427,7 +423,7 @@ namespace Pansori.Microgames
                 PrepareNextMicrogame();
             }
 
-            Debug.Log($"[GameFlowManager] 판소리 씬 진입 (마이크로게임에서: {fromMicrogame}, 속도증가: {didSpeedIncrease})");
+            Debug.Log($"[GameFlowManager] 판소리 씬 진입 (마이크로게임에서: {fromMicrogame}, 연습모드: {isPracticeMode})");
         }
 
         /// <summary>
@@ -532,6 +528,12 @@ namespace Pansori.Microgames
         /// </summary>
         private int GetNextMicrogameIndex()
         {
+            // 연습 모드일 때는 항상 동일한 게임 인덱스 반환
+            if (isPracticeMode && practiceMicrogameIndex >= 0)
+            {
+                return practiceMicrogameIndex;
+            }
+            
             if (microgameManager != null)
             {
                 return microgameManager.GetRandomMicrogameIndex();
@@ -651,55 +653,35 @@ namespace Pansori.Microgames
         {
             lastMicrogameSuccess = success;
 
-            // 연습 모드인 경우 동일 게임 재시작
-            if (isPracticeMode)
+            // 연습 모드에서는 승패 카운트를 올리지 않음
+            if (!isPracticeMode)
             {
-                Debug.Log($"[GameFlowManager] 연습 모드 결과: {(success ? "성공" : "실패")} - 동일 게임 재시작");
-                
-                // 잠시 대기 후 동일 게임 재시작
-                StartCoroutine(RestartPracticeModeCoroutine());
-                return;
-            }
+                if (success)
+                {
+                    winCount++;
+                    OnWin?.Invoke(winCount);
+                    OnStageChanged?.Invoke(CurrentStage);
+                    
+                    Debug.Log($"[GameFlowManager] 승리! 현재 승리 횟수: {winCount}");
 
-            if (success)
-            {
-                winCount++;
-                OnWin?.Invoke(winCount);
-                OnStageChanged?.Invoke(CurrentStage);
-                
-                Debug.Log($"[GameFlowManager] 승리! 현재 승리 횟수: {winCount}");
-
-                // 속도/난이도 업데이트
-                UpdateSpeedAndDifficulty();
+                    // 속도/난이도 업데이트
+                    UpdateSpeedAndDifficulty();
+                }
+                else
+                {
+                    loseCount++;
+                    OnLose?.Invoke(loseCount);
+                    
+                    Debug.Log($"[GameFlowManager] 패배! 현재 패배 횟수: {loseCount}");
+                }
             }
             else
             {
-                loseCount++;
-                OnLose?.Invoke(loseCount);
-                
-                Debug.Log($"[GameFlowManager] 패배! 현재 패배 횟수: {loseCount}");
+                Debug.Log($"[GameFlowManager] 연습 모드 결과: {(success ? "성공" : "실패")}");
             }
 
-            // 판소리 씬으로 돌아가기
+            // 판소리 씬으로 돌아가기 (연습 모드에서도 동일)
             ChangeState(GameState.PansoriScene);
-        }
-
-        /// <summary>
-        /// 연습 모드에서 동일 게임 재시작 코루틴
-        /// </summary>
-        private IEnumerator RestartPracticeModeCoroutine()
-        {
-            // 잠시 대기 (결과 확인 시간)
-            yield return new WaitForSeconds(1.0f);
-            
-            // 연습 모드가 종료되었는지 확인
-            if (!isPracticeMode)
-            {
-                yield break;
-            }
-            
-            // 동일 미니게임 재시작
-            ChangeState(GameState.PracticeMode);
         }
 
         /// <summary>
@@ -753,6 +735,13 @@ namespace Pansori.Microgames
         /// </summary>
         private void CheckGameEndCondition()
         {
+            // 연습 모드에서는 승리/패배 조건 무시, 항상 다음 게임 준비
+            if (isPracticeMode)
+            {
+                PrepareNextMicrogame();
+                return;
+            }
+            
             bool isVictory = settings != null ? settings.IsVictory(winCount) : winCount >= WinCountForVictory;
             bool isGameOver = settings != null ? settings.IsGameOver(loseCount) : loseCount >= LoseCountForGameOver;
 
@@ -848,7 +837,14 @@ namespace Pansori.Microgames
             currentSpeed = BaseSpeed;
             currentDifficulty = BaseDifficulty;
             
-            ChangeState(GameState.PracticeMode);
+            // 연습 모드 힌트 표시
+            if (gameScreens != null)
+            {
+                gameScreens.ShowPracticeHint(true);
+            }
+            
+            // 판소리 씬으로 전환 (본 게임과 동일한 흐름)
+            ChangeState(GameState.PansoriScene);
             
             Debug.Log($"[GameFlowManager] 연습 모드 시작 - 미니게임 인덱스: {microgameIndex}");
         }

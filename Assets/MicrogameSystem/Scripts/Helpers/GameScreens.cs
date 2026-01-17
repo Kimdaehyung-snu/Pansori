@@ -742,7 +742,7 @@ namespace Pansori.Microgames
             hintRect.anchorMax = new Vector2(0f, 1f);
             hintRect.pivot = new Vector2(0f, 1f);
             hintRect.anchoredPosition = new Vector2(20, -20);
-            hintRect.sizeDelta = new Vector2(350, 50);
+            hintRect.sizeDelta = new Vector2(500, 70);
             
             // 배경 이미지
             Image bgImage = hintObj.AddComponent<Image>();
@@ -760,7 +760,7 @@ namespace Pansori.Microgames
             
             practiceHintText = textObj.AddComponent<TextMeshProUGUI>();
             practiceHintText.text = practiceHintMessage;
-            practiceHintText.fontSize = 24;
+            practiceHintText.fontSize = 40;
             practiceHintText.alignment = TextAlignmentOptions.MidlineLeft;
             practiceHintText.color = Color.white;
             
