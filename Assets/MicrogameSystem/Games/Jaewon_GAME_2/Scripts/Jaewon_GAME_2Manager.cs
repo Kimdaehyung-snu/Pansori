@@ -694,21 +694,6 @@ public class Jaewon_GAME_2Manager : MicrogameBase
         
         // UI 초기화
         UpdateCountUI();
-        
-        // 쌀가마니 스택 시각적 업데이트 (누락된 부분 추가)
-        UpdateRiceBagVisuals();
-        
-        // 날아가는 쌀가마니 비활성화
-        if (flyingRiceBag != null)
-        {
-            flyingRiceBag.gameObject.SetActive(false);
-        }
-        
-        // 형 캐릭터 활성화
-        if (hyungCharacter != null)
-        {
-            hyungCharacter.gameObject.SetActive(true);
-        }
     }
     
     /// <summary>

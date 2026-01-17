@@ -2929,14 +2929,6 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 11ee6132bcb544b48b0466c52a77db25, type: 2}
   microgamePrefabs:
   - {fileID: 3430769056563358546, guid: 86394cd144bb72e459440b5045515466, type: 3}
-  - {fileID: 8721404703643638978, guid: 7ea3a4cb90be32d469ac27ebaa3d75f9, type: 3}
-  - {fileID: 7353824501605857139, guid: 9cb30141729a5c54b9fafbb985529b40, type: 3}
-  - {fileID: 5830159389541254652, guid: e05d367aff06de84d814c5e1dd8cd364, type: 3}
-  - {fileID: 5576712119247447505, guid: 7f77f8bc75f62934fa1bda7909ac5d5b, type: 3}
-  - {fileID: 1456649174063736275, guid: 8cd49829f6600994cb41186fbedbc70b, type: 3}
-  - {fileID: 317445591327423780, guid: 210d99204e3a3394bb358d87165ba961, type: 3}
-  - {fileID: 2476862156275478237, guid: d85e840122cf254419029bde0d5e5407, type: 3}
-  - {fileID: 5311364290549085117, guid: 2138479e50738cc45b8d0bc0a24be488, type: 3}
   maxLives: 4
   currentLives: 4
   currentStage: 1

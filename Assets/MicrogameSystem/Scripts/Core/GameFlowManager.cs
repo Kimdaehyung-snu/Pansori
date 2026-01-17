@@ -103,20 +103,6 @@ namespace Pansori.Microgames
         /// </summary>
         private int practiceMicrogameIndex = -1;
 
-        #region 코루틴 관리
-        
-        /// <summary>
-        /// 현재 실행 중인 상태 전환 관련 코루틴
-        /// </summary>
-        private Coroutine currentFlowCoroutine = null;
-        
-        /// <summary>
-        /// 현재 실행 중인 지연 상태 변경 코루틴
-        /// </summary>
-        private Coroutine delayedStateCoroutine = null;
-        
-        #endregion
-
         #region Properties
 
         /// <summary>
@@ -280,56 +266,12 @@ namespace Pansori.Microgames
             UpdateSpeedAndDifficulty();
         }
 
-        #region 상태 전환 정리
-        
-        /// <summary>
-        /// 현재 상태를 정리합니다. 상태 전환 전에 호출됩니다.
-        /// 진행 중인 코루틴을 중지하고 UI를 정리합니다.
-        /// </summary>
-        private void CleanupCurrentState()
-        {
-            // 진행 중인 모든 플로우 코루틴 중지
-            StopAllFlowCoroutines();
-            
-            // PansoriSceneUI 정리 (진행 중인 코루틴 중지 및 숨기기)
-            if (pansoriSceneUI != null)
-            {
-                pansoriSceneUI.HideAll();
-            }
-            
-            Debug.Log("[GameFlowManager] 현재 상태 정리 완료");
-        }
-        
-        /// <summary>
-        /// 모든 플로우 관련 코루틴을 중지합니다.
-        /// </summary>
-        private void StopAllFlowCoroutines()
-        {
-            if (currentFlowCoroutine != null)
-            {
-                StopCoroutine(currentFlowCoroutine);
-                currentFlowCoroutine = null;
-            }
-            
-            if (delayedStateCoroutine != null)
-            {
-                StopCoroutine(delayedStateCoroutine);
-                delayedStateCoroutine = null;
-            }
-        }
-        
-        #endregion
-
         /// <summary>
         /// 게임 상태를 변경합니다.
         /// </summary>
         public void ChangeState(GameState newState)
         {
             GameState previousState = currentState;
-            
-            // 상태 전환 전 현재 상태 정리 (코루틴 중지, UI 정리)
-            CleanupCurrentState();
-            
             currentState = newState;
 
             Debug.Log($"[GameFlowManager] 상태 변경: {previousState} → {newState}");
@@ -434,7 +376,7 @@ namespace Pansori.Microgames
             else
             {
                 // 화면 없으면 바로 전환
-                delayedStateCoroutine = StartCoroutine(DelayedStateChange(GameState.PansoriScene, ReadyDuration));
+                StartCoroutine(DelayedStateChange(GameState.PansoriScene, ReadyDuration));
             }
 
             Debug.Log("[GameFlowManager] 준비 화면 진입");
@@ -504,7 +446,7 @@ namespace Pansori.Microgames
             else
             {
                 // UI가 없으면 바로 다음 단계로
-                currentFlowCoroutine = StartCoroutine(DelayedShowReaction(ReactionDuration));
+                StartCoroutine(DelayedShowReaction(ReactionDuration));
             }
             
             Debug.Log("[GameFlowManager] 속도 증가 연출 시작 (지화자!)");
@@ -535,7 +477,7 @@ namespace Pansori.Microgames
             }
             else
             {
-                currentFlowCoroutine = StartCoroutine(DelayedCheckGameEnd(ReactionDuration));
+                StartCoroutine(DelayedCheckGameEnd(ReactionDuration));
             }
         }
 
@@ -577,7 +519,7 @@ namespace Pansori.Microgames
             }
             else
             {
-                delayedStateCoroutine = StartCoroutine(DelayedStateChange(GameState.Microgame, CommandDelay));
+                StartCoroutine(DelayedStateChange(GameState.Microgame, CommandDelay));
             }
         }
 
@@ -914,15 +856,16 @@ namespace Pansori.Microgames
         {
             if (!isPracticeMode) return;
             
-            Debug.Log("[GameFlowManager] 연습 모드 종료 시작...");
-            
-            // 진행 중인 코루틴 먼저 정리 (상태 전환 전 안전하게 정리)
-            StopAllFlowCoroutines();
-            
             // 현재 실행 중인 미니게임 종료
             if (microgameManager != null && microgameManager.IsMicrogameRunning)
             {
                 microgameManager.EndCurrentMicrogame();
+            }
+            
+            // PansoriSceneUI도 정리 (코루틴 정지 및 UI 숨김)
+            if (pansoriSceneUI != null)
+            {
+                pansoriSceneUI.HideAll();
             }
             
             isPracticeMode = false;
@@ -935,7 +878,7 @@ namespace Pansori.Microgames
             
             ChangeState(GameState.MainMenu);
             
-            Debug.Log("[GameFlowManager] 연습 모드 종료 완료");
+            Debug.Log("[GameFlowManager] 연습 모드 종료");
         }
 
         /// <summary>

@@ -189,11 +189,9 @@ namespace Pansori.Microgames
         /// </summary>
         public void HideAll()
         {
-            if (currentCoroutine != null)
-            {
-                StopCoroutine(currentCoroutine);
-                currentCoroutine = null;
-            }
+            // 모든 코루틴 정지 (단일 코루틴 참조만으로는 부족)
+            StopAllCoroutines();
+            currentCoroutine = null;
             
             if (pansoriPanel != null)
             {

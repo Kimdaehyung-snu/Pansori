@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Pansori.Microgames
@@ -8,7 +7,6 @@ namespace Pansori.Microgames
     /// <summary>
     /// 미니게임 베이스 클래스
     /// 모든 미니게임은 이 클래스를 상속받아 구현하는 것을 권장합니다.
-    /// 자식 오브젝트의 활성화 상태를 자동으로 캐시하고 복원하는 기능을 제공합니다.
     /// </summary>
     public abstract class MicrogameBase : MonoBehaviour, IMicrogame
     {
@@ -26,21 +24,6 @@ namespace Pansori.Microgames
         /// 현재 난이도 (1~3)
         /// </summary>
         protected int currentDifficulty = 1;
-        
-        #region 오브젝트 상태 캐시 시스템
-        
-        /// <summary>
-        /// 자식 오브젝트의 초기 활성화 상태 캐시
-        /// Key: Transform, Value: activeSelf 상태
-        /// </summary>
-        private Dictionary<Transform, bool> initialActiveStates = new Dictionary<Transform, bool>();
-        
-        /// <summary>
-        /// 초기 상태가 캐시되었는지 여부
-        /// </summary>
-        private bool isInitialStatesCached = false;
-        
-        #endregion
         
         /// <summary>
         /// 현재 게임 이름 (서브 클래스에서 오버라이드 가능)
@@ -86,89 +69,7 @@ namespace Pansori.Microgames
             {
                 resultAnimation = GetComponentInChildren<MicrogameResultAnimation>();
             }
-            
-            // 자식 오브젝트 초기 활성화 상태 캐시
-            CacheInitialStates();
         }
-        
-        #region 오브젝트 상태 캐시 메서드
-        
-        /// <summary>
-        /// 모든 자식 오브젝트의 활성화 상태를 캐시합니다.
-        /// Awake()에서 한 번만 호출되어 프리팹의 초기 상태를 저장합니다.
-        /// </summary>
-        protected void CacheInitialStates()
-        {
-            if (isInitialStatesCached) return;
-            
-            initialActiveStates.Clear();
-            
-            // 모든 자식 Transform을 재귀적으로 순회
-            CacheChildStatesRecursive(transform);
-            
-            isInitialStatesCached = true;
-            
-            Debug.Log($"[MicrogameBase] {gameObject.name} - 자식 오브젝트 {initialActiveStates.Count}개 상태 캐시 완료");
-        }
-        
-        /// <summary>
-        /// 자식 오브젝트 상태를 재귀적으로 캐시합니다.
-        /// </summary>
-        private void CacheChildStatesRecursive(Transform parent)
-        {
-            foreach (Transform child in parent)
-            {
-                // 자식의 activeSelf 상태 저장
-                initialActiveStates[child] = child.gameObject.activeSelf;
-                
-                // 손자 오브젝트도 재귀적으로 캐시
-                if (child.childCount > 0)
-                {
-                    CacheChildStatesRecursive(child);
-                }
-            }
-        }
-        
-        /// <summary>
-        /// 캐시된 초기 상태로 모든 자식 오브젝트를 복원합니다.
-        /// OnEnable()에서 호출되어 게임 시작 전 초기 상태를 보장합니다.
-        /// </summary>
-        protected void RestoreInitialStates()
-        {
-            if (!isInitialStatesCached || initialActiveStates.Count == 0) return;
-            
-            int restoredCount = 0;
-            
-            foreach (var kvp in initialActiveStates)
-            {
-                Transform child = kvp.Key;
-                bool initialState = kvp.Value;
-                
-                // Transform이 유효하고 현재 상태가 초기 상태와 다른 경우에만 복원
-                if (child != null && child.gameObject.activeSelf != initialState)
-                {
-                    child.gameObject.SetActive(initialState);
-                    restoredCount++;
-                }
-            }
-            
-            if (restoredCount > 0)
-            {
-                Debug.Log($"[MicrogameBase] {gameObject.name} - 자식 오브젝트 {restoredCount}개 상태 복원");
-            }
-        }
-        
-        /// <summary>
-        /// 상태 캐시를 수동으로 갱신합니다. (필요한 경우에만 사용)
-        /// 기존 캐시를 무시하고 현재 상태를 새로운 초기 상태로 저장합니다.
-        /// </summary>
-        protected void RefreshStateCache()
-        {
-            isInitialStatesCached = false;
-            CacheInitialStates();
-        }
-        
-        #endregion
         
         /// <summary>
         /// 게임 시작 시 매니저가 호출합니다.
@@ -319,32 +220,17 @@ namespace Pansori.Microgames
         
         /// <summary>
         /// 게임 상태를 초기값으로 리셋합니다. (추상 메서드 - 반드시 구현 필요)
-        /// 주의: 이 메서드는 OnGameStart()에서 호출되거나 서브 클래스에서 필요 시 호출합니다.
-        /// OnDisable()에서는 호출하지 않습니다 (부모 비활성화 시 자식 SetActive가 동작하지 않는 문제 방지).
         /// </summary>
         protected abstract void ResetGameState();
         
         /// <summary>
-        /// 오브젝트가 활성화될 때 호출됩니다.
-        /// 캐시된 초기 상태로 자식 오브젝트를 복원하고, 기본 플래그를 초기화합니다.
+        /// 오브젝트가 비활성화될 때 자동으로 상태를 리셋합니다.
         /// </summary>
-        protected virtual void OnEnable()
+        private void OnDisable()
         {
-            // 기본 플래그 초기화
-            isGameEnded = false;
-            isPlayingResultAnimation = false;
+            // 모든 코루틴 먼저 정지 (가장 중요!)
+            StopAllCoroutines();
             
-            // 캐시된 초기 상태로 자식 오브젝트 복원
-            RestoreInitialStates();
-        }
-        
-        /// <summary>
-        /// 오브젝트가 비활성화될 때 호출됩니다.
-        /// 결과 애니메이션만 중지하고, ResetGameState()는 호출하지 않습니다.
-        /// (부모가 비활성화된 상태에서 자식 SetActive가 제대로 동작하지 않는 문제 방지)
-        /// </summary>
-        protected virtual void OnDisable()
-        {
             // 결과 애니메이션 중지
             if (resultAnimation != null)
             {
@@ -352,10 +238,7 @@ namespace Pansori.Microgames
             }
             
             isPlayingResultAnimation = false;
-            
-            // 주의: ResetGameState()는 여기서 호출하지 않습니다.
-            // 자식 오브젝트의 SetActive()가 부모 비활성화 상태에서 제대로 동작하지 않기 때문입니다.
-            // 대신 OnGameStart()에서 완전한 초기화를 수행합니다.
+            ResetGameState();
         }
     }
 }
