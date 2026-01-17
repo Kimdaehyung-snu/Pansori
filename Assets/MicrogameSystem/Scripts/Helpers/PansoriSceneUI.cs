@@ -348,6 +348,23 @@ namespace Pansori.Microgames
         }
         
         /// <summary>
+        /// 마이크로게임 결과에 따른 반응과 게임 정보를 함께 표시
+        /// </summary>
+        /// <param name="success">성공 여부</param>
+        /// <param name="totalLives">총 목숨</param>
+        /// <param name="consumedLives">소모된 목숨</param>
+        /// <param name="stage">현재 스테이지</param>
+        /// <param name="duration">표시 시간</param>
+        /// <param name="onComplete">완료 콜백</param>
+        public void ShowReactionWithInfo(bool success, int totalLives, int consumedLives, int stage, float duration, Action onComplete)
+        {
+            Show();
+            UpdateLivesDisplay(totalLives, consumedLives);
+            UpdateStageDisplay(stage);
+            currentCoroutine = StartCoroutine(ShowReactionWithInfoCoroutine(success, duration, onComplete));
+        }
+        
+        /// <summary>
         /// 반응 표시 코루틴 (강화된 버전)
         /// </summary>
         private IEnumerator ShowReactionCoroutine(bool success, float duration, Action onComplete)
@@ -360,6 +377,77 @@ namespace Pansori.Microgames
             
             // 게임 정보 숨기기
             HideGameInfo();
+            
+            // 화면 플래시 효과 (비동기)
+            if (useScreenFlash)
+            {
+                StartCoroutine(PlayScreenFlash(success));
+            }
+            
+            // 화면 흔들림 효과 (실패 시에만, 비동기)
+            if (!success && useScreenShake)
+            {
+                StartCoroutine(PlayScreenShake());
+            }
+            
+            // 배경색 변경 (애니메이션)
+            if (useBackgroundColorChange && backgroundImage != null)
+            {
+                Color targetColor = success ? successBackgroundColor : failureBackgroundColor;
+                StartCoroutine(TransitionBackgroundColor(targetColor, backgroundColorTransitionDuration));
+            }
+            
+            // 캐릭터 애니메이션
+            if (useCharacterAnimation)
+            {
+                string trigger = success ? successAnimTrigger : failureAnimTrigger;
+                PlayCharacterAnimation(trigger);
+            }
+            
+            // 반응 텍스트 표시
+            if (reactionText != null)
+            {
+                reactionText.text = success ? successReactionText : failureReactionText;
+                reactionText.color = success ? successTextColor : failureTextColor;
+                reactionText.gameObject.SetActive(true);
+                
+                // 스케일 펀치 효과
+                yield return StartCoroutine(ScalePunchEffect(reactionText.rectTransform, reactionScalePunchAmount, 0.3f));
+            }
+            
+            // 대기
+            yield return new WaitForSeconds(duration);
+            
+            // 반응 텍스트 숨기기
+            if (reactionText != null)
+            {
+                reactionText.gameObject.SetActive(false);
+            }
+            
+            // 배경색 복원 (애니메이션)
+            if (useBackgroundColorChange && backgroundImage != null)
+            {
+                yield return StartCoroutine(TransitionBackgroundColor(normalBackgroundColor, backgroundColorTransitionDuration));
+            }
+            
+            // 캐릭터 Idle로 복귀
+            PlayCharacterAnimation(idleAnimTrigger);
+            
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 반응 표시 코루틴 (게임 정보 유지 버전)
+        /// </summary>
+        private IEnumerator ShowReactionWithInfoCoroutine(bool success, float duration, Action onComplete)
+        {
+            // 명령 텍스트 숨기기
+            if (commandText != null)
+            {
+                commandText.gameObject.SetActive(false);
+            }
+            
+            // 게임 정보는 숨기지 않음 (목숨, 스테이지 유지)
             
             // 화면 플래시 효과 (비동기)
             if (useScreenFlash)

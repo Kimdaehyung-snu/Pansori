@@ -39,6 +39,20 @@ namespace Pansori.Microgames.Games
         [SerializeField] private bool useCustomResultAnimation = true; // 커스텀 결과 연출 사용 여부
         [SerializeField] private float resultDisplayDelay = 0.5f; // 결과 표시 전 연출 시간
         
+        [Header("성공 결과 연출")]
+        [SerializeField] private GameObject treasureEffect; // 금은보화 이펙트 (파티클 또는 스프라이트)
+        [SerializeField] private Image stampImage; // "참 잘했어요" 도장 이미지
+        [SerializeField] private RectTransform stampTargetPosition; // 도장 목표 위치 (우측 하단)
+        [SerializeField] private float stampAnimDuration = 0.5f; // 도장 애니메이션 시간
+        [SerializeField] private float stampStartScale = 2.0f; // 도장 시작 스케일
+        [SerializeField] private float stampEndScale = 1.0f; // 도장 끝 스케일
+        [SerializeField] private float stampRotation = -15f; // 도장 회전 각도
+        
+        [Header("실패 결과 연출")]
+        [SerializeField] private float nolbuBounceHeight = 50f; // 놀부 바운스 높이
+        [SerializeField] private float nolbuBounceSpeed = 8f; // 놀부 바운스 속도
+        [SerializeField] private int nolbuBounceCount = 4; // 놀부 바운스 횟수
+        
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
@@ -319,19 +333,12 @@ namespace Pansori.Microgames.Games
         {
             Debug.Log("[Jaewon_GAME_1] 실패!");
             
-            // 흥부 부부 숨기고 놀부 표시
-            if (heungbu != null) heungbu.SetActive(false);
-            if (heungbuWife != null) heungbuWife.SetActive(false);
+            // 흥부 부부 유지 (놀부가 놀리는 연출을 위해)
+            // 놀부만 추가로 표시
             if (nolbu != null) nolbu.SetActive(true);
             
             // 화면 플래시 효과 (실패)
             FlashScreen(false);
-            
-            // 놀부에 이펙트 적용 (흔들림)
-            if (nolbu != null)
-            {
-                PlayQuickEffect(nolbu.transform, false, null);
-            }
             
             // 결과 애니메이션을 사용하여 결과 보고
             if (useCustomResultAnimation && useResultAnimation)
@@ -349,22 +356,202 @@ namespace Pansori.Microgames.Games
         /// </summary>
         protected override void PlayResultAnimation(bool success, System.Action onComplete = null)
         {
-            // 게임별 추가 연출을 여기에 구현할 수 있습니다.
-            // 예: 특정 캐릭터 애니메이션 트리거, 파티클 이펙트 등
-            
             if (success)
             {
-                // 성공 시 추가 연출: 깨진 박에서 보물이 나오는 효과 등
+                // 성공 시: 금은보화 + 도장 연출
                 Debug.Log("[Jaewon_GAME_1] 성공 커스텀 연출 시작");
+                StartCoroutine(PlaySuccessResultAnimation(onComplete));
             }
             else
             {
-                // 실패 시 추가 연출: 놀부가 웃는 효과 등
+                // 실패 시: 놀부 바운스 연출
                 Debug.Log("[Jaewon_GAME_1] 실패 커스텀 연출 시작");
+                StartCoroutine(PlayFailureResultAnimation(onComplete));
+            }
+        }
+        
+        /// <summary>
+        /// 성공 결과 애니메이션 - 금은보화 + 도장
+        /// </summary>
+        private System.Collections.IEnumerator PlaySuccessResultAnimation(System.Action onComplete)
+        {
+            // 금은보화 이펙트 표시
+            ShowTreasureEffect();
+            
+            // 잠시 대기 후 도장 애니메이션
+            yield return new WaitForSeconds(0.3f);
+            
+            // 도장 애니메이션 실행
+            yield return StartCoroutine(StampAnimation());
+            
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            
+            // 완료 콜백
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 실패 결과 애니메이션 - 놀부 바운스
+        /// </summary>
+        private System.Collections.IEnumerator PlayFailureResultAnimation(System.Action onComplete)
+        {
+            // 놀부 바운스 애니메이션 실행
+            yield return StartCoroutine(NolbuBounceAnimation());
+            
+            // 결과 표시 유지
+            yield return new WaitForSeconds(resultDisplayDelay);
+            
+            // 완료 콜백
+            onComplete?.Invoke();
+        }
+        
+        /// <summary>
+        /// 놀부 바운스 애니메이션 (위아래로 왔다갔다하며 흥부 부부 놀리기)
+        /// </summary>
+        private System.Collections.IEnumerator NolbuBounceAnimation()
+        {
+            if (nolbu == null) yield break;
+            
+            Vector3 originalPosition = nolbu.transform.localPosition;
+            float elapsed = 0f;
+            float totalDuration = nolbuBounceCount / nolbuBounceSpeed;
+            
+            while (elapsed < totalDuration)
+            {
+                elapsed += Time.deltaTime;
+                
+                // 사인 함수로 위아래 바운스 (감쇠 적용)
+                float damping = 1f - (elapsed / totalDuration) * 0.5f; // 점점 약해짐
+                float bounceOffset = Mathf.Sin(elapsed * nolbuBounceSpeed * Mathf.PI * 2f) * nolbuBounceHeight * damping;
+                
+                nolbu.transform.localPosition = new Vector3(
+                    originalPosition.x,
+                    originalPosition.y + bounceOffset,
+                    originalPosition.z
+                );
+                
+                yield return null;
             }
             
-            // 기본 결과 애니메이션 재생
-            base.PlayResultAnimation(success, onComplete);
+            // 원래 위치로 복원
+            nolbu.transform.localPosition = originalPosition;
+        }
+        
+        /// <summary>
+        /// 도장 찍는 애니메이션 ("참 잘했어요" 도장)
+        /// </summary>
+        private System.Collections.IEnumerator StampAnimation()
+        {
+            if (stampImage == null) yield break;
+            
+            // 도장 활성화
+            stampImage.gameObject.SetActive(true);
+            
+            RectTransform stampRect = stampImage.rectTransform;
+            Vector3 targetPosition = stampTargetPosition != null 
+                ? stampTargetPosition.anchoredPosition3D 
+                : new Vector3(300f, -200f, 0f); // 기본 우측 하단 위치
+            
+            // 시작 위치 (화면 위에서)
+            Vector3 startPosition = targetPosition + new Vector3(0f, 500f, 0f);
+            stampRect.anchoredPosition3D = startPosition;
+            
+            // 시작 스케일과 회전
+            stampRect.localScale = Vector3.one * stampStartScale;
+            stampRect.localRotation = Quaternion.Euler(0f, 0f, stampRotation + 30f); // 시작 시 더 기울어짐
+            
+            // 투명도 설정
+            Color stampColor = stampImage.color;
+            stampColor.a = 0f;
+            stampImage.color = stampColor;
+            
+            float elapsed = 0f;
+            
+            // 애니메이션 (위에서 내려오며 찍힘)
+            while (elapsed < stampAnimDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / stampAnimDuration;
+                
+                // 이징 함수 (EaseOutBack - 살짝 튕기는 효과)
+                float easeT = 1f - Mathf.Pow(1f - t, 3f);
+                float bounceT = t < 0.8f ? easeT : easeT + Mathf.Sin((t - 0.8f) * Mathf.PI * 5f) * 0.05f * (1f - t);
+                
+                // 위치 보간
+                stampRect.anchoredPosition3D = Vector3.Lerp(startPosition, targetPosition, bounceT);
+                
+                // 스케일 보간 (커졌다가 작아짐)
+                float scaleT = t < 0.5f 
+                    ? Mathf.Lerp(stampStartScale, stampStartScale * 1.2f, t * 2f) 
+                    : Mathf.Lerp(stampStartScale * 1.2f, stampEndScale, (t - 0.5f) * 2f);
+                stampRect.localScale = Vector3.one * scaleT;
+                
+                // 회전 보간
+                float rotationT = Mathf.Lerp(stampRotation + 30f, stampRotation, easeT);
+                stampRect.localRotation = Quaternion.Euler(0f, 0f, rotationT);
+                
+                // 투명도 (빠르게 나타남)
+                stampColor.a = Mathf.Min(1f, t * 3f);
+                stampImage.color = stampColor;
+                
+                yield return null;
+            }
+            
+            // 최종 상태 설정
+            stampRect.anchoredPosition3D = targetPosition;
+            stampRect.localScale = Vector3.one * stampEndScale;
+            stampRect.localRotation = Quaternion.Euler(0f, 0f, stampRotation);
+            stampColor.a = 1f;
+            stampImage.color = stampColor;
+        }
+        
+        /// <summary>
+        /// 금은보화 이펙트 표시
+        /// </summary>
+        private void ShowTreasureEffect()
+        {
+            if (treasureEffect != null)
+            {
+                treasureEffect.SetActive(true);
+                
+                // 파티클 시스템이면 재생
+                ParticleSystem particles = treasureEffect.GetComponent<ParticleSystem>();
+                if (particles != null)
+                {
+                    particles.Play();
+                }
+                
+                Debug.Log("[Jaewon_GAME_1] 금은보화 이펙트 표시");
+            }
+        }
+        
+        /// <summary>
+        /// 금은보화 이펙트 숨기기
+        /// </summary>
+        private void HideTreasureEffect()
+        {
+            if (treasureEffect != null)
+            {
+                treasureEffect.SetActive(false);
+                
+                ParticleSystem particles = treasureEffect.GetComponent<ParticleSystem>();
+                if (particles != null)
+                {
+                    particles.Stop();
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 도장 숨기기
+        /// </summary>
+        private void HideStamp()
+        {
+            if (stampImage != null)
+            {
+                stampImage.gameObject.SetActive(false);
+            }
         }
         
         protected override void ResetGameState()
@@ -392,6 +579,10 @@ namespace Pansori.Microgames.Games
             {
                 inputHandler.OnKeyPressed -= HandleKeyPress;
             }
+            
+            // 결과 연출 이펙트 숨기기
+            HideTreasureEffect();
+            HideStamp();
             
             // 스프라이트 초기 상태로 복원
             SetupInitialState();

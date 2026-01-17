@@ -319,10 +319,13 @@ namespace Pansori.Microgames
 
             if (fromMicrogame)
             {
-                // 마이크로게임 결과에 따른 반응 표시
+                // 마이크로게임 결과에 따른 반응 표시 (목숨 정보 포함)
                 if (pansoriSceneUI != null)
                 {
-                    pansoriSceneUI.ShowReaction(lastMicrogameSuccess, ReactionDuration, () =>
+                    int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
+                    int consumedLives = microgameManager != null ? (microgameManager.MaxLives - microgameManager.CurrentLives) : loseCount;
+                    
+                    pansoriSceneUI.ShowReactionWithInfo(lastMicrogameSuccess, totalLives, consumedLives, CurrentStage, ReactionDuration, () =>
                     {
                         // 승리/패배 조건 확인
                         CheckGameEndCondition();
