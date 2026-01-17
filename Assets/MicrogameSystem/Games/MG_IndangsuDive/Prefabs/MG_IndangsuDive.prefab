@@ -376,7 +376,7 @@ MonoBehaviour:
   simcheong: {fileID: 8095070527951537953}
   dragonPalace: {fileID: 3835630018206368367}
   rightMarginViewport: 0.05
-  defaultVel: 4
+  defaultVel: 2
   extraWindow: 0
   diveSpeed: 6
   diveStopEpsilon: 0.01

@@ -81,7 +81,7 @@ namespace Pansori.Microgames.Games
             SpawnDragonPalace();
 
             isMoving = true;
-            currentVel = defaultVel * difficulty;
+            currentVel = defaultVel * Mathf.Pow(4, speed) * difficulty;
 
             base.OnGameStart(difficulty, speed);
             
