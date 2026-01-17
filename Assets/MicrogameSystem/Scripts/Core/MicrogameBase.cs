@@ -31,6 +31,11 @@ namespace Pansori.Microgames
         public virtual string currentGameName => "MicrogameBase";
         
         /// <summary>
+        /// 조작법 설명 (서브 클래스에서 오버라이드하여 각 게임의 조작법을 표시)
+        /// </summary>
+        public virtual string controlDescription => "";
+        
+        /// <summary>
         /// 현재 배속 (1.0f 이상)
         /// </summary>
         protected float currentSpeed = 1.0f;

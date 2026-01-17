@@ -355,6 +355,9 @@ namespace Pansori.Microgames
 
             // 다음 게임 이름 가져오기
             string nextGameName = GetNextGameName();
+            
+            // 다음 게임 조작법 가져오기
+            string controlDescription = GetNextGameControlDescription();
 
             // 목숨/스테이지 정보 가져오기
             int totalLives = microgameManager != null ? microgameManager.MaxLives : LoseCountForGameOver;
@@ -362,12 +365,12 @@ namespace Pansori.Microgames
 
             if (pansoriSceneUI != null)
             {
-                // 명령과 함께 게임 정보 표시
+                // 명령과 함께 게임 정보 및 조작법 표시
                 pansoriSceneUI.ShowCommandWithInfo(nextGameName, totalLives, consumedLives, CurrentStage, CommandDelay, () =>
                 {
                     // 명령 표시 후 마이크로게임으로 전환
                     ChangeState(GameState.Microgame);
-                });
+                }, controlDescription);
             }
             else
             {
@@ -385,6 +388,18 @@ namespace Pansori.Microgames
                 return microgameManager.GetRandomMicrogameIndex();
             }
             return -1;
+        }
+
+        /// <summary>
+        /// 다음 마이크로게임 조작법 설명을 가져옵니다.
+        /// </summary>
+        private string GetNextGameControlDescription()
+        {
+            if (microgameManager != null && nextMicrogameIndex >= 0)
+            {
+                return microgameManager.GetMicrogameControlDescription(nextMicrogameIndex);
+            }
+            return string.Empty;
         }
 
         /// <summary>
