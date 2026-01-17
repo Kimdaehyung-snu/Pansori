@@ -2321,6 +2321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c614c9b35b374aa4883c1652fcdf8802, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Jaewon_GAME_2Manager
+  thumbnailSprite: {fileID: 4310280990756282674, guid: 963187b37bb3e104c9115a0d2c5201d3, type: 3}
   resultAnimation: {fileID: 0}
   useResultAnimation: 1
   resultAnimationDelay: 0
