@@ -51,7 +51,9 @@ namespace Pansori.Microgames.Games
         /// <summary>
         /// 현재 게임 이름
         /// </summary>
-        public override string currentGameName => "올바른 동앗줄을 골라라!";
+        public override string currentGameName => "골라라!";
+        public override string controlDescription => "튼튼한 동아줄을 클릭하세요!";
+        
         protected override void Awake()
         {
             base.Awake();
