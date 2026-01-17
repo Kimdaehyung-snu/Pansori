@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using Pansori.Microgames;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine.UI;
 
 namespace Pansori.Microgames.Games
@@ -80,6 +81,7 @@ namespace Pansori.Microgames.Games
         private float afterHitVictimTimer = 0f;
         private float afterHitVictimTimerMax = 0.3f;
         private bool isVictimIdle = false;
+        private bool isGameEnd = false;
         
         /// <summary>
         /// 현재 게임 이름
@@ -150,6 +152,10 @@ namespace Pansori.Microgames.Games
 
         private void HandleDragStart(Vector3 startPos)
         {
+            if (isGameEnd)
+            {
+                return;
+            }
             hasHitTarget = false;
             startTime = Time.time;
             
@@ -166,6 +172,10 @@ namespace Pansori.Microgames.Games
 
         private void HandleDrag(Vector3 inputStartPos, Vector3 currentPos)
         {
+            if (isGameEnd)
+            {
+                return;
+            }
             // 현재 좌표 변환
             Vector3 currentCanvasPos =  CoordinateHelper.GetCanvasWorldPos(currentPos,canvasRect);
             // 아직 때리지 않았다면, 이전 위치와 현재 위치 사이를 검사 (뚫림 방지)
@@ -209,6 +219,11 @@ namespace Pansori.Microgames.Games
 
         private void HandleDragEnd(Vector3 endPos)
         {
+            if (isGameEnd)
+            {
+                return;
+            }
+            
             if (!hasHitTarget)
             {
                 Debug.Log("빗나감!");
@@ -290,6 +305,7 @@ namespace Pansori.Microgames.Games
         
         private void OnSuccess()
         {
+            isGameEnd = true;
             if (useCustomResultAnimation && useResultAnimation)
             {
                 ReportResultWithAnimation(true);
@@ -302,6 +318,7 @@ namespace Pansori.Microgames.Games
         
         private void OnFailure()
         {
+            isGameEnd = true;
             if (useCustomResultAnimation && useResultAnimation)
             {
                 ReportResultWithAnimation(false);
@@ -328,6 +345,8 @@ namespace Pansori.Microgames.Games
             victimImage.transform.position = victimPos;
             //화살표초기화
             arrowImage.SetActive(true);
+            //초기화
+            isGameEnd = false;
             
             // 타이머 중지
             if (timer != null)

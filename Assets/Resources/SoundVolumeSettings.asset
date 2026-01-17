@@ -72,7 +72,7 @@ MonoBehaviour:
   - clipGuid: 5741e02a941f802489854c1065cd7f6c
     clipName: fixLeg
     clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLeg.mp3
-    volume: 0.8
+    volume: 0.7
   - clipGuid: f0d05b1ab8701db44b13f10090d1be2c
     clipName: fixLegFailSound
     clipPath: Assets/MicrogameSystem/Games/MG02_FixLeg/Audios/fixLegFailSound.mp3
