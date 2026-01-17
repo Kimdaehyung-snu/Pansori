@@ -89,8 +89,12 @@ namespace Pansori.Microgames
         [SerializeField] private float backgroundColorTransitionDuration = 0.3f; // 배경색 전환 시간
         
         [Header("판소리 스프라이트 애니메이션")]
-        [SerializeField] private Animator pansoriSpriteAnimator; // 판소리 스프라이트 애니메이터
-        [SerializeField] private GameObject pansoriSpriteAnimatorObject; // 애니메이터 오브젝트 (활성화/비활성화용)
+        [SerializeField] private Image pansoriSpriteImage; // 판소리 스프라이트 이미지
+        [SerializeField] private GameObject pansoriSpriteAnimatorObject; // 오브젝트 (활성화/비활성화용)
+        [SerializeField] private Sprite[] pansoriSprites; // 애니메이션 스프라이트 배열
+        [SerializeField] private float pansoriFrameRate = 12f; // 프레임 레이트 (FPS)
+        
+        private Coroutine pansoriSpriteCoroutine; // 스프라이트 애니메이션 코루틴
         
         [Header("속도 증가 알림 설정 (지화자!)")]
         [SerializeField] private GameObject speedUpActiveObject; // 지화자 연출 중 활성화할 오브젝트
@@ -1347,11 +1351,15 @@ namespace Pansori.Microgames
                 pansoriSpriteAnimatorObject.SetActive(true);
             }
             
-            // 애니메이터 활성화 및 재생
-            if (pansoriSpriteAnimator != null)
+            // 스프라이트 애니메이션 코루틴 시작
+            if (pansoriSpriteImage != null && pansoriSprites != null && pansoriSprites.Length > 0)
             {
-                pansoriSpriteAnimator.enabled = true;
-                pansoriSpriteAnimator.Play("PansoriLoop", 0, 0f);
+                // 기존 코루틴 정지
+                if (pansoriSpriteCoroutine != null)
+                {
+                    StopCoroutine(pansoriSpriteCoroutine);
+                }
+                pansoriSpriteCoroutine = StartCoroutine(PlayPansoriSpriteAnimation());
             }
         }
         
@@ -1360,16 +1368,38 @@ namespace Pansori.Microgames
         /// </summary>
         private void StopPansoriSpriteAnimation()
         {
-            // 애니메이터 비활성화
-            if (pansoriSpriteAnimator != null)
+            // 스프라이트 애니메이션 코루틴 중지
+            if (pansoriSpriteCoroutine != null)
             {
-                pansoriSpriteAnimator.enabled = false;
+                StopCoroutine(pansoriSpriteCoroutine);
+                pansoriSpriteCoroutine = null;
             }
             
             // 오브젝트 비활성화
             if (pansoriSpriteAnimatorObject != null)
             {
                 pansoriSpriteAnimatorObject.SetActive(false);
+            }
+        }
+        
+        /// <summary>
+        /// 판소리 스프라이트 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator PlayPansoriSpriteAnimation()
+        {
+            if (pansoriSpriteImage == null || pansoriSprites == null || pansoriSprites.Length == 0)
+            {
+                yield break;
+            }
+            
+            float frameDelay = 1f / pansoriFrameRate;
+            int currentFrame = 0;
+            
+            while (true)
+            {
+                pansoriSpriteImage.sprite = pansoriSprites[currentFrame];
+                currentFrame = (currentFrame + 1) % pansoriSprites.Length;
+                yield return new WaitForSeconds(frameDelay);
             }
         }
         
