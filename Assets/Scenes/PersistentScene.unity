@@ -2665,7 +2665,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CautionPotion.Microgames.MicrogameManager
   settings: {fileID: 11400000, guid: 11ee6132bcb544b48b0466c52a77db25, type: 2}
   microgamePrefabs:
-  - {fileID: 8721404703643638978, guid: 7ea3a4cb90be32d469ac27ebaa3d75f9, type: 3}
+  - {fileID: 5830159389541254652, guid: e05d367aff06de84d814c5e1dd8cd364, type: 3}
   maxLives: 4
   currentLives: 4
   currentStage: 1
@@ -2701,14 +2701,12 @@ MonoBehaviour:
   mixer: {fileID: 24100000, guid: d7704af070e910c4cbe092151688f4b3, type: 2}
   bgList: []
   microgameBgClipList:
-  - {fileID: 8300000, guid: 4ef0786ebba837541b1e8cb2f5f25fe4, type: 3}
-  microgameSuccessClips:
-  - {fileID: 8300000, guid: 1ed06dc6d9e706a4cac8bb0a9ba87259, type: 3}
-  - {fileID: 8300000, guid: 1730c060db6ecea4bb4153b89fc7a950, type: 3}
+  - {fileID: 8300000, guid: 495ac9df5d4f0754082466adaf863e5a, type: 3}
+  microgameSuccessClips: []
   microgameFailClip: {fileID: 8300000, guid: f22034b54dc717f4c8e3a8efaa08aa6a, type: 3}
   mainBGMClip: {fileID: 8300000, guid: 24b177fc3c3f9974fb06c64743526271, type: 3}
-  pansoriSuccessClip: {fileID: 8300000, guid: df7cd591030527c4aa1390952abf0add, type: 3}
-  pansoriFailClip: {fileID: 8300000, guid: 31ec6106187564c4f927f83cf6999422, type: 3}
+  pansoriSuccessClip: {fileID: 0}
+  pansoriFailClip: {fileID: 0}
   fadeInDuration: 0.2
   fadeOutDuration: 0.2
   defaultVolume: 0.3

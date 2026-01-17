@@ -36,9 +36,10 @@ namespace Pansori.Microgames.Games
 
         [SerializeField] private RectTransform hitAreaRect;
         [SerializeField] private TMP_Text timerText; // 남은 시간 표시 UI
-        [SerializeField] private TMP_Text sadagiCountText; // 남은 싸다기 카운트 표시 UI
         [SerializeField] private Image attackerImage;
         [SerializeField] private Image victimImage;
+        [SerializeField] private GameObject arrowImage;
+        [SerializeField] private Slider sadagiGageSlider;
         
         [SerializeField] Animator victimAnimator;
         [SerializeField] Animator attackerAnimator;
@@ -79,6 +80,12 @@ namespace Pansori.Microgames.Games
         private float afterHitVictimTimer = 0f;
         private float afterHitVictimTimerMax = 0.3f;
         private bool isVictimIdle = false;
+        
+        /// <summary>
+        /// 현재 게임 이름
+        /// </summary>
+        public override string currentGameName => "콩쥐의 복수";
+        public override string controlDescription => "마우스로 후려라!";
             
         protected override void Awake()
         {
@@ -149,6 +156,12 @@ namespace Pansori.Microgames.Games
             //시작좌표 변환 및 저장
             startCanvasPos = CoordinateHelper.GetCanvasWorldPos(startPos,canvasRect);
             prevCanvasPos = startCanvasPos;
+
+            if (arrowImage.activeSelf)
+            {
+                arrowImage.SetActive(false);    
+            }
+            
         }
 
         private void HandleDrag(Vector3 inputStartPos, Vector3 currentPos)
@@ -266,7 +279,7 @@ namespace Pansori.Microgames.Games
 
         private void UpdateSadagiUI()
         {
-            sadagiCountText.text = $"현재 싸다귀 회수: {saddagiCount}/{saddagiMaxCount}";
+            sadagiGageSlider.value = saddagiCount;
         }
 
         private void OnTimeUp()
@@ -313,6 +326,8 @@ namespace Pansori.Microgames.Games
             //위치 초기화
             attackerImage.transform.position = attackerPos;
             victimImage.transform.position = victimPos;
+            //화살표초기화
+            arrowImage.SetActive(true);
             
             // 타이머 중지
             if (timer != null)

@@ -20,6 +20,7 @@ namespace Pansori.Microgames.Games
         [SerializeField] private GameObject successResultPanel;
         [SerializeField] private GameObject failResultPanel;
         [SerializeField] private RectTransform rotateAreaRect;
+        [SerializeField] private GameObject legGuideLineGameObject;
         
         [Header("게임 설정")]
         // TODO: 게임 설정 변수를 추가하세요
@@ -102,6 +103,10 @@ namespace Pansori.Microgames.Games
         private void HandleDragStart(Vector3 startPos)
         {
             angleOffset = legTransform.eulerAngles.z - GetMouseAngle(startPos);
+            if (legGuideLineGameObject.activeSelf)
+            {
+                legGuideLineGameObject.SetActive(false);    
+            }
         }
         
         // 2. 드래그 중: 회전 로직 실행
@@ -201,6 +206,7 @@ namespace Pansori.Microgames.Games
             // TODO: 모든 오브젝트를 초기 상태로 리셋하는 로직을 추가하세요
             successResultPanel.SetActive(false);
             failResultPanel.SetActive(false);
+            legGuideLineGameObject.SetActive(true);
             
             // 타이머 중지
             if (timer != null)
