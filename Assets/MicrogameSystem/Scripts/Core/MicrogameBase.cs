@@ -35,6 +35,14 @@ namespace Pansori.Microgames
         /// </summary>
         public virtual string controlDescription => "";
         
+        [Header("게임 정보")]
+        [SerializeField] protected Sprite thumbnailSprite;
+        
+        /// <summary>
+        /// 썸네일 이미지 (연습 모드 선택 화면에서 표시)
+        /// </summary>
+        public virtual Sprite ThumbnailSprite => thumbnailSprite;
+        
         /// <summary>
         /// 현재 배속 (1.0f 이상)
         /// </summary>
