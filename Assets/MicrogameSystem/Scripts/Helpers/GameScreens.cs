@@ -27,10 +27,9 @@ namespace Pansori.Microgames
         
         [Header("준비 화면")]
         [SerializeField] private GameObject readyPanel;
-        [SerializeField] private TMP_Text readyText;
+        [SerializeField] private Image readyImage;
+        [SerializeField] private Image startImage;
         [SerializeField] private TMP_Text controlDescriptionText; // 조작법 설명 텍스트
-        [SerializeField] private string readyMessage = "준비!";
-        [SerializeField] private string startMessage = "시작!";
         
         [Header("승리 화면")]
         [SerializeField] private GameObject victoryPanel;
@@ -303,24 +302,23 @@ namespace Pansori.Microgames
             float halfDuration = totalDuration * 0.5f;
             
             // "준비!" 표시
-            if (readyText != null)
+            if (readyImage != null)
             {
-                readyText.text = readyMessage;
-                readyText.gameObject.SetActive(true);
-                
+                readyImage.gameObject.SetActive(true);
+                startImage.gameObject.SetActive(false);
                 // 스케일 애니메이션
-                yield return StartCoroutine(ScalePunchEffect(readyText.rectTransform, textScaleAmount, textScaleAnimDuration));
+                yield return StartCoroutine(ScalePunchEffect(readyImage.rectTransform, textScaleAmount, textScaleAnimDuration));
             }
             
             yield return new WaitForSeconds(halfDuration - textScaleAnimDuration);
             
             // "시작!" 표시
-            if (readyText != null)
+            if (startImage != null)
             {
-                readyText.text = startMessage;
-                
+                startImage.gameObject.SetActive(true);
+                readyImage.gameObject.SetActive(false);
                 // 스케일 애니메이션
-                yield return StartCoroutine(ScalePunchEffect(readyText.rectTransform, textScaleAmount, textScaleAnimDuration));
+                yield return StartCoroutine(ScalePunchEffect(startImage.rectTransform, textScaleAmount, textScaleAnimDuration));
             }
             
             yield return new WaitForSeconds(halfDuration - textScaleAnimDuration);
