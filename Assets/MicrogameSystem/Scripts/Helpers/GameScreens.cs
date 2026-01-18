@@ -539,7 +539,8 @@ namespace Pansori.Microgames
             backRect.sizeDelta = new Vector2(200, 60);
             
             Image backBtnImage = backBtnObj.AddComponent<Image>();
-            backBtnImage.color = new Color(0.3f, 0.3f, 0.35f, 1f);
+            //backBtnImage.color = new Color(0.3f, 0.3f, 0.35f, 1f);
+            backBtnImage.sprite = Resources.Load<Sprite>("UI_Image/ButtonBG_Grey");
             
             practiceBackButton = backBtnObj.AddComponent<Button>();
             practiceBackButton.onClick.AddListener(OnPracticeBackButtonClicked);
@@ -559,6 +560,8 @@ namespace Pansori.Microgames
             backText.fontSize = 28;
             backText.alignment = TextAlignmentOptions.Center;
             backText.color = Color.white;
+            
+         
             
             Debug.Log("[GameScreens] 연습 모드 선택 패널 동적 생성 완료");
         }
@@ -614,6 +617,8 @@ namespace Pansori.Microgames
             colors.pressedColor = new Color(0.2f, 0.2f, 0.25f, 1f);
             colors.selectedColor = new Color(0.35f, 0.35f, 0.45f, 1f);
             btn.colors = colors;
+   
+            
             
             // 썸네일 이미지
             GameObject thumbnailObj = new GameObject("Thumbnail");
