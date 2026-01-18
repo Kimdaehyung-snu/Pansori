@@ -151,7 +151,7 @@ namespace Pansori.Microgames.Games
             
             // 오차 범위 n도 이내면 성공
 
-            if (-20f <Mathf.Abs(currentZ)&& Mathf.Abs(currentZ)< 20f) 
+            if (350f <Mathf.Abs(currentZ)|| Mathf.Abs(currentZ)< 10f) 
             {
                 Debug.Log("제비 다리 치료 완료! 🩹");
             
