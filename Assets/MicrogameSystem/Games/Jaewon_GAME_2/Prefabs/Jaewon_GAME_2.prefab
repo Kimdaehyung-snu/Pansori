@@ -1189,7 +1189,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 300, y: -580.7}
+  m_AnchoredPosition: {x: 300, y: -683.9}
   m_SizeDelta: {x: 150, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &832807450438778667
@@ -2100,7 +2100,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -300, y: -580.7}
+  m_AnchoredPosition: {x: -300, y: -683.9}
   m_SizeDelta: {x: 150, y: 400}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3095381413958737726
@@ -2341,8 +2341,8 @@ MonoBehaviour:
   successRightArm: {fileID: 5351890910278498484}
   failHyungCelebration: {fileID: 6325166046262941447}
   failText: {fileID: 0}
-  armRaiseHeight: 150
-  hyungBounceHeight: 50
+  armRaiseHeight: -130
+  hyungBounceHeight: 20
   hyungBounceSpeed: 8
   winSprites:
   - {fileID: 3909301933324527257, guid: 6b1878ad7ff66ca49afda69985cc9e29, type: 3}
