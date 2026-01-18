@@ -19,12 +19,17 @@ namespace Pansori.Microgames
         [SerializeField] private Button practiceButton;
         [SerializeField] private TMP_Text titleText;
         
+        [Header("메인 메뉴 배경 애니메이션")]
+        [SerializeField] private Sprite[] mainMenuBackgroundSprites;
+        [SerializeField] private float backgroundSwitchInterval = 0.3f;
+        private Image mainMenuBackgroundImage;
+        private Coroutine backgroundAnimationCoroutine;
+        
         [Header("준비 화면")]
         [SerializeField] private GameObject readyPanel;
-        [SerializeField] private TMP_Text readyText;
+        [SerializeField] private Image readyImage;
+        [SerializeField] private Image startImage;
         [SerializeField] private TMP_Text controlDescriptionText; // 조작법 설명 텍스트
-        [SerializeField] private string readyMessage = "준비!";
-        [SerializeField] private string startMessage = "시작!";
         
         [Header("승리 화면")]
         [SerializeField] private GameObject victoryPanel;
@@ -201,6 +206,9 @@ namespace Pansori.Microgames
                 currentCoroutine = null;
             }
             
+            // 배경 애니메이션 중지
+            StopBackgroundAnimation();
+            
             if (mainMenuPanel != null)
             {
                 mainMenuPanel.SetActive(false);
@@ -245,6 +253,9 @@ namespace Pansori.Microgames
             {
                 titleText.text = "울려라! 판소리";
             }
+            
+            // 배경 애니메이션 시작
+            StartBackgroundAnimation();
             
             Debug.Log("[GameScreens] 메인 메뉴 표시");
         }
@@ -291,24 +302,23 @@ namespace Pansori.Microgames
             float halfDuration = totalDuration * 0.5f;
             
             // "준비!" 표시
-            if (readyText != null)
+            if (readyImage != null)
             {
-                readyText.text = readyMessage;
-                readyText.gameObject.SetActive(true);
-                
+                readyImage.gameObject.SetActive(true);
+                startImage.gameObject.SetActive(false);
                 // 스케일 애니메이션
-                yield return StartCoroutine(ScalePunchEffect(readyText.rectTransform, textScaleAmount, textScaleAnimDuration));
+                yield return StartCoroutine(ScalePunchEffect(readyImage.rectTransform, textScaleAmount, textScaleAnimDuration));
             }
             
             yield return new WaitForSeconds(halfDuration - textScaleAnimDuration);
             
             // "시작!" 표시
-            if (readyText != null)
+            if (startImage != null)
             {
-                readyText.text = startMessage;
-                
+                startImage.gameObject.SetActive(true);
+                readyImage.gameObject.SetActive(false);
                 // 스케일 애니메이션
-                yield return StartCoroutine(ScalePunchEffect(readyText.rectTransform, textScaleAmount, textScaleAnimDuration));
+                yield return StartCoroutine(ScalePunchEffect(startImage.rectTransform, textScaleAmount, textScaleAnimDuration));
             }
             
             yield return new WaitForSeconds(halfDuration - textScaleAnimDuration);
@@ -418,6 +428,64 @@ namespace Pansori.Microgames
             }
             
             target.localScale = originalScale;
+        }
+        
+        /// <summary>
+        /// 메인 메뉴 배경 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator BackgroundAnimationCoroutine()
+        {
+            if (mainMenuBackgroundSprites == null || mainMenuBackgroundSprites.Length < 2)
+            {
+                Debug.LogWarning("[GameScreens] 배경 스프라이트가 2개 이상 필요합니다.");
+                yield break;
+            }
+            
+            // Image 컴포넌트 캐시
+            if (mainMenuBackgroundImage == null && mainMenuPanel != null)
+            {
+                mainMenuBackgroundImage = mainMenuPanel.GetComponent<Image>();
+            }
+            
+            if (mainMenuBackgroundImage == null)
+            {
+                Debug.LogWarning("[GameScreens] MainMenuPanel에 Image 컴포넌트가 없습니다.");
+                yield break;
+            }
+            
+            int currentIndex = 0;
+            
+            while (true)
+            {
+                mainMenuBackgroundImage.sprite = mainMenuBackgroundSprites[currentIndex];
+                currentIndex = (currentIndex + 1) % mainMenuBackgroundSprites.Length;
+                yield return new WaitForSeconds(backgroundSwitchInterval);
+            }
+        }
+        
+        /// <summary>
+        /// 배경 애니메이션 시작
+        /// </summary>
+        private void StartBackgroundAnimation()
+        {
+            StopBackgroundAnimation();
+            
+            if (mainMenuBackgroundSprites != null && mainMenuBackgroundSprites.Length >= 2)
+            {
+                backgroundAnimationCoroutine = StartCoroutine(BackgroundAnimationCoroutine());
+            }
+        }
+        
+        /// <summary>
+        /// 배경 애니메이션 중지
+        /// </summary>
+        private void StopBackgroundAnimation()
+        {
+            if (backgroundAnimationCoroutine != null)
+            {
+                StopCoroutine(backgroundAnimationCoroutine);
+                backgroundAnimationCoroutine = null;
+            }
         }
         
         /// <summary>
