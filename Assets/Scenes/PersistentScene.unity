@@ -4032,6 +4032,10 @@ MonoBehaviour:
   startButton: {fileID: 1825591605}
   practiceButton: {fileID: 84911016}
   titleText: {fileID: 1202953288}
+  mainMenuBackgroundSprites:
+  - {fileID: 21300000, guid: e3cca30a2dc40e542967406979c79fb7, type: 3}
+  - {fileID: 21300000, guid: 8f03be2da9f09ec478e56a050bb7a03e, type: 3}
+  backgroundSwitchInterval: 0.3
   readyPanel: {fileID: 1906624676}
   readyText: {fileID: 413500110}
   controlDescriptionText: {fileID: 2041668408}

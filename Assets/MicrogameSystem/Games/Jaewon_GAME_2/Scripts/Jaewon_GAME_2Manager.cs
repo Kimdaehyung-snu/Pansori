@@ -91,9 +91,9 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     // 형 캐릭터 Image 컴포넌트 캐싱
     private Image hyungCharacterImage;
     
-    // 양팔 초기 위치 저장
-    private Vector2 leftArmInitialPosition;
-    private Vector2 rightArmInitialPosition;
+    // 양팔 초기 Y좌표 저장
+    private float leftArmInitialY;
+    private float rightArmInitialY;
     
     /// <summary>
     /// 이 게임의 표시 이름
@@ -121,18 +121,18 @@ public class Jaewon_GAME_2Manager : MicrogameBase
         if (hyungCharacter != null)
             hyungCharacterImage = hyungCharacter.GetComponent<Image>();
         
-        // 양팔 초기 위치 저장
+        // 양팔 초기 Y좌표 저장
         if (successLeftArm != null)
         {
             var leftArmRect = successLeftArm.GetComponent<RectTransform>();
             if (leftArmRect != null)
-                leftArmInitialPosition = leftArmRect.anchoredPosition;
+                leftArmInitialY = leftArmRect.anchoredPosition.y;
         }
         if (successRightArm != null)
         {
             var rightArmRect = successRightArm.GetComponent<RectTransform>();
             if (rightArmRect != null)
-                rightArmInitialPosition = rightArmRect.anchoredPosition;
+                rightArmInitialY = rightArmRect.anchoredPosition.y;
         }
     }
     
@@ -249,19 +249,27 @@ public class Jaewon_GAME_2Manager : MicrogameBase
     /// </summary>
     private void HideResultElements()
     {
-        // 양팔 위치 초기화 후 비활성화
+        // 양팔 Y좌표만 초기화 후 비활성화
         if (successLeftArm != null)
         {
             var leftArmRect = successLeftArm.GetComponent<RectTransform>();
             if (leftArmRect != null)
-                leftArmRect.anchoredPosition = leftArmInitialPosition;
+            {
+                var pos = leftArmRect.anchoredPosition;
+                pos.y = leftArmInitialY;
+                leftArmRect.anchoredPosition = pos;
+            }
             successLeftArm.SetActive(false);
         }
         if (successRightArm != null)
         {
             var rightArmRect = successRightArm.GetComponent<RectTransform>();
             if (rightArmRect != null)
-                rightArmRect.anchoredPosition = rightArmInitialPosition;
+            {
+                var pos = rightArmRect.anchoredPosition;
+                pos.y = rightArmInitialY;
+                rightArmRect.anchoredPosition = pos;
+            }
             successRightArm.SetActive(false);
         }
         if (failHyungCelebration != null) failHyungCelebration.SetActive(false);

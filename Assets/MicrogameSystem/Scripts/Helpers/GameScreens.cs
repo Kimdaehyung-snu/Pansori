@@ -19,6 +19,12 @@ namespace Pansori.Microgames
         [SerializeField] private Button practiceButton;
         [SerializeField] private TMP_Text titleText;
         
+        [Header("메인 메뉴 배경 애니메이션")]
+        [SerializeField] private Sprite[] mainMenuBackgroundSprites;
+        [SerializeField] private float backgroundSwitchInterval = 0.3f;
+        private Image mainMenuBackgroundImage;
+        private Coroutine backgroundAnimationCoroutine;
+        
         [Header("준비 화면")]
         [SerializeField] private GameObject readyPanel;
         [SerializeField] private TMP_Text readyText;
@@ -201,6 +207,9 @@ namespace Pansori.Microgames
                 currentCoroutine = null;
             }
             
+            // 배경 애니메이션 중지
+            StopBackgroundAnimation();
+            
             if (mainMenuPanel != null)
             {
                 mainMenuPanel.SetActive(false);
@@ -245,6 +254,9 @@ namespace Pansori.Microgames
             {
                 titleText.text = "울려라! 판소리";
             }
+            
+            // 배경 애니메이션 시작
+            StartBackgroundAnimation();
             
             Debug.Log("[GameScreens] 메인 메뉴 표시");
         }
@@ -418,6 +430,64 @@ namespace Pansori.Microgames
             }
             
             target.localScale = originalScale;
+        }
+        
+        /// <summary>
+        /// 메인 메뉴 배경 애니메이션 코루틴
+        /// </summary>
+        private IEnumerator BackgroundAnimationCoroutine()
+        {
+            if (mainMenuBackgroundSprites == null || mainMenuBackgroundSprites.Length < 2)
+            {
+                Debug.LogWarning("[GameScreens] 배경 스프라이트가 2개 이상 필요합니다.");
+                yield break;
+            }
+            
+            // Image 컴포넌트 캐시
+            if (mainMenuBackgroundImage == null && mainMenuPanel != null)
+            {
+                mainMenuBackgroundImage = mainMenuPanel.GetComponent<Image>();
+            }
+            
+            if (mainMenuBackgroundImage == null)
+            {
+                Debug.LogWarning("[GameScreens] MainMenuPanel에 Image 컴포넌트가 없습니다.");
+                yield break;
+            }
+            
+            int currentIndex = 0;
+            
+            while (true)
+            {
+                mainMenuBackgroundImage.sprite = mainMenuBackgroundSprites[currentIndex];
+                currentIndex = (currentIndex + 1) % mainMenuBackgroundSprites.Length;
+                yield return new WaitForSeconds(backgroundSwitchInterval);
+            }
+        }
+        
+        /// <summary>
+        /// 배경 애니메이션 시작
+        /// </summary>
+        private void StartBackgroundAnimation()
+        {
+            StopBackgroundAnimation();
+            
+            if (mainMenuBackgroundSprites != null && mainMenuBackgroundSprites.Length >= 2)
+            {
+                backgroundAnimationCoroutine = StartCoroutine(BackgroundAnimationCoroutine());
+            }
+        }
+        
+        /// <summary>
+        /// 배경 애니메이션 중지
+        /// </summary>
+        private void StopBackgroundAnimation()
+        {
+            if (backgroundAnimationCoroutine != null)
+            {
+                StopCoroutine(backgroundAnimationCoroutine);
+                backgroundAnimationCoroutine = null;
+            }
         }
         
         /// <summary>
