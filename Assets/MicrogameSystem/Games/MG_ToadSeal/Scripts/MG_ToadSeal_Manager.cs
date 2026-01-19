@@ -138,7 +138,10 @@ namespace Pansori.Microgames.Games
         {
             isBlocking = true;  // 두꺼비 밀려나기 시작
             // 성공 단계에 따라 물이 미는 힘이 강해짐
-            currentWaterPushForce = waterDefaultPushForce + speed * 1.5f * difficulty;
+            float t = Mathf.InverseLerp(1f, 1.8f, speed);
+            float curve = Mathf.Pow(t, 2.0f);
+            currentWaterPushForce = waterDefaultPushForce + curve * 5 * difficulty;
+
             waterAudioSource = SoundManager.Instance.SFXLoopPlay("WaterPush", waterClip);
 
             base.OnGameStart(difficulty, speed);
